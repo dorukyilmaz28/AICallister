@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield } from "lucide-react";
+import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2 } from "lucide-react";
 
 interface TeamMember {
   id: string;
@@ -167,6 +167,35 @@ export default function TeamDetailPage() {
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/" });
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!confirm("Bu mesajı silmek istediğinizden emin misiniz?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/teams/${teamId}/chat`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messageId: messageId,
+        }),
+      });
+
+      if (response.ok) {
+        // Mesajı local state'den kaldır
+        setMessages(messages.filter(msg => msg.id !== messageId));
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Mesaj silinirken hata oluştu.");
+      }
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      setError("Mesaj silinirken hata oluştu.");
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -353,7 +382,7 @@ export default function TeamDetailPage() {
                           <User className="w-4 h-4 text-white" />
                         </div>
                         <div
-                          className={`px-4 py-3 rounded-2xl max-w-full transition-colors duration-200 ${
+                          className={`px-4 py-3 rounded-2xl max-w-full transition-colors duration-200 group relative ${
                             message.user.id === session.user?.id
                               ? "bg-white/30 backdrop-blur-sm text-white border border-white/40"
                               : "bg-white/20 backdrop-blur-sm text-white border border-white/30"
@@ -365,8 +394,20 @@ export default function TeamDetailPage() {
                           <div className="text-sm whitespace-pre-wrap">
                             {message.content}
                           </div>
-                          <div className="text-xs text-white/50 mt-2">
-                            {formatDate(message.createdAt)}
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="text-xs text-white/50">
+                              {formatDate(message.createdAt)}
+                            </div>
+                            {/* Sadece kendi mesajlarını silebilir */}
+                            {message.user.id === session.user?.id && (
+                              <button
+                                onClick={() => handleDeleteMessage(message.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-red-500/20 rounded-full"
+                                title="Mesajı sil"
+                              >
+                                <Trash2 className="w-3 h-3 text-red-400 hover:text-red-300" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>

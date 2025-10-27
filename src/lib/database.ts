@@ -256,5 +256,25 @@ export const teamChatDb = {
         createdAt: 'asc'
       }
     });
+  },
+
+  async delete(chatId: string, userId: string) {
+    // Mesajın kullanıcıya ait olduğunu kontrol et
+    const chat = await prisma.teamChat.findFirst({
+      where: {
+        id: chatId,
+        userId: userId
+      }
+    });
+
+    if (!chat) {
+      throw new Error('Mesaj bulunamadı veya silme yetkiniz yok.');
+    }
+
+    await prisma.teamChat.delete({
+      where: { id: chatId }
+    });
+
+    return true;
   }
 };

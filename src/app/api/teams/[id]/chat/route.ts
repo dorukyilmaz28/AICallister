@@ -147,3 +147,52 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     );
   }
 }
+
+// Mesaj silme
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Oturum açmanız gerekiyor." },
+        { status: 401 }
+      );
+    }
+
+    const { id: teamId } = await params;
+    const { messageId } = await req.json();
+
+    if (!messageId) {
+      return NextResponse.json(
+        { error: "Mesaj ID gereklidir." },
+        { status: 400 }
+      );
+    }
+
+    // Kullanıcının takımda olup olmadığını kontrol et
+    const members = await teamMemberDb.findByTeamId(teamId);
+    const isMember = members.some((m: TeamMember) => m.userId === session.user.id);
+
+    if (!isMember) {
+      return NextResponse.json(
+        { error: "Bu takımın üyesi değilsiniz." },
+        { status: 403 }
+      );
+    }
+
+    // Mesajı sil
+    await teamChatDb.delete(messageId, session.user.id);
+
+    return NextResponse.json({
+      message: "Mesaj başarıyla silindi."
+    });
+
+  } catch (error) {
+    console.error("Error deleting message:", error);
+    return NextResponse.json(
+      { error: "Mesaj silinirken hata oluştu." },
+      { status: 500 }
+    );
+  }
+}
