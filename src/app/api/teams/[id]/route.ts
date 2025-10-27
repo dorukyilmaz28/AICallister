@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { teamDb, teamMemberDb, userDb } from "@/lib/database";
+import { teamDb, teamMemberDb, userDb, teamChatDb } from "@/lib/database";
 
 interface TeamMember {
   id: string;
@@ -111,12 +111,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // Kullanıcının takımda olup olmadığını kontrol et
     const isMember = members.some((m: TeamMember) => m.userId === session.user.id);
 
+    // Takım sohbetlerini getir
+    const chats = await teamChatDb.findByTeamId(teamId);
+
     return NextResponse.json({
       team: {
         ...team,
         members: membersWithUsers,
         memberCount: members.length,
-        isMember
+        isMember,
+        chats: chats || []
       }
     });
 

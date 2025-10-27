@@ -80,7 +80,9 @@ export default function TeamDetailPage() {
         const data = await response.json();
         setTeam(data.team);
         setUserRole(data.userRole);
-        setMessages(data.team.chats.reverse()); // Reverse to show oldest first
+        // Chats array'ini kontrol et ve reverse işlemini güvenli yap
+        const chats = data.team?.chats || [];
+        setMessages(chats.reverse()); // Reverse to show oldest first
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Takım bulunamadı.");
