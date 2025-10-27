@@ -6,11 +6,11 @@ import { conversationDb } from "@/lib/database";
 interface Conversation {
   id: string;
   userId: string;
-  title: string;
+  title: string | null;
   context: string;
   messages?: any[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export async function GET(req: NextRequest) {
@@ -28,9 +28,9 @@ export async function GET(req: NextRequest) {
 
     const formattedConversations = conversations.map((conv: Conversation) => ({
       id: conv.id,
-      title: conv.title,
+      title: conv.title || 'Başlıksız Konuşma',
       context: conv.context,
-      createdAt: conv.createdAt,
+      createdAt: conv.createdAt.toISOString(),
       messageCount: conv.messages?.length || 0,
     }));
 

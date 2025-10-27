@@ -8,7 +8,12 @@ interface TeamMember {
   userId: string;
   teamId: string;
   role: string;
-  joinedAt: string;
+  joinedAt: Date;
+  user?: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
 }
 
 interface ChatMessage {
@@ -16,7 +21,12 @@ interface ChatMessage {
   userId: string;
   teamId: string;
   content: string;
-  createdAt: string;
+  createdAt: Date;
+  user?: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
 }
 
 // Takım sohbetine mesaj gönderme

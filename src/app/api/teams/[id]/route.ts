@@ -8,7 +8,12 @@ interface TeamMember {
   userId: string;
   teamId: string;
   role: string;
-  joinedAt: string;
+  joinedAt: Date;
+  user?: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
 }
 
 // Takıma katılma
