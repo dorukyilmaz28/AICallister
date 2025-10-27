@@ -1,0 +1,5 @@
+[33m4a71dab[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Add 200 character limit for user messages with visual feedback
+[33m53e3fe2[m Fix Vercel deployment: improve error handling and environment variables
+[33m1865d00[m Clean up .gitignore - remove React Router references
+[33mdad41e8[m Fix TypeScript config and import paths for Next.js
+[33m36b1614[m Fix import path for FRCChat component
