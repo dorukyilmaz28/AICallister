@@ -69,5 +69,5 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/signin", // Hata durumunda signin sayfasına yönlendir
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === "development", // Sadece development'ta debug açık
+  debug: true, // Geçici olarak production'da da debug açık
 }
