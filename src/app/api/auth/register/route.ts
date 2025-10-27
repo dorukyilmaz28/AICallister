@@ -24,13 +24,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify team number with Blue Alliance API
-    const teamVerification = await verifyTeamNumber(teamNumber);
-    if (!teamVerification.isValid) {
-      return NextResponse.json(
-        { error: teamVerification.error || "Geçersiz takım numarası" },
-        { status: 400 }
-      );
+    // Verify team number with Blue Alliance API (optional - don't fail if API is down)
+    let teamVerification = { isValid: true, team: null, error: null };
+    try {
+      teamVerification = await verifyTeamNumber(teamNumber);
+      if (!teamVerification.isValid) {
+        console.warn("Team verification failed:", teamVerification.error);
+        // Don't fail registration, just warn
+      }
+    } catch (apiError) {
+      console.warn("Blue Alliance API error:", apiError);
+      // Continue with registration even if API fails
     }
 
     // Check if user already exists
@@ -68,7 +72,7 @@ export async function POST(req: NextRequest) {
         data: {
           name: teamVerification.team?.nickname || teamVerification.team?.name || `Team ${teamNumber}`,
           teamNumber,
-          description: `${teamVerification.team?.city}, ${teamVerification.team?.state_prov}`,
+          description: teamVerification.team ? `${teamVerification.team.city}, ${teamVerification.team.state_prov}` : `FRC Team ${teamNumber}`,
         },
       });
     }
