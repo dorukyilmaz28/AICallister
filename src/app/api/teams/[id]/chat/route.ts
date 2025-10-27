@@ -3,6 +3,22 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { teamDb, teamMemberDb, teamChatDb, userDb } from "@/lib/database";
 
+interface TeamMember {
+  id: string;
+  userId: string;
+  teamId: string;
+  role: string;
+  joinedAt: string;
+}
+
+interface ChatMessage {
+  id: string;
+  userId: string;
+  teamId: string;
+  content: string;
+  createdAt: string;
+}
+
 // Takım sohbetine mesaj gönderme
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,7 +43,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Kullanıcının takımda olup olmadığını kontrol et
     const members = await teamMemberDb.findByTeamId(teamId);
-    const isMember = members.some(m => m.userId === session.user.id);
+    const isMember = members.some((m: TeamMember) => m.userId === session.user.id);
 
     if (!isMember) {
       return NextResponse.json(
@@ -82,7 +98,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Kullanıcının takımda olup olmadığını kontrol et
     const members = await teamMemberDb.findByTeamId(teamId);
-    const isMember = members.some(m => m.userId === session.user.id);
+    const isMember = members.some((m: TeamMember) => m.userId === session.user.id);
 
     if (!isMember) {
       return NextResponse.json(
@@ -96,7 +112,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Her mesaj için kullanıcı bilgilerini getir
     const messagesWithUsers = await Promise.all(
-      chatMessages.map(async (message) => {
+      chatMessages.map(async (message: ChatMessage) => {
         const user = await userDb.findById(message.userId);
         return {
           ...message,

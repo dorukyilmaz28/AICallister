@@ -3,6 +3,14 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { teamDb, teamMemberDb, userDb } from "@/lib/database";
 
+interface TeamMember {
+  id: string;
+  userId: string;
+  teamId: string;
+  role: string;
+  joinedAt: string;
+}
+
 // Takım oluşturma
 export async function POST(req: NextRequest) {
   try {
@@ -66,19 +74,19 @@ export async function GET(req: NextRequest) {
 
     // Kullanıcının üye olduğu takımları bul
     const userMemberships = await teamMemberDb.findByUserId(session.user.id);
-    const teamIds = userMemberships.map(m => m.teamId);
+    const teamIds = userMemberships.map((m: TeamMember) => m.teamId);
     
     // Tüm takımları getir ve filtrele
     const allTeams = await teamDb.getAll();
-    const userTeams = allTeams.filter(team => teamIds.includes(team.id));
+    const userTeams = allTeams.filter((team: any) => teamIds.includes(team.id));
 
     // Her takım için üye sayısını hesapla
     const teamsWithCounts = await Promise.all(
-      userTeams.map(async (team) => {
+      userTeams.map(async (team: any) => {
         const members = await teamMemberDb.findByTeamId(team.id);
         return {
           ...team,
-          members: members.map(async (member) => {
+          members: members.map(async (member: TeamMember) => {
             const user = await userDb.findById(member.userId);
             return {
               id: member.id,

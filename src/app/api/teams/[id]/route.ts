@@ -3,6 +3,14 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { teamDb, teamMemberDb, userDb } from "@/lib/database";
 
+interface TeamMember {
+  id: string;
+  userId: string;
+  teamId: string;
+  role: string;
+  joinedAt: string;
+}
+
 // Takıma katılma
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -29,7 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Kullanıcının zaten takımda olup olmadığını kontrol et
     const existingMembers = await teamMemberDb.findByTeamId(teamId);
-    const existingMember = existingMembers.find(m => m.userId === session.user.id);
+    const existingMember = existingMembers.find((m: TeamMember) => m.userId === session.user.id);
 
     if (existingMember) {
       return NextResponse.json(
@@ -85,7 +93,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // Takım üyelerini getir
     const members = await teamMemberDb.findByTeamId(teamId);
     const membersWithUsers = await Promise.all(
-      members.map(async (member) => {
+      members.map(async (member: TeamMember) => {
         const user = await userDb.findById(member.userId);
         return {
           id: member.id,
@@ -101,7 +109,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     );
 
     // Kullanıcının takımda olup olmadığını kontrol et
-    const isMember = members.some(m => m.userId === session.user.id);
+    const isMember = members.some((m: TeamMember) => m.userId === session.user.id);
 
     return NextResponse.json({
       team: {

@@ -3,6 +3,16 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { conversationDb } from "@/lib/database";
 
+interface Conversation {
+  id: string;
+  userId: string;
+  title: string;
+  context: string;
+  messages?: any[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +26,7 @@ export async function GET(req: NextRequest) {
 
     const conversations = await conversationDb.findByUserId(session.user.id);
 
-    const formattedConversations = conversations.map((conv) => ({
+    const formattedConversations = conversations.map((conv: Conversation) => ({
       id: conv.id,
       title: conv.title,
       context: conv.context,
