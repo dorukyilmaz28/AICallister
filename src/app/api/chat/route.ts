@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
 
     // Konuşmayı veritabanına kaydet
     try {
-      let conversation;
+      let conversation: any;
       
       if (conversationId) {
         // Mevcut konuşmayı güncelle
