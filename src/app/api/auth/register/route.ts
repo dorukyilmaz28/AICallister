@@ -3,10 +3,29 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { verifyTeamNumber } from "@/lib/blueAlliance";
 
-const prisma = new PrismaClient();
+// Prisma client'ı singleton olarak kullan
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export async function POST(req: NextRequest) {
   try {
+    // Database bağlantısını test et
+    try {
+      await prisma.$connect();
+      console.log("Database connected successfully");
+    } catch (dbError) {
+      console.error("Database connection error:", dbError);
+      return NextResponse.json(
+        { error: "Veritabanı bağlantı hatası" },
+        { status: 500 }
+      );
+    }
+
     const { name, email, password, teamNumber } = await req.json();
 
     // Validation
@@ -100,6 +119,11 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error("Registration error:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    });
     return NextResponse.json(
       { error: "Kayıt sırasında bir hata oluştu." },
       { status: 500 }
