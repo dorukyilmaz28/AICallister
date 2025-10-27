@@ -20,8 +20,12 @@ export async function POST(req: NextRequest) {
       console.log("Database connected successfully");
     } catch (dbError) {
       console.error("Database connection error:", dbError);
+      console.error("DATABASE_URL:", process.env.DATABASE_URL ? "Set" : "Not set");
       return NextResponse.json(
-        { error: "Veritabanı bağlantı hatası" },
+        { 
+          error: "Veritabanı bağlantı hatası. Lütfen Vercel'de PostgreSQL database ekleyin.",
+          details: process.env.NODE_ENV === "development" ? dbError : undefined
+        },
         { status: 500 }
       );
     }
