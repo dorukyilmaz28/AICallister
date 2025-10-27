@@ -61,8 +61,8 @@ export async function POST(req: NextRequest) {
       ...messages.slice(-2) // Son 2 mesaj
     ];
 
-    // API key'i environment variable'dan al (geçici olarak hardcode)
-    const apiKey = process.env.OPENROUTER_API_KEY || "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";
+    // API key'i environment variable'dan al
+    const apiKey = process.env.OPENROUTER_API_KEY;
     
     console.log("=== DEBUG INFO ===");
     console.log("All env vars:", Object.keys(process.env).filter(key => key.includes('OPENROUTER')));

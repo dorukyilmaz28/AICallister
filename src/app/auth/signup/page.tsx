@@ -2,17 +2,53 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bot, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Bot, Mail, Lock, Eye, EyeOff, User, Users } from "lucide-react";
 
 export default function SignUp() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [teamNumber, setTeamNumber] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [teamVerification, setTeamVerification] = useState<{ isValid: boolean; teamName?: string; error?: string } | null>(null);
+
+  const verifyTeamNumber = async (teamNum: string) => {
+    if (!teamNum || teamNum.length < 3) {
+      setTeamVerification(null);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/auth/verify-team", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ teamNumber: teamNum }),
+      });
+
+      const data = await response.json();
+      setTeamVerification(data);
+    } catch (error) {
+      setTeamVerification({ isValid: false, error: "Bağlantı hatası" });
+    }
+  };
+
+  const handleTeamNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTeamNumber(value);
+    
+    // Debounce the verification
+    setTimeout(() => {
+      if (value === teamNumber) {
+        verifyTeamNumber(value);
+      }
+    }, 500);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +77,7 @@ export default function SignUp() {
           name,
           email,
           password,
+          teamNumber,
         }),
       });
 
@@ -122,6 +159,36 @@ export default function SignUp() {
                   placeholder="ornek@email.com"
                 />
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="teamNumber" className="block text-sm font-medium text-white/80 mb-2">
+                FRC Takım Numarası
+              </label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50" />
+                <input
+                  id="teamNumber"
+                  type="text"
+                  value={teamNumber}
+                  onChange={handleTeamNumberChange}
+                  required
+                  className="w-full pl-10 pr-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                  placeholder="9024"
+                />
+              </div>
+              {teamVerification && (
+                <div className={`mt-2 text-sm ${
+                  teamVerification.isValid 
+                    ? 'text-green-300' 
+                    : 'text-red-300'
+                }`}>
+                  {teamVerification.isValid 
+                    ? `✅ ${teamVerification.teamName}` 
+                    : `❌ ${teamVerification.error}`
+                  }
+                </div>
+              )}
             </div>
 
             <div>

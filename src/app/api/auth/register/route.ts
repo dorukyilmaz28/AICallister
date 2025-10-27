@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { verifyTeamNumber } from "@/lib/blueAlliance";
 
 const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, teamNumber } = await req.json();
 
     // Validation
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !teamNumber) {
       return NextResponse.json(
         { error: "Tüm alanlar zorunludur." },
         { status: 400 }
@@ -19,6 +20,15 @@ export async function POST(req: NextRequest) {
     if (password.length < 6) {
       return NextResponse.json(
         { error: "Şifre en az 6 karakter olmalıdır." },
+        { status: 400 }
+      );
+    }
+
+    // Verify team number with Blue Alliance API
+    const teamVerification = await verifyTeamNumber(teamNumber);
+    if (!teamVerification.isValid) {
+      return NextResponse.json(
+        { error: teamVerification.error || "Geçersiz takım numarası" },
         { status: 400 }
       );
     }
@@ -44,6 +54,31 @@ export async function POST(req: NextRequest) {
         name,
         email,
         password: hashedPassword,
+        teamNumber,
+      },
+    });
+
+    // Find or create team
+    let team = await prisma.team.findFirst({
+      where: { teamNumber },
+    });
+
+    if (!team) {
+      team = await prisma.team.create({
+        data: {
+          name: teamVerification.team?.nickname || teamVerification.team?.name || `Team ${teamNumber}`,
+          teamNumber,
+          description: `${teamVerification.team?.city}, ${teamVerification.team?.state_prov}`,
+        },
+      });
+    }
+
+    // Add user to team as member
+    await prisma.teamMember.create({
+      data: {
+        userId: user.id,
+        teamId: team.id,
+        role: "member",
       },
     });
 

@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, MessageSquare, Settings, Calendar, Bot, ArrowLeft, Send } from "lucide-react";
+import { User, LogOut, MessageSquare, Settings, Calendar, Bot, ArrowLeft, Send, Trash2 } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -35,6 +35,7 @@ export default function ConversationDetail() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -67,6 +68,32 @@ export default function ConversationDetail() {
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/" });
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!conversationId) return;
+    
+    const confirmed = window.confirm("Bu konuşmayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.");
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        router.push("/profile");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Konuşma silinirken hata oluştu.");
+      }
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      setError("Konuşma silinirken hata oluştu.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -142,6 +169,14 @@ export default function ConversationDetail() {
             </h1>
           </div>
           <div className="flex items-center space-x-3">
+            <button
+              onClick={handleDeleteConversation}
+              disabled={isDeleting}
+              className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200 disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>{isDeleting ? "Siliniyor..." : "Konuşmayı Sil"}</span>
+            </button>
             <Link
               href="/chat"
               className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"

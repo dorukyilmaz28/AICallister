@@ -69,10 +69,52 @@ export async function GET(
       messages: formattedMessages,
     });
 
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Oturum açmanız gerekiyor." },
+        { status: 401 }
+      );
+    }
+
+    const { id: conversationId } = await params;
+
+    // Konuşmanın kullanıcıya ait olduğunu kontrol et
+    const conversation = await prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+        userId: session.user.id,
+      },
+    });
+
+    if (!conversation) {
+      return NextResponse.json(
+        { error: "Konuşma bulunamadı veya silme yetkiniz yok." },
+        { status: 404 }
+      );
+    }
+
+    // Konuşmayı ve ilişkili mesajları sil (cascade delete)
+    await prisma.conversation.delete({
+      where: {
+        id: conversationId,
+      },
+    });
+
+    return NextResponse.json({
+      message: "Konuşma başarıyla silindi.",
+    });
+
   } catch (error) {
-    console.error("Error fetching conversation:", error);
+    console.error("Error deleting conversation:", error);
     return NextResponse.json(
-      { error: "Konuşma yüklenirken hata oluştu." },
+      { error: "Konuşma silinirken hata oluştu." },
       { status: 500 }
     );
   }

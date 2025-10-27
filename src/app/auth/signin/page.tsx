@@ -27,7 +27,7 @@ export default function SignIn() {
       if (result?.error) {
         setError("Email veya şifre hatalı!");
       } else {
-        window.location.href = "/chat";
+        window.location.href = "/team-auto-join";
       }
     } catch (error) {
       setError("Bir hata oluştu. Lütfen tekrar deneyin.");
