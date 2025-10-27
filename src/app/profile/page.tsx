@@ -127,7 +127,7 @@ export default function Profile() {
                 <h2 className="text-2xl font-bold text-white">{session.user?.name}</h2>
                 <p className="text-white/70">{session.user?.email}</p>
                 <p className="text-white/50 text-sm">
-                  {conversations.length} konuşma • Üye olma: {formatDate(session.user?.createdAt || new Date().toISOString())}
+                  {conversations.length} konuşma
                 </p>
               </div>
             </div>
