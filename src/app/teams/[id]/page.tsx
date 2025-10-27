@@ -65,6 +65,17 @@ export default function TeamDetailPage() {
     }
   }, [session, status, router, teamId]);
 
+  // Auto-refresh mesajları her 3 saniyede bir
+  useEffect(() => {
+    if (!teamId) return;
+
+    const interval = setInterval(() => {
+      fetchMessages();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [teamId]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -80,9 +91,12 @@ export default function TeamDetailPage() {
         const data = await response.json();
         setTeam(data.team);
         setUserRole(data.userRole);
-        // Chats array'ini kontrol et ve reverse işlemini güvenli yap
+        // Chats array'ini kontrol et ve sırala
         const chats = data.team?.chats || [];
-        setMessages(chats.reverse()); // Reverse to show oldest first
+        const sortedChats = chats.sort((a: any, b: any) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        setMessages(sortedChats);
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Takım bulunamadı.");
@@ -117,7 +131,12 @@ export default function TeamDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setMessages([...messages, data.message]);
+        // Mesajı local state'e ekle ve sırala
+        const newMessages = [...messages, data.message].sort((a: any, b: any) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        setMessages(newMessages);
+        // Auto-refresh zaten çalışıyor, gereksiz fetch kaldırıldı
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Mesaj gönderilirken hata oluştu.");
@@ -127,6 +146,22 @@ export default function TeamDetailPage() {
       setError("Mesaj gönderilirken hata oluştu.");
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const response = await fetch(`/api/teams/${teamId}/chat`);
+      if (response.ok) {
+        const data = await response.json();
+        // Mesajları tarihe göre sırala (en eski en üstte)
+        const sortedMessages = (data.messages || []).sort((a: any, b: any) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        setMessages(sortedMessages);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
     }
   };
 
