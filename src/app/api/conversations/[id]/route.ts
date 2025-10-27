@@ -69,6 +69,15 @@ export async function GET(
       messages: formattedMessages,
     });
 
+  } catch (error) {
+    console.error("Error fetching conversation:", error);
+    return NextResponse.json(
+      { error: "Konuşma yüklenirken hata oluştu." },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
