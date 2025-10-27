@@ -13,7 +13,8 @@ NEXTAUTH_SECRET="your-secret-key-here"
 NEXTAUTH_URL="http://localhost:3000"
 
 # OpenRouter API
-OPENROUTER_API_KEY="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"
+# OpenRouter API
+OPENROUTER_API_KEY="your-openrouter-api-key-here"
 ```
 
 ## Vercel Deployment
@@ -26,9 +27,9 @@ OPENROUTER_API_KEY="sk-or-v1-372494fb7ac08f837da0ffd237359fda61021c4dfc9c4fcf5ee
 Add these environment variables in your Vercel dashboard:
 
 - `DATABASE_URL`: Your PostgreSQL connection string
-- `NEXTAUTH_SECRET`: Use this secure secret: `tRxk0KcjgChp2qr7H31tG+3gfzm2ChudAUreJGX9P74=`
+- `NEXTAUTH_SECRET`: Generate a secure secret (use `openssl rand -base64 32`)
 - `NEXTAUTH_URL`: Your Vercel app URL (e.g., `https://your-app.vercel.app`)
-- `OPENROUTER_API_KEY`: `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`
+- `OPENROUTER_API_KEY`: `your-openrouter-api-key-here`
 
 ### 3. Database Migration
 After setting up the database, run:
