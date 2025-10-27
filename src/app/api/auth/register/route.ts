@@ -14,22 +14,6 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export async function POST(req: NextRequest) {
   try {
-    // Database bağlantısını test et
-    try {
-      await prisma.$connect();
-      console.log("Database connected successfully");
-    } catch (dbError) {
-      console.error("Database connection error:", dbError);
-      console.error("DATABASE_URL:", process.env.DATABASE_URL ? "Set" : "Not set");
-      return NextResponse.json(
-        { 
-          error: "Veritabanı bağlantı hatası. Lütfen Vercel'de PostgreSQL database ekleyin.",
-          details: process.env.NODE_ENV === "development" ? dbError : undefined
-        },
-        { status: 500 }
-      );
-    }
-
     const { name, email, password, teamNumber } = await req.json();
 
     // Validation
