@@ -175,44 +175,32 @@ export async function POST(req: NextRequest) {
       
       if (conversationId) {
         // Mevcut konuşmayı güncelle
-        conversation = await prisma.conversation.findFirst({
-          where: {
-            id: conversationId,
-            userId: session.user.id,
-          },
-        });
+        conversation = await conversationDb.findById(conversationId);
         
         if (conversation) {
           // Yeni mesajları ekle
-          await prisma.message.createMany({
-            data: finalMessages.slice(-2).map((msg) => ({
+          for (const msg of finalMessages.slice(-2)) {
+            await conversationDb.addMessage(conversationId, {
               role: msg.role,
-              content: msg.content,
-              conversationId: conversation.id,
-            })),
-          });
-          
-          // Konuşmayı güncelle
-          await prisma.conversation.update({
-            where: { id: conversation.id },
-            data: { updatedAt: new Date() },
-          });
+              content: msg.content
+            });
+          }
         }
       } else {
         // Yeni konuşma oluştur
-        conversation = await prisma.conversation.create({
-          data: {
-            title: finalMessages[0]?.content?.substring(0, 50) + "..." || "Yeni Konuşma",
-            context,
-            userId: session.user.id,
-            messages: {
-              create: finalMessages.map((msg) => ({
-                role: msg.role,
-                content: msg.content,
-              })),
-            },
-          },
+        conversation = await conversationDb.create({
+          userId: session.user.id,
+          title: finalMessages[0]?.content?.substring(0, 50) + "..." || "Yeni Konuşma",
+          context
         });
+        
+        // Mesajları ekle
+        for (const msg of finalMessages) {
+          await conversationDb.addMessage(conversation.id, {
+            role: msg.role,
+            content: msg.content
+          });
+        }
       }
       
       return NextResponse.json({

@@ -214,6 +214,19 @@ export const conversationDb = {
     
     writeFile(CONVERSATIONS_FILE, conversations);
     return newMessage;
+  },
+
+  async delete(conversationId: string, userId: string) {
+    const conversations = readFile(CONVERSATIONS_FILE);
+    const conversationIndex = conversations.findIndex((c: any) => c.id === conversationId && c.userId === userId);
+    
+    if (conversationIndex === -1) {
+      throw new Error('Konuşma bulunamadı veya silme yetkiniz yok.');
+    }
+
+    conversations.splice(conversationIndex, 1);
+    writeFile(CONVERSATIONS_FILE, conversations);
+    return true;
   }
 };
 

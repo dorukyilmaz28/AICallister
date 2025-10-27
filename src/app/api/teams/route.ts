@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { teamDb, teamMemberDb, userDb } from "@/lib/database";
 
 // Takım oluşturma
 export async function POST(req: NextRequest) {
@@ -27,31 +25,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Takım oluştur
-    const team = await prisma.team.create({
-      data: {
-        name,
-        description,
-        teamNumber,
-        members: {
-          create: {
-            userId: session.user.id,
-            role: "captain", // Takım oluşturan kişi otomatik olarak kaptan olur
-          },
-        },
-      },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-        },
-      },
+    const team = await teamDb.create({
+      name,
+      description,
+      teamNumber
+    });
+
+    // Takım oluşturan kişiyi kaptan olarak ekle
+    await teamMemberDb.create({
+      userId: session.user.id,
+      teamId: team.id,
+      role: "captain"
     });
 
     return NextResponse.json({
@@ -80,40 +64,43 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const teams = await prisma.team.findMany({
-      where: {
-        members: {
-          some: {
-            userId: session.user.id,
-          },
-        },
-      },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-        },
-        _count: {
-          select: {
-            members: true,
-            chats: true,
-          },
-        },
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
-    });
+    // Kullanıcının üye olduğu takımları bul
+    const userMemberships = await teamMemberDb.findByUserId(session.user.id);
+    const teamIds = userMemberships.map(m => m.teamId);
+    
+    // Tüm takımları getir ve filtrele
+    const allTeams = await teamDb.getAll();
+    const userTeams = allTeams.filter(team => teamIds.includes(team.id));
+
+    // Her takım için üye sayısını hesapla
+    const teamsWithCounts = await Promise.all(
+      userTeams.map(async (team) => {
+        const members = await teamMemberDb.findByTeamId(team.id);
+        return {
+          ...team,
+          members: members.map(async (member) => {
+            const user = await userDb.findById(member.userId);
+            return {
+              id: member.id,
+              role: member.role,
+              joinedAt: member.joinedAt,
+              user: user ? {
+                id: user.id,
+                name: user.name,
+                email: user.email
+              } : null
+            };
+          }),
+          _count: {
+            members: members.length,
+            chats: 0 // Team chat sayısını hesaplamak için ayrı fonksiyon gerekebilir
+          }
+        };
+      })
+    );
 
     return NextResponse.json({
-      teams,
+      teams: teamsWithCounts,
     });
 
   } catch (error) {

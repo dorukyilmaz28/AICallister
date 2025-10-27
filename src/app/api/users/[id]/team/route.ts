@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { teamMemberDb, teamDb } from "@/lib/database";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,26 +25,30 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     // Kullanıcının takımını bul
-    const teamMember = await prisma.teamMember.findFirst({
-      where: {
-        userId: userId,
-      },
-      include: {
-        team: true,
-      },
-    });
-
-    if (!teamMember) {
+    const userMemberships = await teamMemberDb.findByUserId(userId);
+    
+    if (userMemberships.length === 0) {
       return NextResponse.json(
         { error: "Kullanıcı hiçbir takımda değil." },
         { status: 404 }
       );
     }
 
+    // İlk takımını al (birden fazla takımda olabilir)
+    const teamMember = userMemberships[0];
+    const team = await teamDb.findById(teamMember.teamId);
+
+    if (!team) {
+      return NextResponse.json(
+        { error: "Takım bulunamadı." },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json({
-      teamId: teamMember.team.id,
-      teamName: teamMember.team.name,
-      teamNumber: teamMember.team.teamNumber,
+      teamId: team.id,
+      teamName: team.name,
+      teamNumber: team.teamNumber,
       userRole: teamMember.role,
     });
 

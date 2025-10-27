@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { conversationDb } from "@/lib/database";
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,28 +14,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const conversations = await prisma.conversation.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      include: {
-        messages: {
-          select: {
-            id: true,
-          },
-        },
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
-    });
+    const conversations = await conversationDb.findByUserId(session.user.id);
 
     const formattedConversations = conversations.map((conv) => ({
       id: conv.id,
       title: conv.title,
       context: conv.context,
-      createdAt: conv.createdAt.toISOString(),
-      messageCount: conv.messages.length,
+      createdAt: conv.createdAt,
+      messageCount: conv.messages?.length || 0,
     }));
 
     return NextResponse.json({

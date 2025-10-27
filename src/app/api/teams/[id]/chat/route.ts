@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { teamDb, teamMemberDb, teamChatDb, userDb } from "@/lib/database";
 
 // Takım sohbetine mesaj gönderme
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -28,16 +26,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Kullanıcının takımda olup olmadığını kontrol et
-    const teamMember = await prisma.teamMember.findUnique({
-      where: {
-        userId_teamId: {
-          userId: session.user.id,
-          teamId: teamId,
-        },
-      },
-    });
+    const members = await teamMemberDb.findByTeamId(teamId);
+    const isMember = members.some(m => m.userId === session.user.id);
 
-    if (!teamMember) {
+    if (!isMember) {
       return NextResponse.json(
         { error: "Bu takımın üyesi değilsiniz." },
         { status: 403 }
@@ -45,25 +37,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Mesajı kaydet
-    const teamChat = await prisma.teamChat.create({
-      data: {
-        content: content.trim(),
-        userId: session.user.id,
-        teamId: teamId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
+    const chatMessage = await teamChatDb.create({
+      userId: session.user.id,
+      teamId: teamId,
+      content: content.trim()
     });
 
+    // Kullanıcı bilgilerini getir
+    const user = await userDb.findById(session.user.id);
+
     return NextResponse.json({
-      message: teamChat,
+      message: {
+        ...chatMessage,
+        user: user ? {
+          id: user.id,
+          name: user.name,
+          email: user.email
+        } : null
+      }
     });
 
   } catch (error) {
@@ -75,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-// Takım sohbet geçmişini getir
+// Takım sohbetini getir
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
@@ -90,49 +81,42 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id: teamId } = await params;
 
     // Kullanıcının takımda olup olmadığını kontrol et
-    const teamMember = await prisma.teamMember.findUnique({
-      where: {
-        userId_teamId: {
-          userId: session.user.id,
-          teamId: teamId,
-        },
-      },
-    });
+    const members = await teamMemberDb.findByTeamId(teamId);
+    const isMember = members.some(m => m.userId === session.user.id);
 
-    if (!teamMember) {
+    if (!isMember) {
       return NextResponse.json(
         { error: "Bu takımın üyesi değilsiniz." },
         { status: 403 }
       );
     }
 
-    // Sohbet geçmişini getir
-    const messages = await prisma.teamChat.findMany({
-      where: {
-        teamId: teamId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    });
+    // Takım sohbetini getir
+    const chatMessages = await teamChatDb.findByTeamId(teamId);
+
+    // Her mesaj için kullanıcı bilgilerini getir
+    const messagesWithUsers = await Promise.all(
+      chatMessages.map(async (message) => {
+        const user = await userDb.findById(message.userId);
+        return {
+          ...message,
+          user: user ? {
+            id: user.id,
+            name: user.name,
+            email: user.email
+          } : null
+        };
+      })
+    );
 
     return NextResponse.json({
-      messages,
+      messages: messagesWithUsers
     });
 
   } catch (error) {
-    console.error("Error fetching team messages:", error);
+    console.error("Error fetching team chat:", error);
     return NextResponse.json(
-      { error: "Sohbet geçmişi yüklenirken hata oluştu." },
+      { error: "Takım sohbeti yüklenirken hata oluştu." },
       { status: 500 }
     );
   }
