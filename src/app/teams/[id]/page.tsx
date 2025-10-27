@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash } from "lucide-react";
+import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash, Info } from "lucide-react";
 
 interface TeamMember {
   id: string;
@@ -52,6 +52,7 @@ export default function TeamDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+  const [showTeamInfo, setShowTeamInfo] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -291,53 +292,91 @@ export default function TeamDetailPage() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
       {/* Header */}
-      <div className="border-b border-white/20 p-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+      <div className="border-b border-white/20 p-3 md:p-4">
+        <div className="container mx-auto">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between mb-3 md:hidden">
             <Link
               href="/teams"
               className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Takımlara Dön</span>
+              <span className="text-sm">Geri</span>
             </Link>
-            <div className="h-6 w-px bg-white/30"></div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleSignOut}
+                className="p-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
+                title="Çıkış Yap"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden md:flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Link
+                href="/teams"
+                className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Takımlara Dön</span>
+              </Link>
+              <div className="h-6 w-px bg-white/30"></div>
+              <img
+                src="/8f28b76859c1479d839d270409be3586.jpg"
+                alt="Callister Logo"
+                className="w-10 h-10 object-cover rounded-xl"
+              />
+              <div>
+                <h1 className="text-xl font-bold text-white">{team?.name}</h1>
+                {team?.teamNumber && (
+                  <p className="text-white/60 text-sm">#{team.teamNumber}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Link
+                href="/chat"
+                className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+              >
+                <Bot className="w-4 h-4" />
+                <span>AI Sohbet</span>
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Çıkış Yap</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Team Info */}
+          <div className="md:hidden flex items-center space-x-3">
             <img
               src="/8f28b76859c1479d839d270409be3586.jpg"
               alt="Callister Logo"
-              className="w-10 h-10 object-cover rounded-xl"
+              className="w-8 h-8 object-cover rounded-lg"
             />
             <div>
-              <h1 className="text-xl font-bold text-white">{team?.name}</h1>
+              <h1 className="text-lg font-bold text-white">{team?.name}</h1>
               {team?.teamNumber && (
-                <p className="text-white/60 text-sm">#{team.teamNumber}</p>
+                <p className="text-white/60 text-xs">#{team.teamNumber}</p>
               )}
             </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Link
-              href="/chat"
-              className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
-            >
-              <Bot className="w-4 h-4" />
-              <span>AI Sohbet</span>
-            </Link>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Çıkış Yap</span>
-            </button>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Team Info Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 sticky top-4">
+      <div className="container mx-auto px-3 md:px-4 py-4 md:py-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
+          {/* Team Info Sidebar - Hidden on mobile */}
+          <div className="hidden lg:block lg:col-span-1">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/20 sticky top-4">
               <h2 className="text-lg font-bold text-white mb-4">Takım Bilgileri</h2>
               
               {team?.description && (
@@ -385,26 +424,98 @@ export default function TeamDetailPage() {
             </div>
           </div>
 
-          {/* Chat Area */}
+          {/* Chat Area - Full width on mobile */}
           <div className="lg:col-span-2">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 h-[600px] flex flex-col">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 h-[500px] md:h-[600px] flex flex-col">
               {/* Chat Header with Clear All Button */}
-              <div className="flex items-center justify-between p-4 border-b border-white/20">
-                <h3 className="text-lg font-bold text-white">Takım Sohbeti</h3>
+              <div className="flex items-center justify-between p-3 md:p-4 border-b border-white/20">
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-base md:text-lg font-bold text-white">Takım Sohbeti</h3>
+                  {/* Mobile Team Info Button */}
+                  <button
+                    onClick={() => setShowTeamInfo(!showTeamInfo)}
+                    className="lg:hidden p-1 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+                    title="Takım bilgileri"
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+                </div>
                 {messages.length > 0 && (
                   <button
                     onClick={handleClearAllMessages}
-                    className="flex items-center space-x-2 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200 text-sm"
+                    className="flex items-center space-x-1 md:space-x-2 px-2 md:px-3 py-1 md:py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200 text-xs md:text-sm"
                     title="Tüm mesajları sil"
                   >
-                    <Trash className="w-4 h-4" />
-                    <span>Tümünü Sil</span>
+                    <Trash className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="hidden sm:inline">Tümünü Sil</span>
+                    <span className="sm:hidden">Sil</span>
                   </button>
                 )}
               </div>
               
+              {/* Mobile Team Info Dropdown */}
+              {showTeamInfo && (
+                <div className="lg:hidden border-t border-white/20 p-4 bg-white/5">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-white">Takım Bilgileri</h4>
+                      <button
+                        onClick={() => setShowTeamInfo(false)}
+                        className="text-white/60 hover:text-white"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    
+                    {team?.description && (
+                      <p className="text-white/70 text-xs">{team.description}</p>
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-2 text-xs text-white/60">
+                      <div className="flex items-center space-x-1">
+                        <Users className="w-3 h-3" />
+                        <span>{team?.members.length} üye</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <MessageSquare className="w-3 h-3" />
+                        <span>{team?.chats.length} mesaj</span>
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-white/50">
+                      Oluşturuldu: {team && formatDate(team.createdAt)}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h5 className="text-xs font-bold text-white">Takım Üyeleri</h5>
+                      {team?.members.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center space-x-2 p-2 bg-white/10 rounded-lg"
+                        >
+                          <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                            <User className="w-3 h-3 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-xs font-medium truncate">
+                              {member.user.name}
+                            </p>
+                            <div className="flex items-center space-x-1">
+                              {getRoleIcon(member.role)}
+                              <span className="text-white/60 text-xs">
+                                {getRoleLabel(member.role)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 md:space-y-4">
                 {messages.length === 0 ? (
                   <div className="text-center py-12">
                     <MessageSquare className="w-16 h-16 text-white/30 mx-auto mb-4" />
@@ -418,24 +529,25 @@ export default function TeamDetailPage() {
                       className={`flex ${message.user.id === session.user?.id ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`flex items-start space-x-3 max-w-3xl ${
+                        className={`flex items-start space-x-2 md:space-x-3 max-w-xs md:max-w-3xl ${
                           message.user.id === session.user?.id ? "flex-row-reverse space-x-reverse" : ""
                         }`}
                       >
-                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="w-4 h-4 text-white" />
+                        <div className="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="w-3 h-3 md:w-4 md:h-4 text-white" />
                         </div>
                         <div
-                          className={`px-4 py-3 rounded-2xl max-w-full transition-colors duration-200 group relative ${
+                          className={`px-3 md:px-4 py-2 md:py-3 rounded-xl md:rounded-2xl max-w-full transition-colors duration-200 group relative ${
                             message.user.id === session.user?.id
                               ? "bg-white/30 backdrop-blur-sm text-white border border-white/40"
                               : "bg-white/20 backdrop-blur-sm text-white border border-white/30"
                           }`}
                         >
-                          <div className="text-sm font-medium text-white/80 mb-1">
-                            {message.user.name} ({message.user.email})
+                          <div className="text-xs md:text-sm font-medium text-white/80 mb-1">
+                            <span className="hidden sm:inline">{message.user.name} ({message.user.email})</span>
+                            <span className="sm:hidden">{message.user.name}</span>
                           </div>
-                          <div className="text-sm whitespace-pre-wrap">
+                          <div className="text-xs md:text-sm whitespace-pre-wrap">
                             {message.content}
                           </div>
                           <div className="flex items-center justify-between mt-2">
@@ -462,22 +574,22 @@ export default function TeamDetailPage() {
               </div>
 
               {/* Message Input */}
-              <div className="border-t border-white/20 p-4">
-                <form onSubmit={handleSendMessage} className="flex space-x-3">
+              <div className="border-t border-white/20 p-3 md:p-4">
+                <form onSubmit={handleSendMessage} className="flex space-x-2 md:space-x-3">
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Takımınıza mesaj yazın..."
-                    className="flex-1 px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    placeholder="Mesaj yazın..."
+                    className="flex-1 px-3 md:px-4 py-2 md:py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm md:text-base"
                     disabled={isSending}
                   />
                   <button
                     type="submit"
                     disabled={!newMessage.trim() || isSending}
-                    className="px-4 py-2 bg-white/30 hover:bg-white/40 border border-white/40 rounded-lg text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 md:px-4 py-2 bg-white/30 hover:bg-white/40 border border-white/40 rounded-lg text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                 </form>
               </div>
