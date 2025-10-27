@@ -14,6 +14,18 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export async function POST(req: NextRequest) {
   try {
+    // Database'i initialize et
+    try {
+      await prisma.$connect();
+      console.log("Database connected successfully");
+    } catch (dbError) {
+      console.error("Database connection error:", dbError);
+      return NextResponse.json(
+        { error: "Database bağlantı hatası" },
+        { status: 500 }
+      );
+    }
+
     const { name, email, password, teamNumber } = await req.json();
 
     // Validation
