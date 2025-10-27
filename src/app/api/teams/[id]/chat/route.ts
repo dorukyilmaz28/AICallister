@@ -148,7 +148,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-// Mesaj silme
+// Mesaj silme veya tüm mesajları temizleme
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
@@ -161,14 +161,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     const { id: teamId } = await params;
-    const { messageId } = await req.json();
-
-    if (!messageId) {
-      return NextResponse.json(
-        { error: "Mesaj ID gereklidir." },
-        { status: 400 }
-      );
-    }
+    const { messageId, clearAll } = await req.json();
 
     // Kullanıcının takımda olup olmadığını kontrol et
     const members = await teamMemberDb.findByTeamId(teamId);
@@ -181,12 +174,26 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       );
     }
 
-    // Mesajı sil
-    await teamChatDb.delete(messageId, session.user.id);
+    if (clearAll) {
+      // Tüm mesajları temizle
+      await teamChatDb.clearAll(teamId, session.user.id);
+      return NextResponse.json({
+        message: "Tüm mesajlar başarıyla silindi."
+      });
+    } else {
+      // Tek mesaj sil
+      if (!messageId) {
+        return NextResponse.json(
+          { error: "Mesaj ID gereklidir." },
+          { status: 400 }
+        );
+      }
 
-    return NextResponse.json({
-      message: "Mesaj başarıyla silindi."
-    });
+      await teamChatDb.delete(messageId, session.user.id);
+      return NextResponse.json({
+        message: "Mesaj başarıyla silindi."
+      });
+    }
 
   } catch (error) {
     console.error("Error deleting message:", error);

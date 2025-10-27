@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2 } from "lucide-react";
+import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash } from "lucide-react";
 
 interface TeamMember {
   id: string;
@@ -198,6 +198,35 @@ export default function TeamDetailPage() {
     }
   };
 
+  const handleClearAllMessages = async () => {
+    if (!confirm("TÜM MESAJLARI silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz!")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/teams/${teamId}/chat`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clearAll: true,
+        }),
+      });
+
+      if (response.ok) {
+        // Tüm mesajları local state'den kaldır
+        setMessages([]);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Mesajlar silinirken hata oluştu.");
+      }
+    } catch (error) {
+      console.error("Error clearing all messages:", error);
+      setError("Mesajlar silinirken hata oluştu.");
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("tr-TR", {
       day: "numeric",
@@ -359,6 +388,21 @@ export default function TeamDetailPage() {
           {/* Chat Area */}
           <div className="lg:col-span-2">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 h-[600px] flex flex-col">
+              {/* Chat Header with Clear All Button */}
+              <div className="flex items-center justify-between p-4 border-b border-white/20">
+                <h3 className="text-lg font-bold text-white">Takım Sohbeti</h3>
+                {messages.length > 0 && (
+                  <button
+                    onClick={handleClearAllMessages}
+                    className="flex items-center space-x-2 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200 text-sm"
+                    title="Tüm mesajları sil"
+                  >
+                    <Trash className="w-4 h-4" />
+                    <span>Tümünü Sil</span>
+                  </button>
+                )}
+              </div>
+              
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.length === 0 ? (

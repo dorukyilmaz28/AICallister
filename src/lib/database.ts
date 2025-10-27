@@ -276,5 +276,26 @@ export const teamChatDb = {
     });
 
     return true;
+  },
+
+  async clearAll(teamId: string, userId: string) {
+    // Kullanıcının takımda olup olmadığını kontrol et
+    const member = await prisma.teamMember.findFirst({
+      where: {
+        teamId: teamId,
+        userId: userId
+      }
+    });
+
+    if (!member) {
+      throw new Error('Bu takımın üyesi değilsiniz.');
+    }
+
+    // Takımdaki tüm mesajları sil
+    await prisma.teamChat.deleteMany({
+      where: { teamId: teamId }
+    });
+
+    return true;
   }
 };
