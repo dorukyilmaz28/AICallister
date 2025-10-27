@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify team number with Blue Alliance API (optional - don't fail if API is down)
-    let teamVerification = { isValid: true, team: null, error: null };
+    let teamVerification: { isValid: boolean; team?: any; error?: string } = { isValid: true, team: null, error: null };
     try {
       teamVerification = await verifyTeamNumber(teamNumber);
       if (!teamVerification.isValid) {
