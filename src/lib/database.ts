@@ -78,7 +78,10 @@ export const userDb = {
 
   async findByEmail(email: string) {
     const users = readFile(USERS_FILE);
-    return users.find((u: any) => u.email === email);
+    console.log("All users:", users);
+    const user = users.find((u: any) => u.email === email);
+    console.log("Found user:", user);
+    return user;
   },
 
   async findById(id: string) {

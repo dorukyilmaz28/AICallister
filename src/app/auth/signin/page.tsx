@@ -24,10 +24,16 @@ export default function SignIn() {
         redirect: false,
       });
 
+      console.log("Sign in result:", result);
+
       if (result?.error) {
+        console.error("Sign in error:", result.error);
         setError("Email veya şifre hatalı!");
-      } else {
+      } else if (result?.ok) {
+        console.log("Sign in successful, redirecting...");
         window.location.href = "/team-auto-join";
+      } else {
+        setError("Beklenmeyen bir hata oluştu.");
       }
     } catch (error) {
       setError("Bir hata oluştu. Lütfen tekrar deneyin.");

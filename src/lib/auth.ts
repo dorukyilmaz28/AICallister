@@ -12,28 +12,37 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("Missing credentials")
           return null
         }
 
-        const user = await userDb.findByEmail(credentials.email)
+        try {
+          const user = await userDb.findByEmail(credentials.email)
 
-        if (!user) {
+          if (!user) {
+            console.log("User not found:", credentials.email)
+            return null
+          }
+
+          const isPasswordValid = await userDb.verifyPassword(
+            credentials.password,
+            user.password
+          )
+
+          if (!isPasswordValid) {
+            console.log("Invalid password for user:", credentials.email)
+            return null
+          }
+
+          console.log("User authenticated successfully:", user.email)
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          }
+        } catch (error) {
+          console.error("Authorization error:", error)
           return null
-        }
-
-        const isPasswordValid = await userDb.verifyPassword(
-          credentials.password,
-          user.password
-        )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
         }
       }
     })
@@ -60,5 +69,5 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/signin", // Hata durumunda signin sayfasına yönlendir
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === "development", // Development'ta debug açık
+  debug: true, // Debug'ı açık tutuyoruz sorunları görmek için
 }
