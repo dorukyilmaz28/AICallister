@@ -50,25 +50,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Add user to team as member
-    await teamMemberDb.create({
-      userId: user.id,
-      teamId: team.id,
-      role: "member"
-    });
-
-    // Takım numarasına göre otomatik bildirim gönder
+    // Takım numarasına göre otomatik bildirim gönder (katılım isteği olarak)
     try {
-      const existingTeam = await teamDb.findByTeamNumber(teamNumber);
-      if (existingTeam) {
-        await teamNotificationDb.create(
-          existingTeam.id,
-          "member_joined",
-          "Yeni Üye Katıldı",
-          `${name} (${email}) takım numarası ${teamNumber} ile sisteme kayıt oldu ve takıma katıldı.`,
-          user.id
-        );
-      }
+      await teamNotificationDb.create(
+        team.id,
+        "join_request",
+        "Yeni Katılım İsteği",
+        `${name} (${email}) takım numarası ${teamNumber} ile sisteme kayıt oldu ve takıma katılmak istiyor.`,
+        user.id
+      );
     } catch (notificationError) {
       console.error("Notification error:", notificationError);
       // Bildirim hatası kayıt işlemini etkilemesin
