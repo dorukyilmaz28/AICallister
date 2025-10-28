@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { Bot, Users, ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
-export default function CreateTeam() {
+function CreateTeamForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { session, isLoading } = useAuthGuard({ requireAuth: true });
@@ -208,5 +208,17 @@ export default function CreateTeam() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateTeam() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
+        <div className="text-white text-xl">Yükleniyor...</div>
+      </div>
+    }>
+      <CreateTeamForm />
+    </Suspense>
   );
 }
