@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { teamDb, teamMemberDb, userDb, teamChatDb, teamJoinRequestDb, teamNotificationDb } from "@/lib/database";
+import { teamDb, teamMemberDb, userDb, teamChatDb, teamJoinRequestDb, teamNotificationDb, prisma } from "@/lib/database";
 
 interface TeamMember {
   id: string;
@@ -16,7 +16,7 @@ interface TeamMember {
   };
 }
 
-// Takıma katılma
+// Takıma katılma (şimdilik direkt üye yap)
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
@@ -51,24 +51,35 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    // Otomatik katılma yerine katılım isteği oluştur
-    try {
-      await teamJoinRequestDb.create(session.user.id, teamId);
-    } catch (e: any) {
-      // Halihazırda pending istek varsa sessiz geç
+    // Zaten takımda mı?
+    const existingMembers = await teamMemberDb.findByTeamId(teamId);
+    const existingMember = existingMembers.find((m: TeamMember) => m.userId === session.user.id);
+
+    if (existingMember) {
+      return NextResponse.json(
+        { message: "Zaten bu takımın üyesisiniz." },
+        { status: 200 }
+      );
     }
 
-    // Takım yöneticilerine bildirim oluştur
+    // Doğrudan üyeliğe ekle
+    await teamMemberDb.create({
+      userId: session.user.id,
+      teamId: teamId,
+      role: "member"
+    });
+
+    // Bilgilendirici bildirim (opsiyonel)
     await teamNotificationDb.create(
       teamId,
-      "join_request",
-      "Yeni Katılım İsteği",
-      `Bir kullanıcı takıma katılmak istiyor.`,
+      "member_joined",
+      "Yeni Üye Katıldı",
+      `Bir kullanıcı takıma katıldı.",
       session.user.id
     );
 
     return NextResponse.json({
-      message: "Katılım isteğiniz gönderildi. Yönetici onayı bekleniyor.",
+      message: "Takıma katıldınız.",
     });
 
   } catch (error) {
@@ -128,12 +139,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // Takım sohbetlerini getir
     const chats = await teamChatDb.findByTeamId(teamId);
 
+    // Kullanıcının bu takım için bekleyen katılım isteği var mı?
+    let pendingJoinRequest = false;
+    if (!isMember && session.user.id) {
+      const existingPending = await prisma.teamJoinRequest.findFirst({
+        where: {
+          teamId: teamId,
+          userId: session.user.id,
+          status: 'pending'
+        }
+      });
+      pendingJoinRequest = !!existingPending;
+    }
+
     return NextResponse.json({
       team: {
         ...team,
         members: membersWithUsers,
         memberCount: members.length,
         isMember,
+        pendingJoinRequest,
         chats: chats || []
       }
     });

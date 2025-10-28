@@ -37,6 +37,8 @@ interface Team {
   updatedAt: string;
   members: TeamMember[];
   chats: TeamChat[];
+  isMember?: boolean;
+  pendingJoinRequest?: boolean;
 }
 
 export default function TeamDetailPage() {
@@ -57,6 +59,28 @@ export default function TeamDetailPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const markAllNotificationsAsRead = async () => {
+    try {
+      await fetch(`/api/teams/${teamId}/notifications`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAllAsRead: true })
+      });
+      setUnreadCount(0);
+    } catch (error) {
+      // ignore
+    }
+  };
+
+  const toggleNotifications = async () => {
+    const willOpen = !showNotifications;
+    setShowNotifications(willOpen);
+    if (willOpen) {
+      await fetchNotifications();
+      await markAllNotificationsAsRead();
+    }
+  };
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -311,6 +335,12 @@ export default function TeamDetailPage() {
       {/* Header */}
       <div className="border-b border-white/20 p-3 md:p-4">
         <div className="container mx-auto">
+          {/* Pending approval banner - Top level */}
+          {!team?.isMember && team?.pendingJoinRequest && (
+            <div className="mb-3 md:mb-4 bg-yellow-500/10 border border-yellow-500/30 text-yellow-200 px-3 py-2 rounded-lg">
+              Katılım isteğiniz gönderildi. Yönetici onayı bekleniyor.
+            </div>
+          )}
           {/* Mobile Header */}
           <div className="flex items-center justify-between mb-3 md:hidden">
             <Link
@@ -468,7 +498,7 @@ export default function TeamDetailPage() {
                   )}
                   {/* Notification Button */}
                   <button
-                    onClick={() => setShowNotifications(!showNotifications)}
+                  onClick={toggleNotifications}
                     className="relative p-1 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-300 hover:text-blue-200 transition-colors duration-200"
                     title="Bildirimler"
                   >
@@ -554,7 +584,7 @@ export default function TeamDetailPage() {
                 </div>
               )}
               
-              {/* Notification Dropdown */}
+              {/* Notification Dropdown (Mobile) */}
               {showNotifications && (
                 <div className="lg:hidden border-t border-white/20 p-4 bg-white/5">
                   <div className="space-y-3">
@@ -575,6 +605,59 @@ export default function TeamDetailPage() {
                       </div>
                     ) : (
                       <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {notifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={`p-3 rounded-lg border ${
+                              notification.isRead 
+                                ? 'bg-white/5 border-white/10' 
+                                : 'bg-blue-500/10 border-blue-500/20'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h5 className="text-white text-sm font-medium mb-1">
+                                  {notification.title}
+                                </h5>
+                                <p className="text-white/70 text-xs mb-2">
+                                  {notification.message}
+                                </p>
+                                <div className="text-white/50 text-xs">
+                                  {formatDate(notification.createdAt)}
+                                </div>
+                              </div>
+                              {!notification.isRead && (
+                                <div className="w-2 h-2 bg-blue-400 rounded-full ml-2 mt-1"></div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Notification Dropdown (Desktop) */}
+              {showNotifications && (
+                <div className="hidden lg:block relative">
+                  <div className="absolute z-20 right-4 top-2 w-96 max-h-96 overflow-y-auto bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-bold text-white">Bildirimler</h4>
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="text-white/60 hover:text-white"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Bell className="w-12 h-12 text-white/30 mx-auto mb-2" />
+                        <p className="text-white/70 text-sm">Henüz bildirim yok</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
                         {notifications.map((notification) => (
                           <div
                             key={notification.id}
