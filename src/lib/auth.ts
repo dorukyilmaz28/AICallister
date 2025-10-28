@@ -41,8 +41,8 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             role: user.role,
             status: user.status,
-            teamId: user.teamId,
-            teamNumber: user.teamNumber
+            teamId: user.teamId || undefined,
+            teamNumber: user.teamNumber || undefined
           }
         } catch (error) {
           console.error("Authorization error:", error)
