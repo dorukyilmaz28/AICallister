@@ -25,7 +25,30 @@ export const userDb = {
         email: userData.email,
         password: hashedPassword,
         teamNumber: userData.teamNumber,
+        role: "member",
+        status: "pending"
       }
+    });
+  },
+
+  async updateStatus(userId: string, status: string) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { status }
+    });
+  },
+
+  async updateRole(userId: string, role: string) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { role }
+    });
+  },
+
+  async updateTeamId(userId: string, teamId: string) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { teamId }
     });
   },
 
@@ -51,7 +74,7 @@ export const userDb = {
 
 // Team işlemleri
 export const teamDb = {
-  async create(teamData: { name: string; teamNumber: string; description?: string }) {
+  async create(teamData: { name: string; teamNumber: string; description?: string; adminId?: string }) {
     // Team number kontrolü
     const existingTeam = await prisma.team.findFirst({
       where: { teamNumber: teamData.teamNumber }
@@ -66,6 +89,25 @@ export const teamDb = {
         name: teamData.name,
         teamNumber: teamData.teamNumber,
         description: teamData.description || '',
+        adminId: teamData.adminId,
+      }
+    });
+  },
+
+  async updateAdmin(teamId: string, adminId: string) {
+    return await prisma.team.update({
+      where: { id: teamId },
+      data: { adminId }
+    });
+  },
+
+  async getTeamMembers(teamId: string) {
+    return await prisma.user.findMany({
+      where: { teamId },
+      include: {
+        teamMemberships: {
+          where: { teamId }
+        }
       }
     });
   },

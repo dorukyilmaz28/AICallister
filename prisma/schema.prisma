@@ -19,6 +19,9 @@ model User {
   name      String?
   password  String
   teamNumber String? // FRC team number (e.g., "9024")
+  teamId    String?  // Hangi takımda olduğu
+  role      String   @default("member") // member, admin
+  status    String   @default("pending") // pending, approved, rejected
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -28,6 +31,8 @@ model User {
   teamChats TeamChat[]
   teamJoinRequests TeamJoinRequest[]
   teamNotifications TeamNotification[]
+  team Team? @relation(fields: [teamId], references: [id])
+  adminTeams Team[] @relation("TeamAdmin")
   
   @@map("users")
 }
@@ -64,7 +69,8 @@ model Team {
   id          String   @id @default(cuid())
   name        String
   description String?
-  teamNumber  String?  // FRC team number (e.g., "1234")
+  teamNumber  String?  @unique // FRC team number (e.g., "1234")
+  adminId     String?  // Takım yöneticisinin ID'si
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -73,13 +79,16 @@ model Team {
   chats   TeamChat[]
   joinRequests TeamJoinRequest[]
   notifications TeamNotification[]
+  users User[] // Takımdaki kullanıcılar
+  admin User? @relation("TeamAdmin", fields: [adminId], references: [id])
   
   @@map("teams")
 }
 
 model TeamMember {
   id        String   @id @default(cuid())
-  role      String   @default("member") // member, captain, mentor
+  role      String   @default("member") // member, admin
+  status    String   @default("approved") // approved, pending, rejected
   joinedAt  DateTime @default(now())
   
   // İlişkiler

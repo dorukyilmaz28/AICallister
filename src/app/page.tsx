@@ -1,7 +1,13 @@
+"use client";
+
 import Link from "next/link";
-import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn } from "lucide-react";
+import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function Home() {
+  const { session, isAuthenticated } = useAuthGuard({ requireAuth: false });
+
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
       {/* Header */}
@@ -18,20 +24,49 @@ export default function Home() {
             </h1>
           </div>
           <div className="flex items-center space-x-3">
-            <Link
-              href="/auth/signin"
-              className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Giriş Yap</span>
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="flex items-center space-x-2 px-4 py-2 bg-white/30 hover:bg-white/40 border border-white/40 rounded-lg text-white transition-colors duration-200"
-            >
-              <User className="w-4 h-4" />
-              <span>Kayıt Ol</span>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                {session?.user.status === "pending" && (
+                  <div className="flex items-center space-x-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-300">
+                    <Shield className="w-4 h-4" />
+                    <span>Onay Bekleniyor</span>
+                  </div>
+                )}
+                {session?.user.role === "admin" && (
+                  <Link
+                    href="/teams/admin"
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-300 hover:text-blue-200 transition-colors duration-200"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Takım Yönetimi</span>
+                  </Link>
+                )}
+                <Link
+                  href="/profile"
+                  className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+                >
+                  <User className="w-4 h-4" />
+                  <span>{session?.user.name}</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth/signin"
+                  className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Giriş Yap</span>
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="flex items-center space-x-2 px-4 py-2 bg-white/30 hover:bg-white/40 border border-white/40 rounded-lg text-white transition-colors duration-200"
+                >
+                  <User className="w-4 h-4" />
+                  <span>Kayıt Ol</span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

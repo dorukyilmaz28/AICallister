@@ -15,6 +15,7 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [teamVerification, setTeamVerification] = useState<{ isValid: boolean; teamName?: string; error?: string } | null>(null);
+  const [showCreateTeam, setShowCreateTeam] = useState(false);
 
   const verifyTeamNumber = async (teamNum: string) => {
     if (!teamNum || teamNum.length < 3) {
@@ -33,8 +34,16 @@ export default function SignUp() {
 
       const data = await response.json();
       setTeamVerification(data);
+      
+      // Eğer takım bulunamadıysa, yeni takım oluşturma seçeneğini göster
+      if (!data.isValid && data.error === "Bu takım numarası bulunamadı.") {
+        setShowCreateTeam(true);
+      } else {
+        setShowCreateTeam(false);
+      }
     } catch (error) {
       setTeamVerification({ isValid: false, error: "Bağlantı hatası" });
+      setShowCreateTeam(false);
     }
   };
 
@@ -187,6 +196,21 @@ export default function SignUp() {
                     ? `✅ ${teamVerification.teamName}` 
                     : `❌ ${teamVerification.error}`
                   }
+                </div>
+              )}
+              
+              {showCreateTeam && (
+                <div className="mt-3 p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+                  <p className="text-blue-200 text-sm mb-2">
+                    Bu takım numarası bulunamadı. Yeni takım oluşturmak ister misiniz?
+                  </p>
+                  <Link
+                    href={`/teams/create?teamNumber=${teamNumber}`}
+                    className="inline-flex items-center text-blue-300 hover:text-blue-200 text-sm font-medium"
+                  >
+                    <Users className="w-4 h-4 mr-1" />
+                    Yeni Takım Oluştur
+                  </Link>
                 </div>
               )}
             </div>

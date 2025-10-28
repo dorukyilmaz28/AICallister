@@ -43,46 +43,64 @@ export async function POST(req: NextRequest) {
     // Find or create team
     let team = await teamDb.findByTeamNumber(teamNumber);
     if (!team) {
+      // Yeni takım oluştur ve kullanıcıyı admin yap
       team = await teamDb.create({
         name: teamVerification.team?.nickname || teamVerification.team?.name || `Team ${teamNumber}`,
         teamNumber,
-        description: teamVerification.team ? `${teamVerification.team.city}, ${teamVerification.team.state_prov}` : `FRC Team ${teamNumber}`
+        description: teamVerification.team ? `${teamVerification.team.city}, ${teamVerification.team.state_prov}` : `FRC Team ${teamNumber}`,
+        adminId: user.id
       });
-    }
 
-    // Kullanıcıyı otomatik olarak takıma üye yap (onay yok)
-    try {
-      await teamMemberDb.create({
-        userId: user.id,
-        teamId: team.id,
-        role: "member"
-      });
-    } catch (membershipError) {
-      // Zaten üye ise sessizce geç
-      console.warn("Membership create skipped:", membershipError);
-    }
+      // Kullanıcıyı admin yap ve onayla
+      await userDb.updateRole(user.id, "admin");
+      await userDb.updateStatus(user.id, "approved");
+      await userDb.updateTeamId(user.id, team.id);
 
-    // Bilgilendirici bildirim: yeni üye katıldı
-    try {
-      await teamNotificationDb.create(
-        team.id,
-        "member_joined",
-        "Yeni Üye Katıldı",
-        `${name} (${email}) takıma katıldı.`,
-        user.id
-      );
-    } catch (notificationError) {
-      console.error("Notification error:", notificationError);
-      // Bildirim hatası kayıt işlemini etkilemesin
+      // Bilgilendirici bildirim: yeni takım oluşturuldu
+      try {
+        await teamNotificationDb.create(
+          team.id,
+          "team_created",
+          "Yeni Takım Oluşturuldu",
+          `${name} tarafından yeni takım oluşturuldu.`,
+          user.id
+        );
+      } catch (notificationError) {
+        console.error("Notification error:", notificationError);
+      }
+    } else {
+      // Mevcut takıma katılma isteği gönder
+      await userDb.updateTeamId(user.id, team.id);
+      await userDb.updateStatus(user.id, "pending");
+
+      // Bilgilendirici bildirim: katılım isteği
+      try {
+        await teamNotificationDb.create(
+          team.id,
+          "join_request",
+          "Yeni Katılım İsteği",
+          `${name} (${email}) takıma katılmak istiyor.`,
+          user.id
+        );
+      } catch (notificationError) {
+        console.error("Notification error:", notificationError);
+      }
     }
 
     return NextResponse.json(
       { 
-        message: "Kullanıcı başarıyla oluşturuldu.",
+        message: team.adminId === user.id 
+          ? "Takım başarıyla oluşturuldu ve siz takım yöneticisisiniz." 
+          : "Takıma katılma isteğiniz gönderildi. Takım yöneticisinin onayını bekliyorsunuz.",
         user: {
           id: user.id,
           name: user.name,
           email: user.email,
+        },
+        team: {
+          id: team.id,
+          name: team.name,
+          teamNumber: team.teamNumber
         }
       },
       { status: 201 }
