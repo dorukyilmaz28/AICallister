@@ -50,13 +50,25 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Takım numarasına göre otomatik bildirim gönder (katılım isteği olarak)
+    // Kullanıcıyı otomatik olarak takıma üye yap (onay yok)
+    try {
+      await teamMemberDb.create({
+        userId: user.id,
+        teamId: team.id,
+        role: "member"
+      });
+    } catch (membershipError) {
+      // Zaten üye ise sessizce geç
+      console.warn("Membership create skipped:", membershipError);
+    }
+
+    // Bilgilendirici bildirim: yeni üye katıldı
     try {
       await teamNotificationDb.create(
         team.id,
-        "join_request",
-        "Yeni Katılım İsteği",
-        `${name} (${email}) takım numarası ${teamNumber} ile sisteme kayıt oldu ve takıma katılmak istiyor.`,
+        "member_joined",
+        "Yeni Üye Katıldı",
+        `${name} (${email}) takıma katıldı.`,
         user.id
       );
     } catch (notificationError) {
