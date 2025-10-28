@@ -145,6 +145,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleRequestAction = async (requestId: string, action: 'approve' | 'reject') => {
+    try {
+      const response = await fetch(`/api/teams/${teamId}/join-requests/${requestId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action }),
+      });
+
+      if (response.ok) {
+        // İstekleri yeniden yükle
+        await fetchRequests();
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "İşlem başarısız.");
+      }
+    } catch (error) {
+      console.error("Error processing request:", error);
+      setError("İşlem sırasında hata oluştu.");
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("tr-TR", {
       day: "numeric",
