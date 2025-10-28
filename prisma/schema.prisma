@@ -26,6 +26,7 @@ model User {
   conversations Conversation[]
   teamMemberships TeamMember[]
   teamChats TeamChat[]
+  teamJoinRequests TeamJoinRequest[]
   
   @@map("users")
 }
@@ -69,6 +70,7 @@ model Team {
   // İlişkiler
   members TeamMember[]
   chats   TeamChat[]
+  joinRequests TeamJoinRequest[]
   
   @@map("teams")
 }
@@ -100,4 +102,21 @@ model TeamChat {
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   
   @@map("team_chats")
+}
+
+model TeamJoinRequest {
+  id        String   @id @default(cuid())
+  status    String   @default("pending") // pending, approved, rejected
+  message   String?  // Kullanıcının katılım mesajı
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // İlişkiler
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, teamId])
+  @@map("team_join_requests")
 }

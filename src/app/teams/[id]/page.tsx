@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash, Info } from "lucide-react";
+import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash, Info, Settings2 } from "lucide-react";
 
 interface TeamMember {
   id: string;
@@ -439,6 +439,16 @@ export default function TeamDetailPage() {
                   >
                     <Info className="w-4 h-4" />
                   </button>
+                  {/* Admin Panel Button */}
+                  {(userRole === 'captain' || userRole === 'mentor') && (
+                    <Link
+                      href={`/teams/${teamId}/admin`}
+                      className="p-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-purple-300 hover:text-purple-200 transition-colors duration-200"
+                      title="Admin Paneli"
+                    >
+                      <Settings2 className="w-4 h-4" />
+                    </Link>
+                  )}
                 </div>
                 {messages.length > 0 && (
                   <button

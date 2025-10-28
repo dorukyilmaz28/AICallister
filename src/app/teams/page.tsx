@@ -38,6 +38,8 @@ export default function TeamsPage() {
   const [error, setError] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [joinRequestMessage, setJoinRequestMessage] = useState("");
+  const [showJoinForm, setShowJoinForm] = useState<string | null>(null);
 
   // Form state
   const [teamName, setTeamName] = useState("");
@@ -116,6 +118,38 @@ export default function TeamsPage() {
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/" });
+  };
+
+  const handleJoinRequest = async (teamId: string) => {
+    if (!joinRequestMessage.trim()) {
+      setError("Lütfen katılım mesajınızı yazın.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/teams/${teamId}/join-requests`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: joinRequestMessage.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        setJoinRequestMessage("");
+        setShowJoinForm(null);
+        setError("");
+        alert("Katılım isteğiniz gönderildi!");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "İstek gönderilirken hata oluştu.");
+      }
+    } catch (error) {
+      console.error("Error sending join request:", error);
+      setError("İstek gönderilirken hata oluştu.");
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -305,12 +339,52 @@ export default function TeamsPage() {
                     Oluşturuldu: {formatDate(team.createdAt)}
                   </div>
                   
-                  <Link
-                    href={`/teams/${team.id}`}
-                    className="block w-full px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white text-center transition-colors duration-200"
-                  >
-                    Takıma Git
-                  </Link>
+                  <div className="space-y-2">
+                    <Link
+                      href={`/teams/${team.id}`}
+                      className="block w-full px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white text-center transition-colors duration-200"
+                    >
+                      Takıma Git
+                    </Link>
+                    
+                    {/* Katılım İsteği Butonu */}
+                    <button
+                      onClick={() => setShowJoinForm(team.id)}
+                      className="w-full px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-300 hover:text-blue-200 transition-colors duration-200 text-sm"
+                    >
+                      Katılım İsteği Gönder
+                    </button>
+                    
+                    {/* Katılım İsteği Formu */}
+                    {showJoinForm === team.id && (
+                      <div className="mt-3 p-3 bg-white/10 rounded-lg border border-white/20">
+                        <textarea
+                          value={joinRequestMessage}
+                          onChange={(e) => setJoinRequestMessage(e.target.value)}
+                          placeholder="Neden bu takıma katılmak istediğinizi açıklayın..."
+                          className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm mb-2"
+                          rows={3}
+                        />
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleJoinRequest(team.id)}
+                            className="flex-1 px-3 py-1 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-green-300 hover:text-green-200 transition-colors duration-200 text-sm"
+                          >
+                            Gönder
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowJoinForm(null);
+                              setJoinRequestMessage("");
+                            }}
+                            className="flex-1 px-3 py-1 bg-gray-500/20 hover:bg-gray-500/30 border border-gray-500/30 rounded-lg text-gray-300 hover:text-gray-200 transition-colors duration-200 text-sm"
+                          >
+                            İptal
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

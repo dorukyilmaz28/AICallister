@@ -299,3 +299,141 @@ export const teamChatDb = {
     return true;
   }
 };
+
+// Takım katılım istekleri
+export const teamJoinRequestDb = {
+  async create(userId: string, teamId: string, message?: string) {
+    // Zaten takımda mı kontrol et
+    const existingMember = await prisma.teamMember.findFirst({
+      where: {
+        userId: userId,
+        teamId: teamId
+      }
+    });
+
+    if (existingMember) {
+      throw new Error('Zaten bu takımın üyesisiniz.');
+    }
+
+    // Zaten bekleyen istek var mı kontrol et
+    const existingRequest = await prisma.teamJoinRequest.findFirst({
+      where: {
+        userId: userId,
+        teamId: teamId,
+        status: 'pending'
+      }
+    });
+
+    if (existingRequest) {
+      throw new Error('Zaten bekleyen bir katılım isteğiniz var.');
+    }
+
+    return await prisma.teamJoinRequest.create({
+      data: {
+        userId: userId,
+        teamId: teamId,
+        message: message
+      }
+    });
+  },
+
+  async findByTeamId(teamId: string) {
+    return await prisma.teamJoinRequest.findMany({
+      where: { teamId: teamId },
+      include: {
+        user: true,
+        team: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  },
+
+  async approve(requestId: string, adminUserId: string) {
+    const request = await prisma.teamJoinRequest.findUnique({
+      where: { id: requestId },
+      include: { team: true }
+    });
+
+    if (!request) {
+      throw new Error('İstek bulunamadı.');
+    }
+
+    // Admin kontrolü
+    const adminMember = await prisma.teamMember.findFirst({
+      where: {
+        teamId: request.teamId,
+        userId: adminUserId,
+        role: { in: ['captain', 'mentor'] }
+      }
+    });
+
+    if (!adminMember) {
+      throw new Error('Bu işlem için yetkiniz yok.');
+    }
+
+    // İsteği onayla
+    await prisma.teamJoinRequest.update({
+      where: { id: requestId },
+      data: { status: 'approved' }
+    });
+
+    // Kullanıcıyı takıma ekle
+    await prisma.teamMember.create({
+      data: {
+        userId: request.userId,
+        teamId: request.teamId,
+        role: 'member'
+      }
+    });
+
+    return true;
+  },
+
+  async reject(requestId: string, adminUserId: string) {
+    const request = await prisma.teamJoinRequest.findUnique({
+      where: { id: requestId },
+      include: { team: true }
+    });
+
+    if (!request) {
+      throw new Error('İstek bulunamadı.');
+    }
+
+    // Admin kontrolü
+    const adminMember = await prisma.teamMember.findFirst({
+      where: {
+        teamId: request.teamId,
+        userId: adminUserId,
+        role: { in: ['captain', 'mentor'] }
+      }
+    });
+
+    if (!adminMember) {
+      throw new Error('Bu işlem için yetkiniz yok.');
+    }
+
+    // İsteği reddet
+    await prisma.teamJoinRequest.update({
+      where: { id: requestId },
+      data: { status: 'rejected' }
+    });
+
+    return true;
+  },
+
+  async delete(requestId: string, userId: string) {
+    const request = await prisma.teamJoinRequest.findUnique({
+      where: { id: requestId }
+    });
+
+    if (!request || request.userId !== userId) {
+      throw new Error('Bu isteği silme yetkiniz yok.');
+    }
+
+    await prisma.teamJoinRequest.delete({
+      where: { id: requestId }
+    });
+
+    return true;
+  }
+};
