@@ -439,3 +439,60 @@ export const teamJoinRequestDb = {
     return true;
   }
 };
+
+// Takım bildirimleri
+export const teamNotificationDb = {
+  async create(teamId: string, type: string, title: string, message: string, userId?: string) {
+    return await prisma.teamNotification.create({
+      data: {
+        teamId: teamId,
+        type: type,
+        title: title,
+        message: message,
+        userId: userId
+      }
+    });
+  },
+
+  async findByTeamId(teamId: string) {
+    return await prisma.teamNotification.findMany({
+      where: { teamId: teamId },
+      include: {
+        user: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  },
+
+  async markAsRead(notificationId: string) {
+    return await prisma.teamNotification.update({
+      where: { id: notificationId },
+      data: { isRead: true }
+    });
+  },
+
+  async markAllAsRead(teamId: string) {
+    return await prisma.teamNotification.updateMany({
+      where: { 
+        teamId: teamId,
+        isRead: false 
+      },
+      data: { isRead: true }
+    });
+  },
+
+  async getUnreadCount(teamId: string) {
+    return await prisma.teamNotification.count({
+      where: { 
+        teamId: teamId,
+        isRead: false 
+      }
+    });
+  },
+
+  async delete(notificationId: string) {
+    return await prisma.teamNotification.delete({
+      where: { id: notificationId }
+    });
+  }
+};

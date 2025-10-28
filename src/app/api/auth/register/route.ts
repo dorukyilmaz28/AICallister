@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { userDb, teamDb, teamMemberDb } from "@/lib/database";
+import { userDb, teamDb, teamMemberDb, teamNotificationDb } from "@/lib/database";
 import { verifyTeamNumber } from "@/lib/blueAlliance";
 
 export async function POST(req: NextRequest) {
@@ -56,6 +56,23 @@ export async function POST(req: NextRequest) {
       teamId: team.id,
       role: "member"
     });
+
+    // Takım numarasına göre otomatik bildirim gönder
+    try {
+      const existingTeam = await teamDb.findByTeamNumber(teamNumber);
+      if (existingTeam) {
+        await teamNotificationDb.create(
+          existingTeam.id,
+          "member_joined",
+          "Yeni Üye Katıldı",
+          `${name} (${email}) takım numarası ${teamNumber} ile sisteme kayıt oldu ve takıma katıldı.`,
+          user.id
+        );
+      }
+    } catch (notificationError) {
+      console.error("Notification error:", notificationError);
+      // Bildirim hatası kayıt işlemini etkilemesin
+    }
 
     return NextResponse.json(
       { 

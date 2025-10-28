@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash, Info, Settings2 } from "lucide-react";
+import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash, Info, Settings2, Bell } from "lucide-react";
 
 interface TeamMember {
   id: string;
@@ -53,6 +53,9 @@ export default function TeamDetailPage() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const [showTeamInfo, setShowTeamInfo] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,6 +75,7 @@ export default function TeamDetailPage() {
 
     const interval = setInterval(() => {
       fetchMessages();
+      fetchNotifications();
     }, 3000);
 
     return () => clearInterval(interval);
@@ -163,6 +167,19 @@ export default function TeamDetailPage() {
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch(`/api/teams/${teamId}/notifications`);
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
     }
   };
 
@@ -449,6 +466,19 @@ export default function TeamDetailPage() {
                       <Settings2 className="w-4 h-4" />
                     </Link>
                   )}
+                  {/* Notification Button */}
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative p-1 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-300 hover:text-blue-200 transition-colors duration-200"
+                    title="Bildirimler"
+                  >
+                    <Bell className="w-4 h-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
                 </div>
                 {messages.length > 0 && (
                   <button
@@ -520,6 +550,60 @@ export default function TeamDetailPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Notification Dropdown */}
+              {showNotifications && (
+                <div className="lg:hidden border-t border-white/20 p-4 bg-white/5">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-white">Bildirimler</h4>
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="text-white/60 hover:text-white"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Bell className="w-12 h-12 text-white/30 mx-auto mb-2" />
+                        <p className="text-white/70 text-sm">Henüz bildirim yok</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {notifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={`p-3 rounded-lg border ${
+                              notification.isRead 
+                                ? 'bg-white/5 border-white/10' 
+                                : 'bg-blue-500/10 border-blue-500/20'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h5 className="text-white text-sm font-medium mb-1">
+                                  {notification.title}
+                                </h5>
+                                <p className="text-white/70 text-xs mb-2">
+                                  {notification.message}
+                                </p>
+                                <div className="text-white/50 text-xs">
+                                  {formatDate(notification.createdAt)}
+                                </div>
+                              </div>
+                              {!notification.isRead && (
+                                <div className="w-2 h-2 bg-blue-400 rounded-full ml-2 mt-1"></div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
