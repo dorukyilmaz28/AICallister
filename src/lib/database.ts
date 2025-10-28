@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+export { prisma };
+
 // User işlemleri
 export const userDb = {
   async create(userData: { name: string; email: string; password: string; teamNumber: string }) {
