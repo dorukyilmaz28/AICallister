@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { teamDb, teamMemberDb, userDb, teamChatDb } from "@/lib/database";
+import { teamDb, teamMemberDb, userDb, teamChatDb, teamJoinRequestDb, teamNotificationDb } from "@/lib/database";
 
 interface TeamMember {
   id: string;
@@ -51,21 +51,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    // Takıma katıl
-    await teamMemberDb.create({
-      userId: session.user.id,
-      teamId: teamId,
-      role: "member"
-    });
+    // Otomatik katılma yerine katılım isteği oluştur
+    try {
+      await teamJoinRequestDb.create(session.user.id, teamId);
+    } catch (e: any) {
+      // Halihazırda pending istek varsa sessiz geç
+    }
+
+    // Takım yöneticilerine bildirim oluştur
+    await teamNotificationDb.create(
+      teamId,
+      "join_request",
+      "Yeni Katılım İsteği",
+      `Bir kullanıcı takıma katılmak istiyor.`,
+      session.user.id
+    );
 
     return NextResponse.json({
-      message: "Takıma başarıyla katıldınız.",
+      message: "Katılım isteğiniz gönderildi. Yönetici onayı bekleniyor.",
     });
 
   } catch (error) {
-    console.error("Error joining team:", error);
+    console.error("Error joining team (request flow):", error);
     return NextResponse.json(
-      { error: "Takıma katılırken hata oluştu." },
+      { error: "Katılım isteği gönderilirken hata oluştu." },
       { status: 500 }
     );
   }

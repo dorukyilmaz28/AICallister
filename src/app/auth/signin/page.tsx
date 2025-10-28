@@ -31,7 +31,7 @@ export default function SignIn() {
         setError("Email veya şifre hatalı!");
       } else if (result?.ok) {
         console.log("Sign in successful, redirecting...");
-        window.location.href = "/team-auto-join";
+        window.location.href = "/teams";
       } else {
         setError("Beklenmeyen bir hata oluştu.");
       }
