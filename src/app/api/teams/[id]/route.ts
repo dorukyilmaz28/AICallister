@@ -40,17 +40,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    // Kullanıcının zaten takımda olup olmadığını kontrol et
-    const existingMembers = await teamMemberDb.findByTeamId(teamId);
-    const existingMember = existingMembers.find((m: TeamMember) => m.userId === session.user.id);
-
-    if (existingMember) {
-      return NextResponse.json(
-        { error: "Zaten bu takımın üyesisiniz." },
-        { status: 400 }
-      );
-    }
-
     // Zaten takımda mı?
     const existingMembers = await teamMemberDb.findByTeamId(teamId);
     const existingMember = existingMembers.find((m: TeamMember) => m.userId === session.user.id);
@@ -74,7 +63,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       teamId,
       "member_joined",
       "Yeni Üye Katıldı",
-      `Bir kullanıcı takıma katıldı.",
+      `Bir kullanıcı takıma katıldı.`,
       session.user.id
     );
 
