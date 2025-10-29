@@ -81,7 +81,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       teamId,
       "join_request",
       "Yeni Katılım İsteği",
-      `Bir kullanıcı takıma katılmak istiyor.",
+      "Bir kullanıcı takıma katılmak istiyor.",
       session.user.id
     );
 
