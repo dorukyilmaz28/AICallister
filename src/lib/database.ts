@@ -498,14 +498,13 @@ export const teamJoinRequestDb = {
       }
     }
 
-    // Kullanıcı durumunu güncelle
-    // Not: teamId güncellemesini atlıyoruz çünkü foreign key hatası oluşabiliyor
-    // Takım bilgisi teamMember tablosundan alınacak, bu yeterli
+    // Kullanıcı durumunu ve teamId'yi güncelle
+    // teamId'yi de güncelle ki frontend ve diğer API'ler doğru çalışsın
     await prisma.user.update({
       where: { id: request.userId },
       data: {
-        status: 'approved'
-        // teamId'yi güncellemiyoruz - teamMember tablosu ana kaynak
+        status: 'approved',
+        teamId: request.teamId  // Kullanıcının takımını User tablosuna da kaydet
       }
     });
 
