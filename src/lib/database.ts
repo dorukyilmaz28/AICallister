@@ -184,9 +184,15 @@ export const teamMemberDb = {
 
   async findByTeamId(teamId: string) {
     return await prisma.teamMember.findMany({
-      where: { teamId },
+      where: { 
+        teamId,
+        status: 'approved'
+      },
       include: {
         user: true
+      },
+      orderBy: {
+        joinedAt: 'desc'
       }
     });
   }
@@ -402,19 +408,6 @@ export const teamJoinRequestDb = {
       throw new Error('İstek bulunamadı.');
     }
 
-    // Admin kontrolü
-    const adminMember = await prisma.teamMember.findFirst({
-      where: {
-        teamId: request.teamId,
-        userId: adminUserId,
-        role: { in: ['captain', 'manager', 'mentor'] }
-      }
-    });
-
-    if (!adminMember) {
-      throw new Error('Bu işlem için yetkiniz yok.');
-    }
-
     // Takımın var olduğundan emin ol - double check
     if (!request.teamId) {
       throw new Error('İstekte takım ID bulunamadı.');
@@ -426,6 +419,20 @@ export const teamJoinRequestDb = {
 
     if (!team) {
       throw new Error(`Takım bulunamadı. Team ID: ${request.teamId}`);
+    }
+
+    // Admin kontrolü: Takım yöneticisi ya da yetkili üye olmalı
+    const isTeamAdmin = team.adminId === adminUserId;
+    const adminMember = await prisma.teamMember.findFirst({
+      where: {
+        teamId: request.teamId,
+        userId: adminUserId,
+        role: { in: ['captain', 'manager', 'mentor'] }
+      }
+    });
+
+    if (!isTeamAdmin && !adminMember) {
+      throw new Error('Bu işlem için yetkiniz yok.');
     }
 
     // İsteği onayla
@@ -489,7 +496,17 @@ export const teamJoinRequestDb = {
       throw new Error('İstek bulunamadı.');
     }
 
-    // Admin kontrolü
+    // Takımın var olduğundan emin ol
+    const team = await prisma.team.findUnique({
+      where: { id: request.teamId }
+    });
+
+    if (!team) {
+      throw new Error(`Takım bulunamadı. Team ID: ${request.teamId}`);
+    }
+
+    // Admin kontrolü: Takım yöneticisi ya da yetkili üye olmalı
+    const isTeamAdmin = team.adminId === adminUserId;
     const adminMember = await prisma.teamMember.findFirst({
       where: {
         teamId: request.teamId,
@@ -498,7 +515,7 @@ export const teamJoinRequestDb = {
       }
     });
 
-    if (!adminMember) {
+    if (!isTeamAdmin && !adminMember) {
       throw new Error('Bu işlem için yetkiniz yok.');
     }
 
