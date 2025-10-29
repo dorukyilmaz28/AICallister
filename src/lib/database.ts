@@ -192,7 +192,8 @@ export const teamMemberDb = {
       // Hata olursa devam et
     });
 
-    // Tüm üyeleri getir (approved olanları ve diğerlerini)
+    // Tüm üyeleri getir (status kontrolü yapmayalım, hepsini alalım)
+    // Sonra filtreleme yapacağız
     const allMembers = await prisma.teamMember.findMany({
       where: { teamId },
       include: {
@@ -203,8 +204,16 @@ export const teamMemberDb = {
       }
     });
 
-    // Sadece approved olanları veya null olanları döndür (null'lar yukarıda güncellendi)
-    return allMembers.filter(m => !m.status || m.status === 'approved');
+    // Sadece approved olanları veya null olanları döndür
+    const approvedMembers = allMembers.filter(m => !m.status || m.status === 'approved');
+
+    // Debug için
+    console.log(`[findByTeamId] Team ${teamId} için ${allMembers.length} toplam üye, ${approvedMembers.length} approved üye bulundu`);
+    approvedMembers.forEach(m => {
+      console.log(`[findByTeamId] Member: ${m.id}, userId: ${m.userId}, status: ${m.status}, user: ${m.user ? m.user.name : 'NULL'}`);
+    });
+
+    return approvedMembers;
   }
 };
 
@@ -461,6 +470,7 @@ export const teamJoinRequestDb = {
 
     if (existingMember) {
       // Zaten varsa sadece durumu güncelle
+      console.log(`[approve] Existing member found, updating status to approved. Member ID: ${existingMember.id}`);
       await prisma.teamMember.update({
         where: { id: existingMember.id },
         data: { status: 'approved' }
@@ -468,7 +478,8 @@ export const teamJoinRequestDb = {
     } else {
       // Kullanıcıyı takıma ekle
       try {
-        await prisma.teamMember.create({
+        console.log(`[approve] Creating new team member. UserId: ${request.userId}, TeamId: ${request.teamId}`);
+        const newMember = await prisma.teamMember.create({
           data: {
             userId: request.userId,
             teamId: request.teamId,
@@ -476,8 +487,9 @@ export const teamJoinRequestDb = {
             status: 'approved'
           }
         });
+        console.log(`[approve] Team member created successfully. Member ID: ${newMember.id}`);
       } catch (memberError: any) {
-        console.error('TeamMember create error:', memberError);
+        console.error('[approve] TeamMember create error:', memberError);
         throw new Error(`Takım üyesi oluşturulamadı: ${memberError.message}`);
       }
     }

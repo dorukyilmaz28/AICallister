@@ -108,7 +108,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const members = await teamMemberDb.findByTeamId(teamId);
     const membersWithUsers = await Promise.all(
       members.map(async (member: TeamMember) => {
-        const user = await userDb.findById(member.userId);
+        // Eğer member.user zaten varsa onu kullan, yoksa userDb'den çek
+        let user = (member as any).user;
+        if (!user) {
+          user = await userDb.findById(member.userId);
+        }
         return {
           id: member.id,
           role: member.role,
