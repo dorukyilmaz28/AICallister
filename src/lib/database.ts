@@ -174,12 +174,16 @@ export const teamMemberDb = {
   },
 
   async findByUserId(userId: string) {
-    return await prisma.teamMember.findMany({
+    // Sadece onaylanmış üyelikleri getir
+    const allMembers = await prisma.teamMember.findMany({
       where: { userId },
       include: {
         team: true
       }
     });
+    
+    // Sadece approved olanları döndür
+    return allMembers.filter(m => !m.status || m.status === 'approved');
   },
 
   async findByTeamId(teamId: string) {

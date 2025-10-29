@@ -55,7 +55,8 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt"
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // İlk login veya token refresh'te user bilgilerini güncelle
       if (user) {
         token.id = user.id
         token.role = user.role
@@ -63,6 +64,24 @@ export const authOptions: NextAuthOptions = {
         token.teamId = user.teamId
         token.teamNumber = user.teamNumber
       }
+      
+      // Her token kontrolünde database'den fresh user bilgisi çek
+      // Bu sayede onay durumu güncel kalır
+      if (token.id) {
+        try {
+          const freshUser = await userDb.findById(token.id as string)
+          if (freshUser) {
+            token.status = freshUser.status
+            token.role = freshUser.role
+            token.teamId = freshUser.teamId
+            token.teamNumber = freshUser.teamNumber
+          }
+        } catch (error) {
+          console.error("Error fetching fresh user data:", error)
+          // Hata durumunda eski token değerleri kullanılır
+        }
+      }
+      
       return token
     },
     async session({ session, token }) {
