@@ -458,32 +458,33 @@ export const teamJoinRequestDb = {
       throw new Error('Bu işlem için yetkiniz yok.');
     }
 
-    // İsteği onayla
-    await prisma.teamJoinRequest.update({
-      where: { id: requestId },
-      data: { status: 'approved' }
-    });
-
-    // Zaten takımda mı kontrol et
-    const existingMember = await prisma.teamMember.findFirst({
-      where: {
-        userId: request.userId,
-        teamId: request.teamId
-      }
-    });
-
-    if (existingMember) {
-      // Zaten varsa sadece durumu güncelle
-      console.log(`[approve] Existing member found, updating status to approved. Member ID: ${existingMember.id}`);
-      await prisma.teamMember.update({
-        where: { id: existingMember.id },
+    // Tüm işlemleri transaction içinde yap (atomicity için)
+    const result = await prisma.$transaction(async (tx) => {
+      // İsteği onayla
+      await tx.teamJoinRequest.update({
+        where: { id: requestId },
         data: { status: 'approved' }
       });
-    } else {
-      // Kullanıcıyı takıma ekle
-      try {
+
+      // Zaten takımda mı kontrol et
+      let existingMember = await tx.teamMember.findFirst({
+        where: {
+          userId: request.userId,
+          teamId: request.teamId
+        }
+      });
+
+      if (existingMember) {
+        // Zaten varsa sadece durumu güncelle
+        console.log(`[approve] Existing member found, updating status to approved. Member ID: ${existingMember.id}`);
+        existingMember = await tx.teamMember.update({
+          where: { id: existingMember.id },
+          data: { status: 'approved' }
+        });
+      } else {
+        // Kullanıcıyı takıma ekle
         console.log(`[approve] Creating new team member. UserId: ${request.userId}, TeamId: ${request.teamId}`);
-        const newMember = await prisma.teamMember.create({
+        existingMember = await tx.teamMember.create({
           data: {
             userId: request.userId,
             teamId: request.teamId,
@@ -491,21 +492,32 @@ export const teamJoinRequestDb = {
             status: 'approved'
           }
         });
-        console.log(`[approve] Team member created successfully. Member ID: ${newMember.id}`);
-      } catch (memberError: any) {
-        console.error('[approve] TeamMember create error:', memberError);
-        throw new Error(`Takım üyesi oluşturulamadı: ${memberError.message}`);
+        console.log(`[approve] Team member created successfully. Member ID: ${existingMember.id}`);
       }
-    }
 
-    // Kullanıcı durumunu ve teamId'yi güncelle
-    // teamId'yi de güncelle ki frontend ve diğer API'ler doğru çalışsın
-    await prisma.user.update({
-      where: { id: request.userId },
-      data: {
-        status: 'approved',
-        teamId: request.teamId  // Kullanıcının takımını User tablosuna da kaydet
-      }
+      // Kullanıcı durumunu ve teamId'yi güncelle
+      await tx.user.update({
+        where: { id: request.userId },
+        data: {
+          status: 'approved',
+          teamId: request.teamId
+        }
+      });
+
+      // Doğrulama: Oluşturulan/güncellenen kayıtları kontrol et
+      const verifyMember = await tx.teamMember.findUnique({
+        where: { id: existingMember.id },
+        include: { user: true }
+      });
+
+      const verifyUser = await tx.user.findUnique({
+        where: { id: request.userId }
+      });
+
+      console.log(`[approve] Verification - TeamMember: ${verifyMember ? 'EXISTS' : 'MISSING'}, status: ${verifyMember?.status}`);
+      console.log(`[approve] Verification - User: ${verifyUser ? 'EXISTS' : 'MISSING'}, teamId: ${verifyUser?.teamId}, status: ${verifyUser?.status}`);
+
+      return { member: existingMember, user: verifyUser };
     });
 
     return true;
