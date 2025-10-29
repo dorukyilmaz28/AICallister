@@ -465,22 +465,16 @@ export const teamJoinRequestDb = {
       }
     }
 
-    // Kullanıcı durumunu güncelle - teamId'yi de güncelle
-    try {
-      await prisma.user.update({
-        where: { id: request.userId },
-        data: {
-          status: 'approved',
-          teamId: request.teamId // Takımın var olduğunu zaten kontrol ettik
-        }
-      });
-    } catch (userError: any) {
-      console.error('User update error:', userError);
-      // TeamMember oluşturuldu ama user güncellenemedi
-      // Bu durumda bile takım üyeliği var, sadece user.teamId null kalır
-      // Ama kullanıcı teamMember üzerinden takımı görebilir
-      throw new Error(`Kullanıcı güncellenemedi ama takıma eklendi. Hata: ${userError.message}`);
-    }
+    // Kullanıcı durumunu güncelle
+    // Not: teamId güncellemesini atlıyoruz çünkü foreign key hatası oluşabiliyor
+    // Takım bilgisi teamMember tablosundan alınacak, bu yeterli
+    await prisma.user.update({
+      where: { id: request.userId },
+      data: {
+        status: 'approved'
+        // teamId'yi güncellemiyoruz - teamMember tablosu ana kaynak
+      }
+    });
 
     return true;
   },
