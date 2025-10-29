@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, MessageSquare, Settings, Calendar, Bot, Users } from "lucide-react";
+import { User, LogOut, MessageSquare, Settings, Calendar, Bot, Users, Shield } from "lucide-react";
 
 interface Conversation {
   id: string;
@@ -19,6 +19,7 @@ export default function Profile() {
   const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [teamInfo, setTeamInfo] = useState<{ teamId: string; teamName: string; teamNumber?: string } | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -28,6 +29,7 @@ export default function Profile() {
 
     if (session) {
       fetchConversations();
+      fetchTeamInfo();
     }
   }, [session, status, router]);
 
@@ -42,6 +44,24 @@ export default function Profile() {
       console.error("Error fetching conversations:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchTeamInfo = async () => {
+    if (!session?.user?.id) return;
+    try {
+      const response = await fetch(`/api/users/${session.user.id}/team`);
+      if (response.ok) {
+        const data = await response.json();
+        setTeamInfo({
+          teamId: data.teamId,
+          teamName: data.teamName,
+          teamNumber: data.teamNumber
+        });
+      }
+    } catch (error) {
+      // Kullanıcının takımı yoksa hata alabilir, bu normal
+      setTeamInfo(null);
     }
   };
 
@@ -97,6 +117,12 @@ export default function Profile() {
             </h1>
           </div>
           <div className="flex items-center space-x-3">
+            {session?.user?.status === "pending" && (
+              <div className="flex items-center space-x-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-300">
+                <Shield className="w-4 h-4" />
+                <span>Onay Bekleniyor</span>
+              </div>
+            )}
             <Link
               href="/teams"
               className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
@@ -133,9 +159,22 @@ export default function Profile() {
               <div>
                 <h2 className="text-2xl font-bold text-white">{session.user?.name}</h2>
                 <p className="text-white/70">{session.user?.email}</p>
-                <p className="text-white/50 text-sm">
-                  {conversations.length} konuşma
-                </p>
+                <div className="flex items-center space-x-4 mt-2">
+                  <p className="text-white/50 text-sm">
+                    {conversations.length} konuşma
+                  </p>
+                  {teamInfo && (
+                    <Link
+                      href={`/teams/${teamInfo.teamId}`}
+                      className="text-blue-300 hover:text-blue-200 text-sm font-medium flex items-center space-x-1"
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>
+                        {teamInfo.teamName} {teamInfo.teamNumber && `(#${teamInfo.teamNumber})`}
+                      </span>
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
           </div>

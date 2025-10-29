@@ -415,6 +415,15 @@ export const teamJoinRequestDb = {
       throw new Error('Bu işlem için yetkiniz yok.');
     }
 
+    // Takımın var olduğundan emin ol
+    const team = await prisma.team.findUnique({
+      where: { id: request.teamId }
+    });
+
+    if (!team) {
+      throw new Error('Takım bulunamadı.');
+    }
+
     // İsteği onayla
     await prisma.teamJoinRequest.update({
       where: { id: requestId },

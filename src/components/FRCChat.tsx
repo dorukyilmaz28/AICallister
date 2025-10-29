@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send, Bot, User, Settings, Wrench, Target, Cpu, Home, UserCircle } from "lucide-react";
+import { Send, Bot, User, Settings, Wrench, Target, Cpu, Home, UserCircle, Shield } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -153,6 +153,12 @@ export function FRCChat() {
             </div>
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2">
+            {session?.user?.status === "pending" && (
+              <div className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-300">
+                <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-sm font-medium hidden sm:inline">Onay Bekleniyor</span>
+              </div>
+            )}
             <Link
               href="/"
               className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors duration-200 bg-white/20 hover:bg-white/30 text-white"
