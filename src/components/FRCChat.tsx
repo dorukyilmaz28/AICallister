@@ -36,6 +36,7 @@ const contextConfig = {
 };
 
 export function FRCChat() {
+  const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
