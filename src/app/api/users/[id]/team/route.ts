@@ -63,8 +63,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       if (userMemberships.length === 0) {
         // Fallback 2: Kullanıcının user.teamId alanı set edilmiş olabilir, oradan üyelik üret
         const user = await userDb.findById(userId);
-        if (user?.teamId) {
-          console.log(`[GET /api/users/${userId}/team] Fallback by user.teamId detected (${user.teamId}). Creating TeamMember if missing.`);
+        // Sadece onaylı kullanıcılar için user.teamId üzerinden üyelik oluştur
+        if (user?.teamId && user?.status === 'approved') {
+          console.log(`[GET /api/users/${userId}/team] Fallback by user.teamId (${user.teamId}) with approved status. Creating TeamMember if missing.`);
           const exists = await prisma.teamMember.findFirst({
             where: { userId, teamId: user.teamId }
           });
@@ -74,6 +75,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             });
           }
           userMemberships = await teamMemberDb.findByUserId(userId);
+        } else if (user?.teamId) {
+          console.log(`[GET /api/users/${userId}/team] user.teamId (${user.teamId}) mevcut ama kullanıcı status='${user?.status}'. Üyelik oluşturulmadı.`);
         }
 
         if (userMemberships.length === 0) {
