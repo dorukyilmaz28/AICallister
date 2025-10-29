@@ -147,6 +147,7 @@ export default function AdminDashboard() {
 
   const handleRequestAction = async (requestId: string, action: 'approve' | 'reject') => {
     try {
+      setError("");
       const response = await fetch(`/api/teams/${teamId}/join-requests/${requestId}`, {
         method: "PATCH",
         headers: {
@@ -158,6 +159,7 @@ export default function AdminDashboard() {
       if (response.ok) {
         // İstekleri yeniden yükle
         await fetchRequests();
+        await fetchNotifications();
       } else {
         const errorData = await response.json();
         setError(errorData.error || "İşlem başarısız.");
@@ -421,16 +423,16 @@ export default function AdminDashboard() {
                           key={request.id}
                           className="bg-white/10 rounded-xl p-4 border border-white/20"
                         >
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-start space-x-3 flex-1">
-                              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div className="flex items-start space-x-3 flex-1 min-w-0">
+                              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
                                 <User className="w-5 h-5 text-white" />
                               </div>
                               
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center space-x-2 mb-1">
-                                  <h3 className="text-white font-medium">{request.user.name}</h3>
-                                  <div className="flex items-center space-x-1">
+                                <div className="flex items-center space-x-2 mb-1 flex-wrap">
+                                  <h3 className="text-white font-medium break-words">{request.user.name}</h3>
+                                  <div className="flex items-center space-x-1 flex-shrink-0">
                                     {getStatusIcon(request.status)}
                                     <span className="text-white/60 text-sm">
                                       {getStatusText(request.status)}
@@ -439,14 +441,14 @@ export default function AdminDashboard() {
                                 </div>
                                 
                                 <div className="flex items-center space-x-1 text-white/60 text-sm mb-2">
-                                  <Mail className="w-3 h-3" />
-                                  <span>{request.user.email}</span>
+                                  <Mail className="w-3 h-3 flex-shrink-0" />
+                                  <span className="break-all">{request.user.email}</span>
                                 </div>
                                 
                                 {request.message && (
-                                  <div className="flex items-start space-x-1 text-white/70 text-sm">
+                                  <div className="flex items-start space-x-1 text-white/70 text-sm mb-2">
                                     <MessageSquare className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                                    <span>{request.message}</span>
+                                    <span className="break-words">{request.message}</span>
                                   </div>
                                 )}
                                 
@@ -457,20 +459,22 @@ export default function AdminDashboard() {
                             </div>
                             
                             {request.status === 'pending' && (
-                              <div className="flex items-center space-x-2 ml-4">
+                              <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
                                 <button
                                   onClick={() => handleRequestAction(request.id, 'approve')}
-                                  className="flex items-center space-x-1 px-3 py-1 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-green-300 hover:text-green-200 transition-colors duration-200 text-sm"
+                                  className="flex items-center justify-center space-x-1 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-green-300 hover:text-green-200 transition-colors duration-200 text-sm font-medium min-w-[100px]"
+                                  title="Onayla"
                                 >
-                                  <CheckCircle className="w-4 h-4" />
+                                  <CheckCircle className="w-4 h-4 flex-shrink-0" />
                                   <span>Onayla</span>
                                 </button>
                                 
                                 <button
                                   onClick={() => handleRequestAction(request.id, 'reject')}
-                                  className="flex items-center space-x-1 px-3 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200 text-sm"
+                                  className="flex items-center justify-center space-x-1 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200 text-sm font-medium min-w-[100px]"
+                                  title="Reddet"
                                 >
-                                  <XCircle className="w-4 h-4" />
+                                  <XCircle className="w-4 h-4 flex-shrink-0" />
                                   <span>Reddet</span>
                                 </button>
                               </div>
