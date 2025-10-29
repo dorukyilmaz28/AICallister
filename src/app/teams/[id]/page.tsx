@@ -282,6 +282,7 @@ export default function TeamDetailPage() {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "captain":
+      case "manager":
         return <Crown className="w-4 h-4 text-yellow-400" />;
       case "mentor":
         return <Shield className="w-4 h-4 text-blue-400" />;
@@ -293,7 +294,8 @@ export default function TeamDetailPage() {
   const getRoleLabel = (role: string) => {
     switch (role) {
       case "captain":
-        return "Kaptan";
+      case "manager":
+        return "Yönetici";
       case "mentor":
         return "Mentor";
       default:
@@ -487,7 +489,7 @@ export default function TeamDetailPage() {
                     <Info className="w-4 h-4" />
                   </button>
                   {/* Admin Panel Button */}
-                  {(userRole === 'captain' || userRole === 'mentor') && (
+                  {(userRole === 'captain' || userRole === 'manager' || userRole === 'mentor') && (
                     <Link
                       href={`/teams/${teamId}/admin`}
                       className="p-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-purple-300 hover:text-purple-200 transition-colors duration-200"

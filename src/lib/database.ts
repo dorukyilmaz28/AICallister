@@ -407,7 +407,7 @@ export const teamJoinRequestDb = {
       where: {
         teamId: request.teamId,
         userId: adminUserId,
-        role: { in: ['captain', 'mentor'] }
+        role: { in: ['captain', 'manager', 'mentor'] }
       }
     });
 
@@ -457,7 +457,7 @@ export const teamJoinRequestDb = {
       where: {
         teamId: request.teamId,
         userId: adminUserId,
-        role: { in: ['captain', 'mentor'] }
+        role: { in: ['captain', 'manager', 'mentor'] }
       }
     });
 

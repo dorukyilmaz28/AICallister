@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const team = await prisma.team.findUnique({ where: { id: teamId } });
     const isTeamAdmin = team?.adminId === session.user.id;
     const adminMember = await prisma.teamMember.findFirst({
-      where: { teamId, userId: session.user.id, role: { in: ['captain', 'mentor'] } }
+      where: { teamId, userId: session.user.id, role: { in: ['captain', 'manager', 'mentor'] } }
     });
 
     if (!isTeamAdmin && !adminMember) {

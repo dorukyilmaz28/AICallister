@@ -56,12 +56,12 @@ export async function POST(req: NextRequest) {
       await userDb.updateStatus(user.id, "approved");
       await userDb.updateTeamId(user.id, team.id);
 
-      // Takım üyesi olarak da ekle (kaptan)
+      // Takım üyesi olarak da ekle (yönetici)
       try {
         await teamMemberDb.create({
           userId: user.id,
           teamId: team.id,
-          role: "captain"
+          role: "captain" // Backward compatibility için captain kullanılıyor
         });
       } catch (e) {
         // zaten varsa sessizce geç

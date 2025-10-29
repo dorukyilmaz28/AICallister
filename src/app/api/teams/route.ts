@@ -44,11 +44,11 @@ export async function POST(req: NextRequest) {
       teamNumber
     });
 
-    // Takım oluşturan kişiyi kaptan olarak ekle
+    // Takım oluşturan kişiyi yönetici olarak ekle
     await teamMemberDb.create({
       userId: session.user.id,
       teamId: team.id,
-      role: "captain"
+      role: "captain" // Backward compatibility için captain kullanılıyor
     });
 
     return NextResponse.json({

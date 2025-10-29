@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       where: {
         teamId: teamId,
         userId: session.user.id,
-        role: { in: ['captain', 'mentor'] }
+        role: { in: ['captain', 'manager', 'mentor'] }
       }
     });
 
