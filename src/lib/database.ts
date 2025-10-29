@@ -415,13 +415,17 @@ export const teamJoinRequestDb = {
       throw new Error('Bu işlem için yetkiniz yok.');
     }
 
-    // Takımın var olduğundan emin ol
+    // Takımın var olduğundan emin ol - double check
+    if (!request.teamId) {
+      throw new Error('İstekte takım ID bulunamadı.');
+    }
+
     const team = await prisma.team.findUnique({
       where: { id: request.teamId }
     });
 
     if (!team) {
-      throw new Error('Takım bulunamadı.');
+      throw new Error(`Takım bulunamadı. Team ID: ${request.teamId}`);
     }
 
     // İsteği onayla
@@ -446,24 +450,37 @@ export const teamJoinRequestDb = {
       });
     } else {
       // Kullanıcıyı takıma ekle
-      await prisma.teamMember.create({
-        data: {
-          userId: request.userId,
-          teamId: request.teamId,
-          role: 'member',
-          status: 'approved'
-        }
-      });
+      try {
+        await prisma.teamMember.create({
+          data: {
+            userId: request.userId,
+            teamId: request.teamId,
+            role: 'member',
+            status: 'approved'
+          }
+        });
+      } catch (memberError: any) {
+        console.error('TeamMember create error:', memberError);
+        throw new Error(`Takım üyesi oluşturulamadı: ${memberError.message}`);
+      }
     }
 
-    // Kullanıcı durumunu güncelle
-    await prisma.user.update({
-      where: { id: request.userId },
-      data: {
-        status: 'approved',
-        teamId: request.teamId
-      }
-    });
+    // Kullanıcı durumunu güncelle - teamId'yi de güncelle
+    try {
+      await prisma.user.update({
+        where: { id: request.userId },
+        data: {
+          status: 'approved',
+          teamId: request.teamId // Takımın var olduğunu zaten kontrol ettik
+        }
+      });
+    } catch (userError: any) {
+      console.error('User update error:', userError);
+      // TeamMember oluşturuldu ama user güncellenemedi
+      // Bu durumda bile takım üyeliği var, sadece user.teamId null kalır
+      // Ama kullanıcı teamMember üzerinden takımı görebilir
+      throw new Error(`Kullanıcı güncellenemedi ama takıma eklendi. Hata: ${userError.message}`);
+    }
 
     return true;
   },
