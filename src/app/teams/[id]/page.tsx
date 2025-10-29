@@ -93,11 +93,12 @@ export default function TeamDetailPage() {
     }
   }, [session, status, router, teamId]);
 
-  // Auto-refresh mesajları her 3 saniyede bir
+  // Auto-refresh mesajları ve takım bilgileri her 3 saniyede bir
   useEffect(() => {
     if (!teamId) return;
 
     const interval = setInterval(() => {
+      fetchTeam(); // Takım bilgilerini ve üyeleri yenile
       fetchMessages();
       fetchNotifications();
     }, 3000);

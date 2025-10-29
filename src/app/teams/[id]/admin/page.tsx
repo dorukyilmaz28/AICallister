@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Users, CheckCircle, XCircle, Clock, User, Mail, MessageSquare, Bell } from "lucide-react";
+import { ArrowLeft, Users, CheckCircle, XCircle, Clock, User, Mail, MessageSquare, Bell, Home } from "lucide-react";
 
 interface JoinRequest {
   id: string;
@@ -232,6 +232,15 @@ export default function AdminDashboard() {
               <Users className="w-5 h-5 text-white" />
               <h1 className="text-xl font-bold text-white">Admin Paneli</h1>
             </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white/70 hover:text-white transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              <span>Ana Sayfa</span>
+            </Link>
           </div>
         </div>
       </div>
