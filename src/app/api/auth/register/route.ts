@@ -56,6 +56,18 @@ export async function POST(req: NextRequest) {
       await userDb.updateStatus(user.id, "approved");
       await userDb.updateTeamId(user.id, team.id);
 
+      // Takım üyesi olarak da ekle (kaptan)
+      try {
+        await teamMemberDb.create({
+          userId: user.id,
+          teamId: team.id,
+          role: "captain"
+        });
+      } catch (e) {
+        // zaten varsa sessizce geç
+        console.warn("Admin member create warning:", e);
+      }
+
       // Bilgilendirici bildirim: yeni takım oluşturuldu
       try {
         await teamNotificationDb.create(

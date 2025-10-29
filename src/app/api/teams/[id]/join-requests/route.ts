@@ -18,7 +18,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { id: teamId } = await params;
 
-    // Admin kontrolü
+    // Admin kontrolü: Takım yöneticisi (Team.adminId) ya da yetkili üye
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    const isTeamAdmin = team?.adminId === session.user.id;
+
     const adminMember = await prisma.teamMember.findFirst({
       where: {
         teamId: teamId,
@@ -27,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     });
 
-    if (!adminMember) {
+    if (!isTeamAdmin && !adminMember) {
       return NextResponse.json(
         { error: "Bu işlem için yetkiniz yok." },
         { status: 403 }

@@ -421,14 +421,23 @@ export const teamJoinRequestDb = {
       data: { status: 'approved' }
     });
 
-    // Kullanıcıyı takıma ekle
-    await prisma.teamMember.create({
-      data: {
-        userId: request.userId,
-        teamId: request.teamId,
-        role: 'member'
-      }
-    });
+    // Kullanıcıyı takıma ekle ve kullanıcı durumunu güncelle
+    await prisma.$transaction([
+      prisma.teamMember.create({
+        data: {
+          userId: request.userId,
+          teamId: request.teamId,
+          role: 'member'
+        }
+      }),
+      prisma.user.update({
+        where: { id: request.userId },
+        data: {
+          status: 'approved',
+          teamId: request.teamId
+        }
+      })
+    ]);
 
     return true;
   },
