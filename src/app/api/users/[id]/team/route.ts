@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { teamMemberDb, teamDb } from "@/lib/database";
+import { teamMemberDb, teamDb, prisma } from "@/lib/database";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -25,19 +25,48 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     // Kullanıcının takımını bul
-    const userMemberships = await teamMemberDb.findByUserId(userId);
+    let userMemberships = await teamMemberDb.findByUserId(userId);
     
     console.log(`[GET /api/users/${userId}/team] Found ${userMemberships.length} team memberships`);
     userMemberships.forEach((member, index) => {
       console.log(`[GET /api/users/${userId}/team] Membership ${index}: teamId=${member.teamId}, role=${member.role}, status=${member.status}`);
     });
-    
+
+    // Üyelik bulunamazsa, onaylanmış katılım isteğine bak ve eksik üyeliği otomatik oluştur
     if (userMemberships.length === 0) {
-      console.log(`[GET /api/users/${userId}/team] No memberships found, returning 404`);
-      return NextResponse.json(
-        { error: "Kullanıcı hiçbir takımda değil." },
-        { status: 404 }
-      );
+      const approvedRequest = await prisma.teamJoinRequest.findFirst({
+        where: { userId, status: 'approved' },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      if (approvedRequest?.teamId) {
+        console.log(`[GET /api/users/${userId}/team] No membership but approved request found. Creating missing TeamMember for team ${approvedRequest.teamId}`);
+        // Güvenli oluşturma: varsa güncelle, yoksa oluştur
+        const existing = await prisma.teamMember.findFirst({
+          where: { userId, teamId: approvedRequest.teamId }
+        });
+        if (!existing) {
+          await prisma.teamMember.create({
+            data: {
+              userId,
+              teamId: approvedRequest.teamId,
+              role: 'member',
+              status: 'approved'
+            }
+          });
+        }
+        // Tekrar yükle
+        userMemberships = await teamMemberDb.findByUserId(userId);
+        console.log(`[GET /api/users/${userId}/team] Memberships reloaded after auto-fix: ${userMemberships.length}`);
+      }
+
+      if (userMemberships.length === 0) {
+        console.log(`[GET /api/users/${userId}/team] No memberships found, returning 404`);
+        return NextResponse.json(
+          { error: "Kullanıcı hiçbir takımda değil." },
+          { status: 404 }
+        );
+      }
     }
 
     // İlk takımını al (birden fazla takımda olabilir)
