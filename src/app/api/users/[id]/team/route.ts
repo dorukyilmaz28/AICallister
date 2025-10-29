@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { teamMemberDb, teamDb, prisma } from "@/lib/database";
+import { teamMemberDb, teamDb, prisma, userDb } from "@/lib/database";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -61,11 +61,28 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       }
 
       if (userMemberships.length === 0) {
-        console.log(`[GET /api/users/${userId}/team] No memberships found, returning 404`);
-        return NextResponse.json(
-          { error: "Kullanıcı hiçbir takımda değil." },
-          { status: 404 }
-        );
+        // Fallback 2: Kullanıcının user.teamId alanı set edilmiş olabilir, oradan üyelik üret
+        const user = await userDb.findById(userId);
+        if (user?.teamId) {
+          console.log(`[GET /api/users/${userId}/team] Fallback by user.teamId detected (${user.teamId}). Creating TeamMember if missing.`);
+          const exists = await prisma.teamMember.findFirst({
+            where: { userId, teamId: user.teamId }
+          });
+          if (!exists) {
+            await prisma.teamMember.create({
+              data: { userId, teamId: user.teamId, role: 'member', status: 'approved' }
+            });
+          }
+          userMemberships = await teamMemberDb.findByUserId(userId);
+        }
+
+        if (userMemberships.length === 0) {
+          console.log(`[GET /api/users/${userId}/team] No memberships found, returning 404`);
+          return NextResponse.json(
+            { error: "Kullanıcı hiçbir takımda değil." },
+            { status: 404 }
+          );
+        }
       }
     }
 
