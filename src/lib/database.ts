@@ -183,11 +183,18 @@ export const teamMemberDb = {
   },
 
   async findByTeamId(teamId: string) {
-    return await prisma.teamMember.findMany({
-      where: { 
-        teamId,
-        status: 'approved'
-      },
+    // Önce eski kayıtların status'unu güncelle (NULL olanları 'approved' yap)
+    await prisma.$executeRaw`
+      UPDATE team_members 
+      SET status = 'approved' 
+      WHERE team_id = ${teamId} AND (status IS NULL OR status = '')
+    `.catch(() => {
+      // Hata olursa devam et
+    });
+
+    // Tüm üyeleri getir (approved olanları ve diğerlerini)
+    const allMembers = await prisma.teamMember.findMany({
+      where: { teamId },
       include: {
         user: true
       },
@@ -195,6 +202,9 @@ export const teamMemberDb = {
         joinedAt: 'desc'
       }
     });
+
+    // Sadece approved olanları veya null olanları döndür (null'lar yukarıda güncellendi)
+    return allMembers.filter(m => !m.status || m.status === 'approved');
   }
 };
 
