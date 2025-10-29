@@ -12,8 +12,10 @@ import {
   CheckCircle, 
   XCircle,
   Trash2,
-  Shield
+  Shield,
+  Home
 } from "lucide-react";
+import Link from "next/link";
 
 interface TeamMember {
   id: string;
@@ -143,9 +145,18 @@ export default function TeamAdminPanel() {
                 {teamInfo.team.name} (#{teamInfo.team.teamNumber})
               </p>
             </div>
-            <div className="flex items-center space-x-2 text-white/70">
-              <Shield className="w-6 h-6" />
-              <span className="text-lg font-medium">Yönetici</span>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 text-white/70">
+                <Shield className="w-6 h-6" />
+                <span className="text-lg font-medium">Yönetici</span>
+              </div>
+              <Link
+                href="/"
+                className="flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white/70 hover:text-white transition-colors"
+              >
+                <Home className="w-5 h-5" />
+                <span>Ana Sayfa</span>
+              </Link>
             </div>
           </div>
         </div>
