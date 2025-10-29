@@ -430,23 +430,40 @@ export const teamJoinRequestDb = {
       data: { status: 'approved' }
     });
 
-    // Kullanıcıyı takıma ekle ve kullanıcı durumunu güncelle
-    await prisma.$transaction([
-      prisma.teamMember.create({
+    // Zaten takımda mı kontrol et
+    const existingMember = await prisma.teamMember.findFirst({
+      where: {
+        userId: request.userId,
+        teamId: request.teamId
+      }
+    });
+
+    if (existingMember) {
+      // Zaten varsa sadece durumu güncelle
+      await prisma.teamMember.update({
+        where: { id: existingMember.id },
+        data: { status: 'approved' }
+      });
+    } else {
+      // Kullanıcıyı takıma ekle
+      await prisma.teamMember.create({
         data: {
           userId: request.userId,
           teamId: request.teamId,
-          role: 'member'
+          role: 'member',
+          status: 'approved'
         }
-      }),
-      prisma.user.update({
-        where: { id: request.userId },
-        data: {
-          status: 'approved',
-          teamId: request.teamId
-        }
-      })
-    ]);
+      });
+    }
+
+    // Kullanıcı durumunu güncelle
+    await prisma.user.update({
+      where: { id: request.userId },
+      data: {
+        status: 'approved',
+        teamId: request.teamId
+      }
+    });
 
     return true;
   },
