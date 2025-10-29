@@ -73,8 +73,9 @@ export const authOptions: NextAuthOptions = {
           if (freshUser) {
             token.status = freshUser.status
             token.role = freshUser.role
-            token.teamId = freshUser.teamId
-            token.teamNumber = freshUser.teamNumber
+            // null değerlerini undefined'a çevir (TypeScript uyumu için)
+            token.teamId = freshUser.teamId ?? undefined
+            token.teamNumber = freshUser.teamNumber ?? undefined
           }
         } catch (error) {
           console.error("Error fetching fresh user data:", error)
