@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "vercel-build": "PRISMA_DISABLE_ADVISORY_LOCKS=1 PRISMA_MIGRATE_ADVISORY_LOCK_TIMEOUT=60000 DATABASE_URL=$DATABASE_URL_DIRECT npx prisma migrate deploy && next build"
+    "vercel-build": "next build"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
