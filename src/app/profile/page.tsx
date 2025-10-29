@@ -33,6 +33,13 @@ export default function Profile() {
     }
   }, [session, status, router]);
 
+  // Session'daki user status değiştiğinde takım bilgisini yeniden fetch et
+  useEffect(() => {
+    if (session?.user?.status === "approved") {
+      fetchTeamInfo();
+    }
+  }, [session?.user?.status]);
+
   const fetchConversations = async () => {
     try {
       const response = await fetch("/api/conversations");
@@ -50,16 +57,23 @@ export default function Profile() {
   const fetchTeamInfo = async () => {
     if (!session?.user?.id) return;
     try {
+      console.log(`[Profile] Fetching team info for user ${session.user.id}, status: ${session.user.status}`);
       const response = await fetch(`/api/users/${session.user.id}/team`);
       if (response.ok) {
         const data = await response.json();
+        console.log(`[Profile] Team info received:`, data);
         setTeamInfo({
           teamId: data.teamId,
           teamName: data.teamName,
           teamNumber: data.teamNumber
         });
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.log(`[Profile] Failed to fetch team info: ${errorData.error || response.status}`);
+        setTeamInfo(null);
       }
     } catch (error) {
+      console.error("[Profile] Error fetching team info:", error);
       // Kullanıcının takımı yoksa hata alabilir, bu normal
       setTeamInfo(null);
     }
