@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,89 +8,79 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  teamNumber String? // FRC team number (e.g., "9024")
-  teamId    String?  // Hangi takımda olduğu
-  role      String   @default("member") // member, admin
-  status    String   @default("pending") // pending, approved, rejected
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // İlişkiler
-  conversations Conversation[]
-  teamMemberships TeamMember[]
-  teamChats TeamChat[]
-  teamJoinRequests TeamJoinRequest[]
+  id                String             @id @default(cuid())
+  email             String             @unique
+  name              String?
+  password          String
+  teamNumber        String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  role              String             @default("member")
+  status            String             @default("pending")
+  teamId            String?
+  conversations     Conversation[]
+  teamChats         TeamChat[]
+  teamJoinRequests  TeamJoinRequest[]
+  teamMemberships   TeamMember[]
   teamNotifications TeamNotification[]
-  team Team? @relation(fields: [teamId], references: [id])
-  adminTeams Team[] @relation("TeamAdmin")
-  
+  adminTeams        Team[]             @relation("TeamAdmin")
+  team              Team?              @relation(fields: [teamId], references: [id])
+
   @@map("users")
 }
 
 model Conversation {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   title     String?
-  context   String   @default("general") // general, strategy, mechanical, simulation
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // İlişkiler
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages Message[]
-  
+  context   String    @default("general")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
   @@map("conversations")
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  role      String   // user, assistant
-  content   String
-  createdAt DateTime @default(now())
-  
-  // İlişkiler
+  id             String       @id @default(cuid())
+  role           String
+  content        String
+  createdAt      DateTime     @default(now())
   conversationId String
-  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
   @@map("messages")
 }
 
 model Team {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  teamNumber  String?  @unique // FRC team number (e.g., "1234")
-  adminId     String?  // Takım yöneticisinin ID'si
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // İlişkiler
-  members TeamMember[]
-  chats   TeamChat[]
-  joinRequests TeamJoinRequest[]
+  id            String             @id @default(cuid())
+  name          String
+  description   String?
+  teamNumber    String?            @unique
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  adminId       String?
+  chats         TeamChat[]
+  joinRequests  TeamJoinRequest[]
+  members       TeamMember[]
   notifications TeamNotification[]
-  users User[] // Takımdaki kullanıcılar
-  admin User? @relation("TeamAdmin", fields: [adminId], references: [id])
-  
+  admin         User?              @relation("TeamAdmin", fields: [adminId], references: [id])
+  users         User[]
+
   @@map("teams")
 }
 
 model TeamMember {
-  id        String   @id @default(cuid())
-  role      String   @default("member") // member, admin
-  status    String   @default("approved") // approved, pending, rejected
-  joinedAt  DateTime @default(now())
-  
-  // İlişkiler
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  teamId String
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
+  id       String   @id @default(cuid())
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+  userId   String
+  teamId   String
+  status   String   @default("approved")
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, teamId])
   @@map("team_members")
 }
@@ -105,46 +89,40 @@ model TeamChat {
   id        String   @id @default(cuid())
   content   String
   createdAt DateTime @default(now())
-  
-  // İlişkiler
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  teamId String
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
+  userId    String
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("team_chats")
 }
 
 model TeamJoinRequest {
   id        String   @id @default(cuid())
-  status    String   @default("pending") // pending, approved, rejected
-  message   String?  // Kullanıcının katılım mesajı
+  status    String   @default("pending")
+  message   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  // İlişkiler
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  teamId String
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
+  userId    String
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, teamId])
   @@map("team_join_requests")
 }
 
 model TeamNotification {
   id        String   @id @default(cuid())
-  type      String   // "join_request", "member_joined", "member_left", "message"
+  type      String
   title     String
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-  
-  // İlişkiler
-  teamId String
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId String? // Hangi kullanıcıyla ilgili (opsiyonel)
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  teamId    String
+  userId    String?
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("team_notifications")
 }
