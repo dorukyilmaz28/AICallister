@@ -16,7 +16,7 @@ interface TeamMember {
   };
 }
 
-// Takıma katılma (şimdilik direkt üye yap)
+// Takıma katılma (katılım isteği oluşturur, doğrudan üye yapmaz)
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
@@ -51,24 +51,42 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    // Doğrudan üyeliğe ekle
-    await teamMemberDb.create({
-      userId: session.user.id,
-      teamId: teamId,
-      role: "member"
+    // Bekleyen istek var mı?
+    const pendingRequest = await prisma.teamJoinRequest.findFirst({
+      where: {
+        userId: session.user.id,
+        teamId,
+        status: 'pending'
+      }
     });
 
-    // Bilgilendirici bildirim (opsiyonel)
+    if (pendingRequest) {
+      return NextResponse.json(
+        { message: "Zaten bekleyen bir katılım isteğiniz var." },
+        { status: 200 }
+      );
+    }
+
+    // Katılım isteği oluştur
+    await prisma.teamJoinRequest.create({
+      data: {
+        userId: session.user.id,
+        teamId,
+        status: 'pending'
+      }
+    });
+
+    // Bildirim (opsiyonel)
     await teamNotificationDb.create(
       teamId,
-      "member_joined",
-      "Yeni Üye Katıldı",
-      `Bir kullanıcı takıma katıldı.`,
+      "join_request",
+      "Yeni Katılım İsteği",
+      `Bir kullanıcı takıma katılmak istiyor.",
       session.user.id
     );
 
     return NextResponse.json({
-      message: "Takıma katıldınız.",
+      message: "Katılım isteğiniz gönderildi. Onay bekleniyor.",
     });
 
   } catch (error) {
