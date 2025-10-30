@@ -103,7 +103,37 @@ export function FRCChat() {
         throw new Error(data.error);
       }
 
-      setMessages(data.messages);
+      // Typing effect for assistant message
+      const assistantMessage = data.messages[data.messages.length - 1];
+      const assistantText = assistantMessage?.content || "";
+
+      // Start with empty assistant message, then type it out
+      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+
+      let index = 0;
+      const typingIntervalMs = 15; // speed of typing effect
+
+      await new Promise<void>((resolve) => {
+        const intervalId = setInterval(() => {
+          index += 1;
+          setMessages(prev => {
+            const updated = [...prev];
+            const lastIdx = updated.length - 1;
+            if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
+              updated[lastIdx] = {
+                role: "assistant",
+                content: assistantText.slice(0, index)
+              };
+            }
+            return updated;
+          });
+          if (index >= assistantText.length) {
+            clearInterval(intervalId);
+            resolve();
+          }
+        }, typingIntervalMs);
+      });
+
       if (data.conversationId) {
         setConversationId(data.conversationId);
       }
