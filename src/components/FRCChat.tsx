@@ -174,11 +174,11 @@ export function FRCChat() {
       {/* Header */}
       <div className="border-b border-white/20 p-3 sm:p-4" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <Link href="/" className="flex items-center space-x-2 sm:space-x-3 group">
             <img
               src="/8f28b76859c1479d839d270409be3586.jpg"
               alt="Callister Logo"
-              className="w-8 h-8 sm:w-12 sm:h-12 object-cover rounded-xl"
+              className="w-8 h-8 sm:w-12 sm:h-12 object-cover rounded-xl transition-transform group-hover:scale-[1.02]"
             />
             <div className="min-w-0 flex-1">
               <h1 className="text-sm sm:text-xl font-bold text-white truncate">
@@ -188,7 +188,7 @@ export function FRCChat() {
                 {selectedMode === "frc" ? contextConfig[selectedContext].description : "Genel amaçlı yapay zeka modu"}
               </p>
             </div>
-          </div>
+          </Link>
           <div className="flex items-center space-x-1 sm:space-x-2">
             {session?.user?.status === "pending" && (
               <div className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-300">
@@ -196,15 +196,6 @@ export function FRCChat() {
                 <span className="text-xs sm:text-sm font-medium hidden sm:inline">Onay Bekleniyor</span>
               </div>
             )}
-            <Link
-              href="/"
-              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors duration-200 bg-white/20 hover:bg-white/30 text-white"
-            >
-              <Home className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-xs sm:text-sm font-medium hidden sm:inline">
-                Ana Sayfa
-              </span>
-            </Link>
             
             <Link
               href="/profile"
@@ -290,7 +281,7 @@ export function FRCChat() {
             )}
             
             <button
-              onClick={clearChat}
+              onClick={() => clearChat()}
               className="px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors duration-200 text-white/80 hover:text-white hover:bg-white/20"
             >
               <span className="hidden sm:inline">Temizle</span>
