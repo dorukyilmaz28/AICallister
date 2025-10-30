@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
     console.log("Environment:", process.env.NODE_ENV);
     console.log("Vercel URL:", process.env.VERCEL_URL);
     
-    const { messages, context, conversationId } = await req.json();
-    console.log("Request data:", { messagesCount: messages?.length, context, conversationId });
+    const { messages, context, conversationId, mode } = await req.json();
+    console.log("Request data:", { messagesCount: messages?.length, context, conversationId, mode });
     
     // Kullanıcı oturumu kontrolü
     const session = await getServerSession(authOptions);
@@ -37,20 +37,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Context'e göre system prompt
+    // Moda veya context'e göre system prompt
     let systemPrompt = "";
-    switch (context) {
-      case "strategy":
-        systemPrompt = "Sen bir FRC strateji uzmanısın. Robot stratejileri, oyun analizi ve takım koordinasyonu konularında yardım ediyorsun.";
-        break;
-      case "mechanical":
-        systemPrompt = "Sen bir FRC mekanik tasarım uzmanısın. Robot mekaniği, motor seçimi, güç aktarımı ve mekanik tasarım konularında yardım ediyorsun.";
-        break;
-      case "simulation":
-        systemPrompt = "Sen bir FRC simülasyon uzmanısın. Robot simülasyonu, fizik motorları ve test ortamları konularında yardım ediyorsun.";
-        break;
-      default:
-        systemPrompt = "Sen bir FRC uzmanısın. Genel FRC konularında, robot tasarımı, programlama ve yarışma stratejileri hakkında yardım ediyorsun.";
+    if (mode === "general") {
+      systemPrompt = "Sen genel amaçlı, nazik ve yardımsever bir yapay zekasın. Her konuda doğru, açık ve güvenli bilgiler ver; gerekirse örnekler ve adım adım açıklamalar yap.";
+    } else {
+      switch (context) {
+        case "strategy":
+          systemPrompt = "Sen bir FRC strateji uzmanısın. Robot stratejileri, oyun analizi ve takım koordinasyonu konularında yardım ediyorsun.";
+          break;
+        case "mechanical":
+          systemPrompt = "Sen bir FRC mekanik tasarım uzmanısın. Robot mekaniği, motor seçimi, güç aktarımı ve mekanik tasarım konularında yardım ediyorsun.";
+          break;
+        case "simulation":
+          systemPrompt = "Sen bir FRC simülasyon uzmanısın. Robot simülasyonu, fizik motorları ve test ortamları konularında yardım ediyorsun.";
+          break;
+        default:
+          systemPrompt = "Sen bir FRC uzmanısın. Genel FRC konularında, robot tasarımı, programlama ve yarışma stratejileri hakkında yardım ediyorsun.";
+      }
     }
 
     // Free sürüm için optimize edilmiş mesaj dizisi
@@ -79,13 +83,18 @@ export async function POST(req: NextRequest) {
       
       // Mock response - API key olmadığında geçici çözüm
       const mockResponses = {
-        general: "Merhaba! FRC AI asistanınızım. Genel FRC konularında size yardımcı olabilirim. Robot tasarımı, programlama, yarışma stratejileri ve takım yönetimi hakkında sorularınızı sorabilirsiniz.",
-        strategy: "Strateji uzmanı olarak size yardımcı olabilirim. Robot stratejileri, oyun analizi, takım koordinasyonu ve yarışma taktikleri konularında sorularınızı yanıtlayabilirim.",
-        mechanical: "Mekanik tasarım uzmanı olarak robot mekaniği, motor seçimi, güç aktarımı, şanzıman tasarımı ve mekanik optimizasyon konularında size yardımcı olabilirim.",
-        simulation: "Simülasyon uzmanı olarak robot simülasyonu, fizik motorları, test ortamları ve performans analizi konularında size yardımcı olabilirim."
-      };
+        frc: {
+          general: "Merhaba! FRC AI asistanınızım. Genel FRC konularında size yardımcı olabilirim. Robot tasarımı, programlama, yarışma stratejileri ve takım yönetimi hakkında sorularınızı sorabilirsiniz.",
+          strategy: "Strateji uzmanı olarak size yardımcı olabilirim. Robot stratejileri, oyun analizi, takım koordinasyonu ve yarışma taktikleri konularında sorularınızı yanıtlayabilirim.",
+          mechanical: "Mekanik tasarım uzmanı olarak robot mekaniği, motor seçimi, güç aktarımı, şanzıman tasarımı ve mekanik optimizasyon konularında size yardımcı olabilirim.",
+          simulation: "Simülasyon uzmanı olarak robot simülasyonu, fizik motorları, test ortamları ve performans analizi konularında size yardımcı olabilirim."
+        },
+        general: "Merhaba! Genel amaçlı bir yapay zekayım. Her konuda sorularınızı cevaplayabilirim. Bilim, teknoloji, yazılım, günlük hayat, eğitim vb. konularda yardımcı olabilirim."
+      } as const;
       
-      const mockResponse = mockResponses[context as keyof typeof mockResponses] || mockResponses.general;
+      const mockResponse = mode === "general"
+        ? mockResponses.general
+        : (mockResponses.frc[context as keyof typeof mockResponses.frc] || mockResponses.frc.general);
       
       return NextResponse.json({
         messages: [...messages, { role: "assistant", content: mockResponse }],

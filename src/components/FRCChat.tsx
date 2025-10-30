@@ -11,6 +11,7 @@ interface Message {
 }
 
 type Context = "general" | "strategy" | "mechanical" | "simulation";
+type Mode = "frc" | "general";
 
 const contextConfig = {
   general: {
@@ -37,6 +38,7 @@ const contextConfig = {
 
 export function FRCChat() {
   const { data: session } = useSession();
+  const [selectedMode, setSelectedMode] = useState<Mode>("frc");
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -89,6 +91,7 @@ export function FRCChat() {
         body: JSON.stringify({
           messages: newMessages,
           context: selectedContext,
+          mode: selectedMode,
           conversationId: conversationId,
         }),
       });
@@ -158,7 +161,9 @@ export function FRCChat() {
   const clearChat = () => {
     setMessages([{
       role: "assistant",
-      content: "Merhaba! FRC AI asistanınızım. Hangi konuda yardımcı olabilirim? Strateji, mekanik tasarım, simülasyon veya genel FRC konularında sorularınızı sorabilirsiniz."
+      content: selectedMode === "frc"
+        ? "Merhaba! FRC AI asistanınızım. Hangi konuda yardımcı olabilirim? Strateji, mekanik tasarım, simülasyon veya genel FRC konularında sorularınızı sorabilirsiniz."
+        : "Merhaba! Genel amaçlı yapay zekayım. Her konuda sorularınızı cevaplayabilirim."
     }]);
     setConversationId(null);
   };
@@ -179,7 +184,7 @@ export function FRCChat() {
                 Callister FRC AI Assistant
               </h1>
               <p className="text-xs sm:text-sm text-gray-400 truncate">
-                {contextConfig[selectedContext].description}
+                {selectedMode === "frc" ? contextConfig[selectedContext].description : "Genel amaçlı yapay zeka modu"}
               </p>
             </div>
           </div>
@@ -210,6 +215,33 @@ export function FRCChat() {
               </span>
             </Link>
             
+            {/* Mode toggle */}
+            <div className="flex items-center bg-white/20 rounded-lg overflow-hidden border border-white/30 mr-2">
+              <button
+                onClick={() => {
+                  if (selectedMode !== "frc") {
+                    setSelectedMode("frc");
+                    clearChat();
+                  }
+                }}
+                className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors ${selectedMode === "frc" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
+              >
+                FRC
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedMode !== "general") {
+                    setSelectedMode("general");
+                    clearChat();
+                  }
+                }}
+                className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors ${selectedMode === "general" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
+              >
+                Genel AI
+              </button>
+            </div>
+
+            {selectedMode === "frc" && (
             <div className="relative">
               <button
                 onClick={() => setShowContextMenu(!showContextMenu)}
@@ -254,6 +286,7 @@ export function FRCChat() {
                 </div>
               )}
             </div>
+            )}
             
             <button
               onClick={clearChat}
@@ -350,7 +383,7 @@ export function FRCChat() {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="FRC hakkında sorunuzu yazın... (Maksimum 200 karakter)"
+                  placeholder={selectedMode === "frc" ? "FRC hakkında sorunuzu yazın... (Maksimum 200 karakter)" : "Sorunuzu yazın... (Maksimum 200 karakter)"}
                   className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-transparent resize-none transition-colors bg-white/20 backdrop-blur-sm text-white placeholder-white/60 text-sm sm:text-base ${
                     isOverLimit ? 'border-red-400 focus:ring-red-400' : 'border-white/30'
                   }`}
