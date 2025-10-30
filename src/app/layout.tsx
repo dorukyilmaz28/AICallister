@@ -23,7 +23,7 @@ export default function RootLayout({
         <SessionProvider>
           {children}
           {/* Global Home button */}
-          <div className="fixed left-3 bottom-3 z-50">
+          <div className="fixed left-3 top-3 z-50">
             <Link
               href="/"
               className="flex items-center space-x-2 px-3 py-2 rounded-full bg-white/80 hover:bg-white text-gray-900 shadow-md border border-white/60 backdrop-blur-md transition-colors"
