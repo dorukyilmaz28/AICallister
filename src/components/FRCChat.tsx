@@ -158,10 +158,11 @@ export function FRCChat() {
     }
   };
 
-  const clearChat = () => {
+  const clearChat = (mode?: Mode) => {
+    const effectiveMode = mode ?? selectedMode;
     setMessages([{
       role: "assistant",
-      content: selectedMode === "frc"
+      content: effectiveMode === "frc"
         ? "Merhaba! FRC AI asistanınızım. Hangi konuda yardımcı olabilirim? Strateji, mekanik tasarım, simülasyon veya genel FRC konularında sorularınızı sorabilirsiniz."
         : "Merhaba! Genel amaçlı yapay zekayım. Her konuda sorularınızı cevaplayabilirim."
     }]);
@@ -221,7 +222,7 @@ export function FRCChat() {
                 onClick={() => {
                   if (selectedMode !== "general") {
                     setSelectedMode("general");
-                    clearChat();
+                    clearChat("general");
                   }
                 }}
                 className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors min-w-[90px] sm:min-w-[104px] text-center ${selectedMode === "general" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
@@ -232,7 +233,7 @@ export function FRCChat() {
                 onClick={() => {
                   if (selectedMode !== "frc") {
                     setSelectedMode("frc");
-                    clearChat();
+                    clearChat("frc");
                   }
                 }}
                 className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors min-w-[90px] sm:min-w-[104px] text-center ${selectedMode === "frc" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
