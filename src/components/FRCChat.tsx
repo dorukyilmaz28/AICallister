@@ -219,25 +219,25 @@ export function FRCChat() {
             <div className="flex items-center bg-white/20 rounded-lg overflow-hidden border border-white/30 mr-2">
               <button
                 onClick={() => {
-                  if (selectedMode !== "frc") {
-                    setSelectedMode("frc");
-                    clearChat();
-                  }
-                }}
-                className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors ${selectedMode === "frc" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
-              >
-                FRC
-              </button>
-              <button
-                onClick={() => {
                   if (selectedMode !== "general") {
                     setSelectedMode("general");
                     clearChat();
                   }
                 }}
-                className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors ${selectedMode === "general" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
+                className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors min-w-[90px] sm:min-w-[104px] text-center ${selectedMode === "general" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
               >
                 Genel AI
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedMode !== "frc") {
+                    setSelectedMode("frc");
+                    clearChat();
+                  }
+                }}
+                className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors min-w-[90px] sm:min-w-[104px] text-center ${selectedMode === "frc" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
+              >
+                FRC
               </button>
             </div>
 
