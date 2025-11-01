@@ -1,20 +1,20 @@
-﻿import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 export { prisma };
 
-// User iÅŸlemleri
+// User işlemleri
 export const userDb = {
   async create(userData: { name: string; email: string; password: string; teamNumber: string }) {
-    // Email kontrolÃ¼
+    // Email kontrolü
     const existingUser = await prisma.user.findUnique({
       where: { email: userData.email }
     });
     
     if (existingUser) {
-      throw new Error('Bu email adresi zaten kullanÄ±lÄ±yor.');
+      throw new Error('Bu email adresi zaten kullanılıyor.');
     }
 
     const hashedPassword = await bcrypt.hash(userData.password, 12);
@@ -72,16 +72,16 @@ export const userDb = {
   }
 };
 
-// Team iÅŸlemleri
+// Team işlemleri
 export const teamDb = {
   async create(teamData: { name: string; teamNumber: string; description?: string; adminId?: string }) {
-    // Team number kontrolÃ¼
+    // Team number kontrolü
     const existingTeam = await prisma.team.findFirst({
       where: { teamNumber: teamData.teamNumber }
     });
     
     if (existingTeam) {
-      throw new Error('Bu takÄ±m numarasÄ± zaten kullanÄ±lÄ±yor.');
+      throw new Error('Bu takım numarası zaten kullanılıyor.');
     }
 
     return await prisma.team.create({
@@ -149,10 +149,10 @@ export const teamDb = {
   }
 };
 
-// Team Member iÅŸlemleri
+// Team Member işlemleri
 export const teamMemberDb = {
   async create(memberData: { userId: string; teamId: string; role?: string }) {
-    // Duplicate kontrolÃ¼
+    // Duplicate kontrolü
     const existingMember = await prisma.teamMember.findFirst({
       where: {
         userId: memberData.userId,
@@ -161,7 +161,7 @@ export const teamMemberDb = {
     });
     
     if (existingMember) {
-      throw new Error('KullanÄ±cÄ± zaten bu takÄ±mda.');
+      throw new Error('Kullanıcı zaten bu takımda.');
     }
 
     return await prisma.teamMember.create({
@@ -174,7 +174,7 @@ export const teamMemberDb = {
   },
 
   async findByUserId(userId: string) {
-    // Sadece onaylanmÄ±ÅŸ Ã¼yelikleri getir
+    // Sadece onaylanmış üyelikleri getir
     const allMembers = await prisma.teamMember.findMany({
       where: { userId },
       include: {
@@ -182,12 +182,12 @@ export const teamMemberDb = {
       }
     });
     
-    // Sadece approved olanlarÄ± dÃ¶ndÃ¼r
+    // Sadece approved olanları döndür
     return allMembers.filter(m => !m.status || m.status === 'approved');
   },
 
   async findByTeamId(teamId: string) {
-    // Ã–nce eski kayÄ±tlarÄ±n status'unu gÃ¼ncelle (NULL olanlarÄ± 'approved' yap)
+    // Önce eski kayıtların status'unu güncelle (NULL olanları 'approved' yap)
     await prisma.$executeRaw`
       UPDATE team_members 
       SET status = 'approved' 
@@ -196,8 +196,8 @@ export const teamMemberDb = {
       // Hata olursa devam et
     });
 
-    // TÃ¼m Ã¼yeleri getir (status kontrolÃ¼ yapmayalÄ±m, hepsini alalÄ±m)
-    // Sonra filtreleme yapacaÄŸÄ±z
+    // Tüm üyeleri getir (status kontrolü yapmayalım, hepsini alalım)
+    // Sonra filtreleme yapacağız
     const allMembers = await prisma.teamMember.findMany({
       where: { teamId },
       include: {
@@ -208,11 +208,11 @@ export const teamMemberDb = {
       }
     });
 
-    // Sadece approved olanlarÄ± veya null olanlarÄ± dÃ¶ndÃ¼r
+    // Sadece approved olanları veya null olanları döndür
     const approvedMembers = allMembers.filter(m => !m.status || m.status === 'approved');
 
-    // Debug iÃ§in
-    console.log(`[findByTeamId] Team ${teamId} iÃ§in ${allMembers.length} toplam Ã¼ye, ${approvedMembers.length} approved Ã¼ye bulundu`);
+    // Debug için
+    console.log(`[findByTeamId] Team ${teamId} için ${allMembers.length} toplam üye, ${approvedMembers.length} approved üye bulundu`);
     approvedMembers.forEach(m => {
       console.log(`[findByTeamId] Member: ${m.id}, userId: ${m.userId}, status: ${m.status}, user: ${m.user ? m.user.name : 'NULL'}`);
     });
@@ -221,13 +221,13 @@ export const teamMemberDb = {
   }
 };
 
-// Conversation iÅŸlemleri
+// Conversation işlemleri
 export const conversationDb = {
   async create(conversationData: { userId: string; title?: string; context?: string }) {
     return await prisma.conversation.create({
       data: {
         userId: conversationData.userId,
-        title: conversationData.title || 'Yeni KonuÅŸma',
+        title: conversationData.title || 'Yeni Konuşma',
         context: conversationData.context || 'general',
       }
     });
@@ -264,7 +264,7 @@ export const conversationDb = {
     });
     
     if (!conversation) {
-      throw new Error('KonuÅŸma bulunamadÄ±.');
+      throw new Error('Konuşma bulunamadı.');
     }
 
     const message = await prisma.message.create({
@@ -275,7 +275,7 @@ export const conversationDb = {
       }
     });
 
-    // Conversation'Ä± gÃ¼ncelle
+    // Conversation'ı güncelle
     await prisma.conversation.update({
       where: { id: conversationId },
       data: { updatedAt: new Date() }
@@ -293,7 +293,7 @@ export const conversationDb = {
     });
     
     if (!conversation) {
-      throw new Error('KonuÅŸma bulunamadÄ± veya silme yetkiniz yok.');
+      throw new Error('Konuşma bulunamadı veya silme yetkiniz yok.');
     }
 
     await prisma.conversation.delete({
@@ -304,7 +304,7 @@ export const conversationDb = {
   }
 };
 
-// Team Chat iÅŸlemleri
+// Team Chat işlemleri
 export const teamChatDb = {
   async create(chatData: { userId: string; teamId: string; content: string }) {
     return await prisma.teamChat.create({
@@ -332,7 +332,7 @@ export const teamChatDb = {
   },
 
   async delete(chatId: string, userId: string) {
-    // MesajÄ±n kullanÄ±cÄ±ya ait olduÄŸunu kontrol et
+    // Mesajın kullanıcıya ait olduğunu kontrol et
     const chat = await prisma.teamChat.findFirst({
       where: {
         id: chatId,
@@ -341,7 +341,7 @@ export const teamChatDb = {
     });
 
     if (!chat) {
-      throw new Error('Mesaj bulunamadÄ± veya silme yetkiniz yok.');
+      throw new Error('Mesaj bulunamadı veya silme yetkiniz yok.');
     }
 
     await prisma.teamChat.delete({
@@ -352,7 +352,7 @@ export const teamChatDb = {
   },
 
   async clearAll(teamId: string, userId: string) {
-    // KullanÄ±cÄ±nÄ±n takÄ±mda olup olmadÄ±ÄŸÄ±nÄ± kontrol et
+    // Kullanıcının takımda olup olmadığını kontrol et
     const member = await prisma.teamMember.findFirst({
       where: {
         teamId: teamId,
@@ -361,10 +361,10 @@ export const teamChatDb = {
     });
 
     if (!member) {
-      throw new Error('Bu takÄ±mÄ±n Ã¼yesi deÄŸilsiniz.');
+      throw new Error('Bu takımın üyesi değilsiniz.');
     }
 
-    // TakÄ±mdaki tÃ¼m mesajlarÄ± sil
+    // Takımdaki tüm mesajları sil
     await prisma.teamChat.deleteMany({
       where: { teamId: teamId }
     });
@@ -373,10 +373,10 @@ export const teamChatDb = {
   }
 };
 
-// TakÄ±m katÄ±lÄ±m istekleri
+// Takım katılım istekleri
 export const teamJoinRequestDb = {
   async create(userId: string, teamId: string, message?: string) {
-    // Zaten takÄ±mda mÄ± kontrol et
+    // Zaten takımda mı kontrol et
     const existingMember = await prisma.teamMember.findFirst({
       where: {
         userId: userId,
@@ -385,10 +385,10 @@ export const teamJoinRequestDb = {
     });
 
     if (existingMember) {
-      throw new Error('Zaten bu takÄ±mÄ±n Ã¼yesisiniz.');
+      throw new Error('Zaten bu takımın üyesisiniz.');
     }
 
-    // Zaten bekleyen istek var mÄ± kontrol et
+    // Zaten bekleyen istek var mı kontrol et
     const existingRequest = await prisma.teamJoinRequest.findFirst({
       where: {
         userId: userId,
@@ -398,7 +398,7 @@ export const teamJoinRequestDb = {
     });
 
     if (existingRequest) {
-      throw new Error('Zaten bekleyen bir katÄ±lÄ±m isteÄŸiniz var.');
+      throw new Error('Zaten bekleyen bir katılım isteğiniz var.');
     }
 
     return await prisma.teamJoinRequest.create({
@@ -428,12 +428,12 @@ export const teamJoinRequestDb = {
     });
 
     if (!request) {
-      throw new Error('Ä°stek bulunamadÄ±.');
+      throw new Error('İstek bulunamadı.');
     }
 
-    // TakÄ±mÄ±n var olduÄŸundan emin ol - double check
+    // Takımın var olduğundan emin ol - double check
     if (!request.teamId) {
-      throw new Error('Ä°stekte takÄ±m ID bulunamadÄ±.');
+      throw new Error('İstekte takım ID bulunamadı.');
     }
 
     const team = await prisma.team.findUnique({
@@ -441,10 +441,10 @@ export const teamJoinRequestDb = {
     });
 
     if (!team) {
-      throw new Error(`TakÄ±m bulunamadÄ±. Team ID: ${request.teamId}`);
+      throw new Error(`Takım bulunamadı. Team ID: ${request.teamId}`);
     }
 
-    // Admin kontrolÃ¼: TakÄ±m yÃ¶neticisi ya da yetkili Ã¼ye olmalÄ±
+    // Admin kontrolü: Takım yöneticisi ya da yetkili üye olmalı
     const isTeamAdmin = team.adminId === adminUserId;
     const adminMember = await prisma.teamMember.findFirst({
       where: {
@@ -455,18 +455,18 @@ export const teamJoinRequestDb = {
     });
 
     if (!isTeamAdmin && !adminMember) {
-      throw new Error('Bu iÅŸlem iÃ§in yetkiniz yok.');
+      throw new Error('Bu işlem için yetkiniz yok.');
     }
 
-    // TÃ¼m iÅŸlemleri transaction iÃ§inde yap (atomicity iÃ§in)
+    // Tüm işlemleri transaction içinde yap (atomicity için)
     const result = await prisma.$transaction(async (tx) => {
-      // Ä°steÄŸi onayla
+      // İsteği onayla
       await tx.teamJoinRequest.update({
         where: { id: requestId },
         data: { status: 'approved' }
       });
 
-      // Zaten takÄ±mda mÄ± kontrol et
+      // Zaten takımda mı kontrol et
       let existingMember = await tx.teamMember.findFirst({
         where: {
           userId: request.userId,
@@ -475,14 +475,14 @@ export const teamJoinRequestDb = {
       });
 
       if (existingMember) {
-        // Zaten varsa sadece durumu gÃ¼ncelle
+        // Zaten varsa sadece durumu güncelle
         console.log(`[approve] Existing member found, updating status to approved. Member ID: ${existingMember.id}`);
         existingMember = await tx.teamMember.update({
           where: { id: existingMember.id },
           data: { status: 'approved' }
         });
       } else {
-        // KullanÄ±cÄ±yÄ± takÄ±ma ekle
+        // Kullanıcıyı takıma ekle
         console.log(`[approve] Creating new team member. UserId: ${request.userId}, TeamId: ${request.teamId}`);
         existingMember = await tx.teamMember.create({
           data: {
@@ -495,7 +495,7 @@ export const teamJoinRequestDb = {
         console.log(`[approve] Team member created successfully. Member ID: ${existingMember.id}`);
       }
 
-      // KullanÄ±cÄ± durumunu ve teamId'yi gÃ¼ncelle
+      // Kullanıcı durumunu ve teamId'yi güncelle
       await tx.user.update({
         where: { id: request.userId },
         data: {
@@ -504,7 +504,7 @@ export const teamJoinRequestDb = {
         }
       });
 
-      // DoÄŸrulama: OluÅŸturulan/gÃ¼ncellenen kayÄ±tlarÄ± kontrol et
+      // Doğrulama: Oluşturulan/güncellenen kayıtları kontrol et
       const verifyMember = await tx.teamMember.findUnique({
         where: { id: existingMember.id },
         include: { user: true }
@@ -530,19 +530,19 @@ export const teamJoinRequestDb = {
     });
 
     if (!request) {
-      throw new Error('Ä°stek bulunamadÄ±.');
+      throw new Error('İstek bulunamadı.');
     }
 
-    // TakÄ±mÄ±n var olduÄŸundan emin ol
+    // Takımın var olduğundan emin ol
     const team = await prisma.team.findUnique({
       where: { id: request.teamId }
     });
 
     if (!team) {
-      throw new Error(`TakÄ±m bulunamadÄ±. Team ID: ${request.teamId}`);
+      throw new Error(`Takım bulunamadı. Team ID: ${request.teamId}`);
     }
 
-    // Admin kontrolÃ¼: TakÄ±m yÃ¶neticisi ya da yetkili Ã¼ye olmalÄ±
+    // Admin kontrolü: Takım yöneticisi ya da yetkili üye olmalı
     const isTeamAdmin = team.adminId === adminUserId;
     const adminMember = await prisma.teamMember.findFirst({
       where: {
@@ -553,10 +553,10 @@ export const teamJoinRequestDb = {
     });
 
     if (!isTeamAdmin && !adminMember) {
-      throw new Error('Bu iÅŸlem iÃ§in yetkiniz yok.');
+      throw new Error('Bu işlem için yetkiniz yok.');
     }
 
-    // Ä°steÄŸi reddet
+    // İsteği reddet
     await prisma.teamJoinRequest.update({
       where: { id: requestId },
       data: { status: 'rejected' }
@@ -571,7 +571,7 @@ export const teamJoinRequestDb = {
     });
 
     if (!request || request.userId !== userId) {
-      throw new Error('Bu isteÄŸi silme yetkiniz yok.');
+      throw new Error('Bu isteği silme yetkiniz yok.');
     }
 
     await prisma.teamJoinRequest.delete({
@@ -582,7 +582,7 @@ export const teamJoinRequestDb = {
   }
 };
 
-// TakÄ±m bildirimleri
+// Takım bildirimleri
 export const teamNotificationDb = {
   async create(teamId: string, type: string, title: string, message: string, userId?: string) {
     return await prisma.teamNotification.create({
