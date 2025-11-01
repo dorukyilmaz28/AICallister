@@ -45,7 +45,7 @@ export const userDb = {
     });
   },
 
-  async updateTeamId(userId: string, teamId: string) {
+  async updateTeamId(userId: string, teamId: string | null) {
     return await prisma.user.update({
       where: { id: userId },
       data: { teamId }

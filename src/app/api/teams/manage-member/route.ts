@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { userDb, teamDb } from "@/lib/database";
+import { userDb, teamDb, teamMemberDb } from "@/lib/database";
 
 export async function POST(req: NextRequest) {
   try {
@@ -67,9 +67,8 @@ export async function POST(req: NextRequest) {
       );
     } else if (action === "remove") {
       // Kullanıcıyı takımdan çıkar
-      await userDb.updateTeamId(userId, "");
-      await userDb.updateStatus(userId, "pending");
-      await userDb.updateRole(userId, "member");
+      // Önce TeamMember kaydını sil, sonra User bilgilerini güncelle
+      await teamMemberDb.removeMember(userId, currentUser.teamId);
       
       return NextResponse.json(
         { message: "Kullanıcı takımdan çıkarıldı." },
