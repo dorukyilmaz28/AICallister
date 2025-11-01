@@ -452,7 +452,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
         "X-Title": "Callister FRC AI Assistant",
       },
       body: JSON.stringify({
-        model: "google/gemma-3n-e2b-it:free",
+        model: "deepseek/deepseek-chat-v3.1:free",
         messages: optimizedMessages,
         max_tokens: 4000, // Çok daha uzun yanıtlar için
         temperature: 0.7,
@@ -552,7 +552,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
         context,
         conversationId: conversation?.id,
         timestamp: new Date().toISOString(),
-        model: "google/gemma-3n-e2b-it:free",
+        model: "deepseek/deepseek-chat-v3.1:free",
       });
       
     } catch (dbError) {
@@ -562,7 +562,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
         messages: finalMessages,
         context,
         timestamp: new Date().toISOString(),
-        model: "google/gemma-3n-e2b-it:free",
+        model: "deepseek/deepseek-chat-v3.1:free",
       });
     }
 
