@@ -256,7 +256,6 @@ export async function POST(req: NextRequest) {
     }
 
     // RAG: Kullanıcı mesajından takım numaralarını ve programlama konularını çıkar
-    const lastUserMessage = messages[messages.length - 1];
     let ragContext = "";
     
     if (lastUserMessage && lastUserMessage.role === "user") {
