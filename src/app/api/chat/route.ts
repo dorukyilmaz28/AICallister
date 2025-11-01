@@ -3,6 +3,62 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { conversationDb } from "@/lib/database";
 
+// FRC takım numaralarını tespit et
+function extractTeamNumbers(text: string): string[] {
+  const teamNumbers: string[] = [];
+  
+  // "254", "frc 254", "team 254", "takım 254" gibi formatları yakala
+  const patterns = [
+    /(?:frc|team|takım)\s*(\d{1,5})/gi,
+    /\b(\d{3,5})\b/g,  // 3-5 haneli sayılar (muhtemelen takım numarası)
+  ];
+  
+  patterns.forEach(pattern => {
+    const matches = text.matchAll(pattern);
+    for (const match of matches) {
+      const num = match[1];
+      if (num && !teamNumbers.includes(num)) {
+        teamNumbers.push(num);
+      }
+    }
+  });
+  
+  return teamNumbers.slice(0, 3); // Max 3 takım
+}
+
+// TBA'dan takım bilgisi çek
+async function fetchTeamInfo(teamNumber: string): Promise<string> {
+  try {
+    const TBA_API_KEY = process.env.TBA_API_KEY || "";
+    
+    if (!TBA_API_KEY) {
+      return "";
+    }
+
+    const response = await fetch(
+      `https://www.thebluealliance.com/api/v3/team/frc${teamNumber}`,
+      {
+        headers: { "X-TBA-Auth-Key": TBA_API_KEY },
+      }
+    );
+
+    if (!response.ok) return "";
+
+    const team = await response.json();
+    
+    return `
+FRC Takım ${teamNumber} Bilgileri (The Blue Alliance):
+- İsim: ${team.nickname || "N/A"}
+- Tam İsim: ${team.name || "N/A"}
+- Şehir: ${team.city || "N/A"}, ${team.state_prov || "N/A"}, ${team.country || "N/A"}
+- Rookie Yılı: ${team.rookie_year || "N/A"}
+- Website: ${team.website || "N/A"}
+`;
+  } catch (error) {
+    return "";
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     console.log("=== API Route Başladı ===");
@@ -34,6 +90,31 @@ export async function POST(req: NextRequest) {
           },
           { status: 400 }
         );
+      }
+    }
+
+    // RAG: Kullanıcı mesajından takım numaralarını çıkar
+    const lastUserMessage = messages[messages.length - 1];
+    let ragContext = "";
+    
+    if (lastUserMessage && lastUserMessage.role === "user") {
+      const teamNumbers = extractTeamNumbers(lastUserMessage.content);
+      
+      if (teamNumbers.length > 0) {
+        console.log("Tespit edilen takımlar:", teamNumbers);
+        
+        // TBA'dan bilgi çek (paralel)
+        const teamInfoPromises = teamNumbers.map(num => fetchTeamInfo(num));
+        const teamInfos = await Promise.all(teamInfoPromises);
+        
+        const validInfos = teamInfos.filter(info => info.trim() !== "");
+        
+        if (validInfos.length > 0) {
+          ragContext = "\n\n=== GÜNCEL TAKIM BİLGİLERİ (The Blue Alliance) ===\n" + 
+                       validInfos.join("\n") + 
+                       "\n=== BİLGİ SONU ===\n\n" +
+                       "Yukarıdaki güncel takım bilgilerini kullanarak cevap ver.";
+        }
       }
     }
 
@@ -142,7 +223,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
 
     // Free sürüm için optimize edilmiş mesaj dizisi
     const optimizedMessages = [
-      { role: "system", content: systemPrompt },
+      { role: "system", content: systemPrompt + ragContext }, // RAG context eklendi!
       ...messages.slice(-2) // Son 2 mesaj
     ];
 
@@ -200,7 +281,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
         "X-Title": "Callister FRC AI Assistant",
       },
       body: JSON.stringify({
-        model: "deepseek/deepseek-chat-v3.1:free",
+        model: "google/gemma-2-9b-it:free",
         messages: optimizedMessages,
         max_tokens: 4000, // Çok daha uzun yanıtlar için
         temperature: 0.7,
@@ -300,7 +381,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
         context,
         conversationId: conversation?.id,
         timestamp: new Date().toISOString(),
-        model: "deepseek/deepseek-chat-v3.1:free",
+        model: "google/gemma-2-9b-it:free",
       });
       
     } catch (dbError) {
@@ -310,7 +391,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
         messages: finalMessages,
         context,
         timestamp: new Date().toISOString(),
-        model: "deepseek/deepseek-chat-v3.1:free",
+        model: "google/gemma-2-9b-it:free",
       });
     }
 
