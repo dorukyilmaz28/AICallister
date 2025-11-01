@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { userDb, teamDb, teamMemberDb } from "@/lib/database";
+import { userDb, teamDb, teamMemberDb, teamJoinRequestDb, prisma } from "@/lib/database";
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,32 +32,64 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hedef kullanıcıyı bul
-    const targetUser = await userDb.findById(userId);
-    if (!targetUser || targetUser.teamId !== currentUser.teamId) {
-      return NextResponse.json(
-        { error: "Kullanıcı bulunamadı veya takımınızda değil." },
-        { status: 404 }
-      );
-    }
-
     if (action === "approve") {
-      // Kullanıcıyı onayla
-      await userDb.updateStatus(userId, "approved");
+      // Katılma isteğini bul
+      const joinRequest = await prisma.teamJoinRequest.findFirst({
+        where: {
+          userId: userId,
+          teamId: currentUser.teamId,
+          status: "pending"
+        }
+      });
+
+      if (!joinRequest) {
+        return NextResponse.json(
+          { error: "Bekleyen katılma isteği bulunamadı." },
+          { status: 404 }
+        );
+      }
+
+      // İsteği onayla (teamJoinRequestDb.approve kullanarak)
+      await teamJoinRequestDb.approve(joinRequest.id, session.user.id);
       
       return NextResponse.json(
         { message: "Kullanıcı başarıyla onaylandı." },
         { status: 200 }
       );
     } else if (action === "reject") {
-      // Kullanıcıyı reddet
-      await userDb.updateStatus(userId, "rejected");
+      // Katılma isteğini bul
+      const joinRequest = await prisma.teamJoinRequest.findFirst({
+        where: {
+          userId: userId,
+          teamId: currentUser.teamId,
+          status: "pending"
+        }
+      });
+
+      if (!joinRequest) {
+        return NextResponse.json(
+          { error: "Bekleyen katılma isteği bulunamadı." },
+          { status: 404 }
+        );
+      }
+
+      // İsteği reddet
+      await teamJoinRequestDb.reject(joinRequest.id, session.user.id);
       
       return NextResponse.json(
         { message: "Kullanıcı reddedildi." },
         { status: 200 }
       );
     } else if (action === "make_admin") {
+      // Hedef kullanıcıyı bul ve takımda olup olmadığını kontrol et
+      const targetUser = await userDb.findById(userId);
+      if (!targetUser || targetUser.teamId !== currentUser.teamId) {
+        return NextResponse.json(
+          { error: "Kullanıcı bulunamadı veya takımınızda değil." },
+          { status: 404 }
+        );
+      }
+
       // Kullanıcıyı yönetici yap
       await userDb.updateRole(userId, "admin");
       
@@ -66,6 +98,15 @@ export async function POST(req: NextRequest) {
         { status: 200 }
       );
     } else if (action === "remove") {
+      // Hedef kullanıcıyı bul ve takımda olup olmadığını kontrol et
+      const targetUser = await userDb.findById(userId);
+      if (!targetUser || targetUser.teamId !== currentUser.teamId) {
+        return NextResponse.json(
+          { error: "Kullanıcı bulunamadı veya takımınızda değil." },
+          { status: 404 }
+        );
+      }
+
       // Kullanıcıyı takımdan çıkar
       // Önce TeamMember kaydını sil, sonra User bilgilerini güncelle
       await teamMemberDb.removeMember(userId, currentUser.teamId);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { teamDb, userDb } from "@/lib/database";
+import { teamDb, userDb, teamJoinRequestDb } from "@/lib/database";
 
 export async function GET(req: NextRequest) {
   try {
@@ -32,12 +32,13 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Takım üyelerini al
+    // Takım üyelerini al (onaylanmış üyeler)
     const members = await teamDb.getTeamMembers(currentUser.teamId);
-
-    // Onaylanmış ve bekleyen üyeleri ayır
     const approvedMembers = members.filter(member => member.status === "approved");
-    const pendingMembers = members.filter(member => member.status === "pending");
+
+    // Bekleyen katılma isteklerini al
+    const joinRequests = await teamJoinRequestDb.findByTeamId(currentUser.teamId);
+    const pendingRequests = joinRequests.filter(req => req.status === "pending");
 
     return NextResponse.json({
       team: {
@@ -62,13 +63,13 @@ export async function GET(req: NextRequest) {
         status: member.status,
         joinedAt: member.createdAt
       })),
-      pendingMembers: pendingMembers.map(member => ({
-        id: member.id,
-        name: member.name,
-        email: member.email,
-        role: member.role,
-        status: member.status,
-        requestedAt: member.createdAt
+      pendingMembers: pendingRequests.map(request => ({
+        id: request.user.id,
+        name: request.user.name,
+        email: request.user.email,
+        role: "member",
+        status: "pending",
+        requestedAt: request.createdAt
       }))
     });
 
