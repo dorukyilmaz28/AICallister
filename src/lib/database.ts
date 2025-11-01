@@ -218,6 +218,38 @@ export const teamMemberDb = {
     });
 
     return approvedMembers;
+  },
+
+  async removeMember(userId: string, teamId: string) {
+    // Önce TeamMember kaydını bul
+    const teamMember = await prisma.teamMember.findFirst({
+      where: {
+        userId,
+        teamId
+      }
+    });
+
+    if (!teamMember) {
+      throw new Error('Kullanıcı bu takımda değil.');
+    }
+
+    // Transaction içinde hem TeamMember'ı sil hem de User.teamId'yi null yap
+    return await prisma.$transaction(async (tx) => {
+      // TeamMember kaydını sil
+      await tx.teamMember.delete({
+        where: {
+          id: teamMember.id
+        }
+      });
+
+      // User'ın teamId'sini null yap
+      await tx.user.update({
+        where: { id: userId },
+        data: { teamId: null }
+      });
+
+      return true;
+    });
   }
 };
 
