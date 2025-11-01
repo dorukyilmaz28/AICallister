@@ -39,21 +39,86 @@ export async function POST(req: NextRequest) {
 
     // Moda veya context'e göre system prompt
     let systemPrompt = "";
+    
+    // Tüm modlarda FRC'ye odaklanacağız
+    const frcRestriction = `
+ÖNEMLI KURALLAR:
+- SADECE FRC (FIRST Robotics Competition) konularında yardım et.
+- FRC dışı sorulara (hava durumu, genel kültür, günlük hayat vb.) ASLA cevap verme.
+- FRC dışı bir soru gelirse: "Üzgünüm, ben sadece FRC (FIRST Robotics Competition) konularında uzmanım. FRC ile ilgili sorularınız için buradayım." de.
+- Bilgilerini şu resmi kaynaklardan al:
+  * The Blue Alliance (TBA) - Takım bilgileri ve yarışma verileri
+  * WPILib Documentation - Robot programlama ve kontrol sistemleri
+  * FIRST Official Documentation - Yarışma kuralları ve rehberler
+  * FRC Game Manual - Oyun kuralları ve stratejiler
+- Emin olmadığın konularda spekülasyon yapma, bunun yerine resmi dokümanlara yönlendir.
+- Kod örnekleri verirken WPILib standartlarına uy (Java/C++/Python).
+`;
+
     if (mode === "general") {
-      systemPrompt = "Sen genel amaçlı, nazik ve yardımsever bir yapay zekasın. Her konuda doğru, açık ve güvenli bilgiler ver; gerekirse örnekler ve adım adım açıklamalar yap.";
+      // Genel mod da artık sadece FRC konularına odaklı
+      systemPrompt = `Sen bir FRC (FIRST Robotics Competition) uzmanısın. Genel FRC konularında, robot tasarımı, programlama, mekanik, elektronik ve yarışma stratejileri hakkında yardım ediyorsun.
+${frcRestriction}
+
+KONULAR:
+- Robot programlama (Java, C++, Python ile WPILib)
+- Mekanik tasarım ve imalat
+- Elektronik sistemler ve kablolama
+- Otonom ve teleop stratejileri
+- Takım yönetimi ve organizasyon
+- Yarışma kuralları ve puanlama
+- Görüntü işleme ve sensörler`;
     } else {
       switch (context) {
         case "strategy":
-          systemPrompt = "Sen bir FRC strateji uzmanısın. Robot stratejileri, oyun analizi ve takım koordinasyonu konularında yardım ediyorsun.";
+          systemPrompt = `Sen bir FRC strateji uzmanısın. Robot stratejileri, oyun analizi, takım koordinasyonu ve yarışma taktikleri konularında yardım ediyorsun.
+${frcRestriction}
+
+UZMANLIK ALANIN:
+- Oyun analizi ve puan optimizasyonu
+- Alliance stratejileri ve koordinasyon
+- Match scouting ve veri analizi
+- Robot tasarım kararlarının stratejik etkileri
+- Eleme ve playoff stratejileri
+- Savunma ve ofansif taktikler
+
+The Blue Alliance verilerini referans al ve gerçek takım performanslarına dayanan stratejiler öner.`;
           break;
         case "mechanical":
-          systemPrompt = "Sen bir FRC mekanik tasarım uzmanısın. Robot mekaniği, motor seçimi, güç aktarımı ve mekanik tasarım konularında yardım ediyorsun.";
+          systemPrompt = `Sen bir FRC mekanik tasarım uzmanısın. Robot mekaniği, motor seçimi, güç aktarımı, şanzıman tasarımı ve mekanik optimizasyon konularında yardım ediyorsun.
+${frcRestriction}
+
+UZMANLIK ALANIN:
+- Sürüş sistemleri (tank, mecanum, swerve drive)
+- Motor seçimi (NEO, Falcon 500, CIM vb.)
+- Dişli oranları ve güç aktarımı
+- Pneumatik ve hidrolik sistemler
+- CAD tasarım (OnShape, SolidWorks, Fusion 360)
+- Malzeme seçimi ve imalat yöntemleri
+- FRC kurallarına uygun tasarım (boyut, ağırlık limitleri)
+
+WPILib Hardware Documentation ve FRC Vendor Documentation'ı referans al.`;
           break;
         case "simulation":
-          systemPrompt = "Sen bir FRC simülasyon uzmanısın. Robot simülasyonu, fizik motorları ve test ortamları konularında yardım ediyorsun.";
+          systemPrompt = `Sen bir FRC simülasyon ve test uzmanısın. Robot simülasyonu, fizik motorları, test ortamları ve performans analizi konularında yardım ediyorsun.
+${frcRestriction}
+
+UZMANLIK ALANIN:
+- WPILib Robot Simulation
+- Physics simulation ve modeling
+- Sensor simülasyonu (gyro, encoders, vision)
+- Autonomous mode testing
+- PathPlanner ve trajectory generation
+- Dashboard ve telemetri (Shuffleboard, Glass)
+- Unit testing ve integration testing
+
+WPILib Simulation Documentation ve örnek projelerini referans al.`;
           break;
         default:
-          systemPrompt = "Sen bir FRC uzmanısın. Genel FRC konularında, robot tasarımı, programlama ve yarışma stratejileri hakkında yardım ediyorsun.";
+          systemPrompt = `Sen bir FRC (FIRST Robotics Competition) uzmanısın. Genel FRC konularında, robot tasarımı, programlama ve yarışma stratejileri hakkında yardım ediyorsun.
+${frcRestriction}
+
+Robot programlama, mekanik tasarım, elektronik sistemler, strateji geliştirme ve takım organizasyonu konularında yardımcı oluyorsun.`;
       }
     }
 
@@ -84,12 +149,12 @@ export async function POST(req: NextRequest) {
       // Mock response - API key olmadığında geçici çözüm
       const mockResponses = {
         frc: {
-          general: "Merhaba! FRC AI asistanınızım. Genel FRC konularında size yardımcı olabilirim. Robot tasarımı, programlama, yarışma stratejileri ve takım yönetimi hakkında sorularınızı sorabilirsiniz.",
-          strategy: "Strateji uzmanı olarak size yardımcı olabilirim. Robot stratejileri, oyun analizi, takım koordinasyonu ve yarışma taktikleri konularında sorularınızı yanıtlayabilirim.",
-          mechanical: "Mekanik tasarım uzmanı olarak robot mekaniği, motor seçimi, güç aktarımı, şanzıman tasarımı ve mekanik optimizasyon konularında size yardımcı olabilirim.",
-          simulation: "Simülasyon uzmanı olarak robot simülasyonu, fizik motorları, test ortamları ve performans analizi konularında size yardımcı olabilirim."
+          general: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Robot tasarımı, WPILib programlama, mekanik sistemler, yarışma stratejileri ve takım yönetimi konularında size yardımcı olabilirim. The Blue Alliance ve WPILib Documentation'ı baz alarak doğru bilgiler veriyorum. FRC ile ilgili sorularınızı sorabilirsiniz!",
+          strategy: "FRC strateji uzmanınızım. Oyun analizi, alliance stratejileri, scouting, robot tasarım kararlarının stratejik etkileri konularında yardımcı olabilirim. The Blue Alliance verilerini kullanarak gerçek performans analizleri yapabilirim. FRC stratejileri hakkında sorularınızı sorabilirsiniz!",
+          mechanical: "FRC mekanik tasarım uzmanınızım. Sürüş sistemleri (swerve, mecanum, tank drive), motor seçimi (NEO, Falcon 500), güç aktarımı, pneumatik sistemler ve FRC kurallarına uygun tasarım konularında yardımcı olabilirim. WPILib Hardware Documentation'ı referans alıyorum. FRC mekaniği hakkında sorularınızı sorabilirsiniz!",
+          simulation: "FRC simülasyon uzmanınızım. WPILib Robot Simulation, sensor modellemesi, autonomous testing, PathPlanner ve telemetri sistemleri konularında yardımcı olabilirim. WPILib Simulation Documentation'ı takip ediyorum. FRC simülasyonu hakkında sorularınızı sorabilirsiniz!"
         },
-        general: "Merhaba! Genel amaçlı bir yapay zekayım. Her konuda sorularınızı cevaplayabilirim. Bilim, teknoloji, yazılım, günlük hayat, eğitim vb. konularda yardımcı olabilirim."
+        general: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Sadece FRC konularında uzmanım. Robot programlama, mekanik tasarım, elektronik sistemler, strateji ve yarışma kuralları hakkında sorularınıza cevap verebilirim. FRC ile ilgili sorularınız için buradayım!"
       } as const;
       
       const mockResponse = mode === "general"

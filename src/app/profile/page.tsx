@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, MessageSquare, Settings, Calendar, Bot, Users, Shield } from "lucide-react";
+import { User, LogOut, MessageSquare, Settings, Calendar, Bot, Users, Shield, Search } from "lucide-react";
 
 interface Conversation {
   id: string;
@@ -143,6 +143,13 @@ export default function Profile() {
             >
               <Users className="w-4 h-4" />
               <span>Takımlarım</span>
+            </Link>
+            <Link
+              href="/discover-teams"
+              className="flex items-center space-x-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-white transition-colors duration-200"
+            >
+              <Search className="w-4 h-4" />
+              <span>Takım Keşfet</span>
             </Link>
             <Link
               href="/chat"

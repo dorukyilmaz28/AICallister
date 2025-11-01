@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send, Bot, User, Settings, Wrench, Target, Cpu, Home, UserCircle, Shield } from "lucide-react";
+import { Send, Bot, User, Settings, Wrench, Target, Cpu, Home, UserCircle, Shield, Search } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -42,7 +42,7 @@ export function FRCChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Merhaba! FRC AI asistanınızım. Hangi konuda yardımcı olabilirim? Strateji, mekanik tasarım, simülasyon veya genel FRC konularında sorularınızı sorabilirsiniz."
+      content: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Sadece FRC konularında uzmanım ve bilgilerimi Blue Alliance, WPILib Documentation ve FIRST resmi kaynaklarından alıyorum.\n\nSize nasıl yardımcı olabilirim?\n• Robot programlama (WPILib - Java/C++/Python)\n• Mekanik tasarım ve motor seçimi\n• Strateji ve oyun analizi\n• Simülasyon ve test\n• Yarışma kuralları\n\nSorularınızı sorabilirsiniz! (Not: FRC dışı sorulara yanıt veremem)"
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
@@ -163,8 +163,8 @@ export function FRCChat() {
     setMessages([{
       role: "assistant",
       content: effectiveMode === "frc"
-        ? "Merhaba! FRC AI asistanınızım. Hangi konuda yardımcı olabilirim? Strateji, mekanik tasarım, simülasyon veya genel FRC konularında sorularınızı sorabilirsiniz."
-        : "Merhaba! Genel amaçlı yapay zekayım. Her konuda sorularınızı cevaplayabilirim."
+        ? "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Sadece FRC konularında uzmanım ve bilgilerimi Blue Alliance, WPILib Documentation ve FIRST resmi kaynaklarından alıyorum.\n\nSize nasıl yardımcı olabilirim?\n• Robot programlama (WPILib - Java/C++/Python)\n• Mekanik tasarım ve motor seçimi\n• Strateji ve oyun analizi\n• Simülasyon ve test\n• Yarışma kuralları\n\nSorularınızı sorabilirsiniz! (Not: FRC dışı sorulara yanıt veremem)"
+        : "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Bu modda da sadece FRC konularında yardımcı olabilirim. FRC ile ilgili sorularınız için buradayım!"
     }]);
     setConversationId(null);
   };
@@ -185,7 +185,7 @@ export function FRCChat() {
                 Callister FRC AI Assistant
               </h1>
               <p className="text-xs sm:text-sm text-gray-400 truncate">
-                {selectedMode === "frc" ? contextConfig[selectedContext].description : "Genel amaçlı yapay zeka modu"}
+                {selectedMode === "frc" ? contextConfig[selectedContext].description : "FRC konularında yardımcı"}
               </p>
             </div>
           </Link>
@@ -196,6 +196,16 @@ export function FRCChat() {
                 <span className="text-xs sm:text-sm font-medium hidden sm:inline">Onay Bekleniyor</span>
               </div>
             )}
+            
+            <Link
+              href="/discover-teams"
+              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors duration-200 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-white"
+            >
+              <Search className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-xs sm:text-sm font-medium hidden sm:inline">
+                Takım Keşfet
+              </span>
+            </Link>
             
             <Link
               href="/profile"
@@ -217,8 +227,9 @@ export function FRCChat() {
                   }
                 }}
                 className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors min-w-[90px] sm:min-w-[104px] text-center ${selectedMode === "general" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
+                title="FRC genel konular"
               >
-                Genel AI
+                FRC Genel
               </button>
               <button
                 onClick={() => {
@@ -228,8 +239,9 @@ export function FRCChat() {
                   }
                 }}
                 className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors min-w-[90px] sm:min-w-[104px] text-center ${selectedMode === "frc" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
+                title="FRC uzman modları (Strateji, Mekanik, Simülasyon)"
               >
-                FRC
+                FRC Uzman
               </button>
             </div>
 
