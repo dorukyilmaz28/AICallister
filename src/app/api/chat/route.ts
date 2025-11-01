@@ -59,6 +59,168 @@ FRC Takım ${teamNumber} Bilgileri (The Blue Alliance):
   }
 }
 
+// WPILib programlama konularını tespit et ve dokümantasyon ekle
+function getWPILibContext(text: string): string {
+  const textLower = text.toLowerCase();
+  let context = "";
+  
+  // WPILib Keyword Mapping
+  const wpilibTopics = {
+    // Motor Controllers
+    motor: {
+      keywords: ["motor", "talon", "spark", "victor", "falcon", "neo", "kraken", "can", "pwm"],
+      docs: `
+WPILib Motor Controller Dokümantasyonu:
+- TalonFX/TalonSRX: https://docs.wpilib.org/en/stable/docs/software/hardware-apis/motors/talonfx.html
+- SparkMax: https://docs.wpilib.org/en/stable/docs/software/hardware-apis/motors/spark-max.html
+- PWM Motor Controllers: https://docs.wpilib.org/en/stable/docs/software/hardware-apis/motors/pwm-controllers.html
+
+Motor Kontrol Örnekleri:
+- Motor hız kontrolü için set() metodunu kullan (değer: -1.0 ile 1.0 arası)
+- Encoder okumak için getEncoder() kullan
+- PID kontrolü için setPID() veya Phoenix API kullan
+`
+    },
+    
+    // Autonomous
+    autonomous: {
+      keywords: ["autonomous", "auto", "otonom", "pathplanner", "trajectory", "path"],
+      docs: `
+WPILib Autonomous Dokümantasyonu:
+- Command-Based Programming: https://docs.wpilib.org/en/stable/docs/software/commandbased/index.html
+- PathPlanner: https://pathplanner.dev/
+- Trajectory Following: https://docs.wpilib.org/en/stable/docs/software/advanced-controls/trajectories/index.html
+
+Autonomous Örnek:
+- Commands kullanarak autonomous rutinleri oluştur
+- RamseteCommand ile trajectory takibi yap
+- Autonomous için SequentialCommandGroup kullan
+`
+    },
+    
+    // Sensors
+    sensor: {
+      keywords: ["sensor", "encoder", "gyro", "limit switch", "ultrasonic", "lidar", "vision", "limelight"],
+      docs: `
+WPILib Sensor Dokümantasyonu:
+- Encoders: https://docs.wpilib.org/en/stable/docs/software/hardware-apis/sensors/encoders.html
+- Gyroscopes: https://docs.wpilib.org/en/stable/docs/software/hardware-apis/sensors/gyros.html
+- Limit Switches: https://docs.wpilib.org/en/stable/docs/software/hardware-apis/sensors/digital-inputs.html
+- Vision Processing: https://docs.wpilib.org/en/stable/docs/software/vision-processing/index.html
+
+Sensor Kullanımı:
+- Encoder pozisyonu: encoder.getDistance()
+- Gyro açısı: gyro.getAngle()
+- Limit switch: limitSwitch.get()
+`
+    },
+    
+    // PID Control
+    pid: {
+      keywords: ["pid", "pidcontroller", "feedback", "control loop"],
+      docs: `
+WPILib PID Controller Dokümantasyonu:
+- PID Control: https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/pidcontroller.html
+- Profiled PID: https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/profiled-pidcontroller.html
+
+PID Örnek:
+PIDController pidController = new PIDController(kP, kI, kD);
+double output = pidController.calculate(measurement, setpoint);
+`
+    },
+    
+    // Pneumatics
+    pneumatic: {
+      keywords: ["pneumatic", "solenoid", "compressor", "pnömatik"],
+      docs: `
+WPILib Pneumatics Dokümantasyonu:
+- Pneumatics: https://docs.wpilib.org/en/stable/docs/software/hardware-apis/pneumatics/index.html
+- Solenoids: https://docs.wpilib.org/en/stable/docs/software/hardware-apis/pneumatics/solenoids.html
+
+Pneumatics Örnek:
+Solenoid solenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
+solenoid.set(true); // Aktif et
+`
+    },
+    
+    // Drive Systems
+    drive: {
+      keywords: ["drive", "swerve", "mecanum", "differential", "tank", "arcade"],
+      docs: `
+WPILib Drive Systems Dokümantasyonu:
+- Differential Drive: https://docs.wpilib.org/en/stable/docs/software/hardware-apis/motors/wpi-drive-classes.html
+- Swerve Drive: https://docs.wpilib.org/en/stable/docs/software/advanced-controls/geometry/swerve-drive-kinematics.html
+- Mecanum Drive: https://docs.wpilib.org/en/stable/docs/software/hardware-apis/motors/wpi-drive-classes.html#mecanum-drive
+
+Drive Örnek:
+DifferentialDrive drive = new DifferentialDrive(leftMotor, rightMotor);
+drive.arcadeDrive(speed, rotation);
+`
+    },
+    
+    // Programming Basics
+    programming: {
+      keywords: ["robot.java", "robot.py", "robotcontainer", "subsystem", "command", "button", "java", "python", "c++"],
+      docs: `
+WPILib Command-Based Programming:
+- Robot Structure: https://docs.wpilib.org/en/stable/docs/software/commandbased/structuring-command-based-project.html
+- Commands: https://docs.wpilib.org/en/stable/docs/software/commandbased/commands.html
+- Subsystems: https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html
+- Java Docs: https://docs.wpilib.org/en/stable/docs/software/java-libraries/index.html
+- Python (RobotPy): https://robotpy.readthedocs.io/
+- C++ Docs: https://docs.wpilib.org/en/stable/docs/software/cpp-libraries/index.html
+
+Temel Yapı:
+1. Robot.java/py/cpp - Ana robot sınıfı
+2. RobotContainer - Robot konfigürasyonu
+3. Subsystems/ - Robot alt sistemleri
+4. Commands/ - Robot komutları
+
+Dil Seçimi:
+- Java: En popüler, en çok kaynak
+- Python (RobotPy): Kolay öğrenilir
+- C++: Performans kritik uygulamalar
+`
+    },
+    
+    // Simulation & Testing
+    simulation: {
+      keywords: ["simulation", "simülasyon", "test", "unit test", "shuffleboard", "glass"],
+      docs: `
+WPILib Simulation & Testing:
+- Robot Simulation: https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/index.html
+- Shuffleboard: https://docs.wpilib.org/en/stable/docs/software/dashboards/shuffleboard/index.html
+- Glass: https://docs.wpilib.org/en/stable/docs/software/dashboards/glass/index.html
+- Unit Testing: https://docs.wpilib.org/en/stable/docs/software/advanced-gradlerio/unit-testing.html
+
+Simulation Kullanımı:
+- Kodu test etmek için fiziksel robot gerekmiyor
+- Sensor ve motor davranışlarını simüle et
+- GUI ile robotunuzu görselleştir
+`
+    }
+  };
+  
+  // Hangi konular tespit edildi?
+  const detectedTopics: string[] = [];
+  
+  for (const [topic, data] of Object.entries(wpilibTopics)) {
+    const hasKeyword = data.keywords.some(keyword => textLower.includes(keyword));
+    if (hasKeyword) {
+      detectedTopics.push(data.docs);
+    }
+  }
+  
+  if (detectedTopics.length > 0) {
+    context = "\n\n=== WPILib DOKÜMANTASYONU ===\n" + 
+              detectedTopics.join("\n---\n") + 
+              "\n=== DÖKÜMAN SONU ===\n\n" +
+              "Yukarıdaki WPILib dokümantasyonunu kullanarak kod örnekleri ve açıklamalar ver.";
+  }
+  
+  return context;
+}
+
 export async function POST(req: NextRequest) {
   try {
     console.log("=== API Route Başladı ===");
@@ -93,12 +255,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // RAG: Kullanıcı mesajından takım numaralarını çıkar
+    // RAG: Kullanıcı mesajından takım numaralarını ve programlama konularını çıkar
     const lastUserMessage = messages[messages.length - 1];
     let ragContext = "";
     
     if (lastUserMessage && lastUserMessage.role === "user") {
-      const teamNumbers = extractTeamNumbers(lastUserMessage.content);
+      const userText = lastUserMessage.content;
+      
+      // 1. TBA RAG - Takım bilgileri
+      const teamNumbers = extractTeamNumbers(userText);
       
       if (teamNumbers.length > 0) {
         console.log("Tespit edilen takımlar:", teamNumbers);
@@ -110,11 +275,18 @@ export async function POST(req: NextRequest) {
         const validInfos = teamInfos.filter(info => info.trim() !== "");
         
         if (validInfos.length > 0) {
-          ragContext = "\n\n=== GÜNCEL TAKIM BİLGİLERİ (The Blue Alliance) ===\n" + 
+          ragContext += "\n\n=== GÜNCEL TAKIM BİLGİLERİ (The Blue Alliance) ===\n" + 
                        validInfos.join("\n") + 
                        "\n=== BİLGİ SONU ===\n\n" +
                        "Yukarıdaki güncel takım bilgilerini kullanarak cevap ver.";
         }
+      }
+      
+      // 2. WPILib RAG - Programlama dokümantasyonu
+      const wpilibContext = getWPILibContext(userText);
+      if (wpilibContext) {
+        console.log("WPILib dokümantasyonu eklendi");
+        ragContext += wpilibContext;
       }
     }
 
