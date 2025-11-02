@@ -35,35 +35,35 @@ export default function Home() {
                 {session?.user.role === "admin" && (
                   <Link
                     href="/teams/admin"
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-300 hover:text-blue-200 transition-colors duration-200"
+                    className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-300 hover:text-blue-200 transition-colors duration-200"
                   >
                     <Settings className="w-4 h-4" />
-                    <span>Takım Yönetimi</span>
+                    <span className="hidden md:inline">Yönetim</span>
                   </Link>
                 )}
                 <Link
                   href="/profile"
-                  className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+                  className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
                 >
                   <User className="w-4 h-4" />
-                  <span>{session?.user.name}</span>
+                  <span className="hidden sm:inline">{session?.user.name}</span>
                 </Link>
               </>
             ) : (
               <>
                 <Link
                   href="/auth/signin"
-                  className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+                  className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
                 >
                   <LogIn className="w-4 h-4" />
-                  <span>Giriş Yap</span>
+                  <span className="hidden md:inline">Giriş</span>
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="flex items-center space-x-2 px-4 py-2 bg-white/30 hover:bg-white/40 border border-white/40 rounded-lg text-white transition-colors duration-200"
+                  className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/30 hover:bg-white/40 border border-white/40 rounded-lg text-white transition-colors duration-200"
                 >
                   <User className="w-4 h-4" />
-                  <span>Kayıt Ol</span>
+                  <span className="hidden md:inline">Kayıt</span>
                 </Link>
               </>
             )}
