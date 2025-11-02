@@ -32,9 +32,12 @@ async function fetchTeamInfo(teamNumber: string): Promise<string> {
     const TBA_API_KEY = process.env.TBA_API_KEY || "";
     
     if (!TBA_API_KEY) {
+      console.log("[TBA RAG] API key yok!");
       return "";
     }
 
+    console.log(`[TBA RAG] Takım ${teamNumber} bilgisi çekiliyor...`);
+    
     const response = await fetch(
       `https://www.thebluealliance.com/api/v3/team/frc${teamNumber}`,
       {
@@ -42,9 +45,15 @@ async function fetchTeamInfo(teamNumber: string): Promise<string> {
       }
     );
 
-    if (!response.ok) return "";
+    console.log(`[TBA RAG] TBA Response Status: ${response.status}`);
+    
+    if (!response.ok) {
+      console.log(`[TBA RAG] Takım ${teamNumber} bulunamadı (${response.status})`);
+      return "";
+    }
 
     const team = await response.json();
+    console.log(`[TBA RAG] Takım ${teamNumber} başarıyla çekildi:`, team.nickname);
     
     return `
 FRC Takım ${teamNumber} Bilgileri (The Blue Alliance):
