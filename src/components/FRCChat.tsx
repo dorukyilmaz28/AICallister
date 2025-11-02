@@ -202,6 +202,16 @@ export function FRCChat() {
             )}
             
             <Link
+              href="/"
+              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors duration-200 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-white"
+            >
+              <Home className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-xs sm:text-sm font-medium hidden sm:inline">
+                Ana Sayfa
+              </span>
+            </Link>
+            
+            <Link
               href="/discover-teams"
               className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors duration-200 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-white"
             >

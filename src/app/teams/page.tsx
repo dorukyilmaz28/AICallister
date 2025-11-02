@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Plus, Bot, ArrowLeft, Settings, MessageSquare, Search } from "lucide-react";
+import { User, LogOut, Users, Plus, Bot, ArrowLeft, Settings, MessageSquare, Search, Home } from "lucide-react";
 
 interface Team {
   id: string;
@@ -196,6 +196,13 @@ export default function TeamsPage() {
             </h1>
           </div>
           <div className="flex items-center space-x-3">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors duration-200"
+            >
+              <Home className="w-4 h-4" />
+              <span>Ana Sayfa</span>
+            </Link>
             <button
               onClick={() => setShowCreateForm(true)}
               className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
