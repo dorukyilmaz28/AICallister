@@ -130,44 +130,44 @@ export default function DiscoverTeamsPage() {
       {/* Header */}
       <div className="border-b border-white/20 p-4">
         <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 flex-1 min-w-0">
             <img
               src="/8f28b76859c1479d839d270409be3586.jpg"
               alt="Callister Logo"
-              className="w-10 h-10 object-cover rounded-xl"
+              className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-xl"
             />
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-base sm:text-xl font-bold text-white truncate">
               Takım Keşfet
             </h1>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <Link
               href="/"
-              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors duration-200"
+              className="p-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors duration-200"
+              title="Ana Sayfa"
             >
               <Home className="w-4 h-4" />
-              <span className="hidden md:inline">Ana Sayfa</span>
             </Link>
             <Link
               href="/teams"
-              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+              className="p-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+              title="Takımlarım"
             >
               <Users className="w-4 h-4" />
-              <span className="hidden md:inline">Takımlarım</span>
             </Link>
             <Link
               href="/profile"
-              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+              className="p-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+              title="Profil"
             >
               <User className="w-4 h-4" />
-              <span className="hidden md:inline">Profil</span>
             </Link>
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
+              className="p-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
+              title="Çıkış Yap"
             >
               <LogOut className="w-4 h-4" />
-              <span className="hidden md:inline">Çıkış</span>
             </button>
           </div>
         </div>
