@@ -72,74 +72,42 @@ export default function Home() {
       </div>
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden min-h-screen flex items-center">
-        {/* Animated Background */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
-          {/* Floating particles */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ top: '10%', left: '10%', animationDuration: '4s' }}></div>
-            <div className="absolute w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ top: '60%', right: '10%', animationDuration: '6s', animationDelay: '1s' }}></div>
-            <div className="absolute w-64 h-64 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ bottom: '20%', left: '50%', animationDuration: '5s', animationDelay: '2s' }}></div>
-          </div>
-        </div>
-        
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}></div>
         <div className="relative container mx-auto px-4 py-12 sm:py-20">
           <div className="max-w-4xl mx-auto">
             {/* Content - Ortada */}
             <div className="text-white text-center">
-              {/* Logo - Fade in + Scale */}
-              <div className="flex items-center justify-center space-x-3 mb-6 sm:mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <div className="flex items-center justify-center space-x-3 mb-6 sm:mb-8">
                 <img
                   src="/8f28b76859c1479d839d270409be3586.jpg"
                   alt="Callister Logo"
-                  className="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-2xl shadow-2xl transform hover:scale-110 hover:rotate-3 transition-all duration-500 animate-float"
+                  className="w-16 h-16 sm:w-24 sm:h-24 object-cover rounded-2xl shadow-2xl"
                 />
               </div>
               
-              {/* Team Info - Fade in */}
-              <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                <p className="text-blue-300 font-medium text-lg sm:text-xl mb-2">Callister Team</p>
-                <p className="text-gray-300 text-sm sm:text-lg">AI-Powered FRC Assistant</p>
+              <div className="mb-4">
+                <p className="text-blue-300 font-medium text-base sm:text-lg">Callister Team</p>
+                <p className="text-gray-300 text-sm sm:text-base">AI-Powered FRC Assistant</p>
               </div>
               
-              {/* Main Title - Slide in + Gradient Animation */}
-              <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold mb-8 sm:mb-10 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent animate-fade-in-up animate-gradient" style={{ animationDelay: '0.6s', backgroundSize: '200% auto' }}>
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
                 Callister FRC AI Assistant
               </h1>
               
-              {/* Description - Fade in */}
-              <p className="text-xl sm:text-3xl text-gray-200 mb-10 sm:mb-14 leading-relaxed max-w-3xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
+              <p className="text-lg sm:text-2xl text-gray-300 mb-8 sm:mb-12 leading-relaxed max-w-3xl mx-auto">
                 Robot tasarımından stratejiye, mekanikten simülasyona kadar FRC'nin her alanında 
-                uzman desteği alın. 🤖 Yapay zeka ile güçlendirilmiş akıllı asistanınız. 🚀
+                uzman desteği alın. Yapay zeka ile güçlendirilmiş akıllı asistanınız.
               </p>
               
-              {/* CTA Button - Fade in + Pulse */}
-              <div className="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in-up" style={{ animationDelay: '1s' }}>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   href="/chat"
-                  className="group relative inline-flex items-center justify-center space-x-3 bg-gradient-to-r from-blue-500/40 to-purple-500/40 backdrop-blur-sm text-white px-10 sm:px-14 py-5 sm:py-6 rounded-2xl font-bold text-xl sm:text-2xl hover:from-blue-500/60 hover:to-purple-500/60 transition-all duration-500 shadow-2xl hover:shadow-blue-500/50 transform hover:scale-105 border-2 border-white/30 overflow-hidden"
+                  className="inline-flex items-center justify-center space-x-3 bg-gradient-to-r from-blue-500/30 to-purple-500/30 backdrop-blur-sm text-white px-8 sm:px-12 py-4 sm:py-5 rounded-2xl font-bold text-lg sm:text-xl hover:from-blue-500/40 hover:to-purple-500/40 transition-all duration-300 shadow-2xl hover:shadow-white/25 transform hover:-translate-y-1 border border-white/30"
                 >
-                  {/* Shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
-                  <Play className="w-6 h-6 sm:w-7 sm:h-7 animate-pulse" />
-                  <span className="relative">AI Asistanı ile Sohbet Et</span>
+                  <Play className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <span>AI Asistanı ile Sohbet Et</span>
                 </Link>
-              </div>
-              
-              {/* Stats - Fade in */}
-              <div className="grid grid-cols-3 gap-6 sm:gap-8 mt-16 sm:mt-20 animate-fade-in-up" style={{ animationDelay: '1.2s' }}>
-                <div className="backdrop-blur-sm bg-white/10 rounded-2xl p-4 sm:p-6 border border-white/20 transform hover:scale-105 transition-all duration-300">
-                  <div className="text-3xl sm:text-4xl font-bold text-blue-300 mb-2">24/7</div>
-                  <div className="text-sm sm:text-base text-gray-300">Erişilebilir</div>
-                </div>
-                <div className="backdrop-blur-sm bg-white/10 rounded-2xl p-4 sm:p-6 border border-white/20 transform hover:scale-105 transition-all duration-300">
-                  <div className="text-3xl sm:text-4xl font-bold text-purple-300 mb-2">∞</div>
-                  <div className="text-sm sm:text-base text-gray-300">Sınırsız Soru</div>
-                </div>
-                <div className="backdrop-blur-sm bg-white/10 rounded-2xl p-4 sm:p-6 border border-white/20 transform hover:scale-105 transition-all duration-300">
-                  <div className="text-3xl sm:text-4xl font-bold text-green-300 mb-2">🚀</div>
-                  <div className="text-sm sm:text-base text-gray-300">Hızlı Yanıt</div>
-                </div>
               </div>
             </div>
           </div>
