@@ -46,7 +46,7 @@ export function FRCChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Sadece FRC konularında uzmanım ve bilgilerimi Blue Alliance, WPILib Documentation ve FIRST resmi kaynaklarından alıyorum.\n\nSize nasıl yardımcı olabilirim?\n• Robot programlama (WPILib - Java/C++/Python)\n• Mekanik tasarım ve motor seçimi\n• Strateji ve oyun analizi\n• Simülasyon ve test\n• Yarışma kuralları\n\nSorularınızı sorabilirsiniz! (Not: FRC dışı sorulara yanıt veremem)"
+      content: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Bilgilerimi The Blue Alliance, WPILib Documentation ve FIRST resmi kaynaklarından alıyorum.\n\n**Size nasıl yardımcı olabilirim?**\n• Robot programlama (WPILib - Java/C++/Python)\n• Mekanik tasarım ve motor seçimi\n• Strateji ve oyun analizi\n• Simülasyon ve test\n• Yarışma kuralları ve FRC takımları\n\nSorularınızı sorabilirsiniz! 🚀"
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
@@ -163,12 +163,9 @@ export function FRCChat() {
   };
 
   const clearChat = (mode?: Mode) => {
-    const effectiveMode = mode ?? selectedMode;
     setMessages([{
       role: "assistant",
-      content: effectiveMode === "frc"
-        ? "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Sadece FRC konularında uzmanım ve bilgilerimi Blue Alliance, WPILib Documentation ve FIRST resmi kaynaklarından alıyorum.\n\nSize nasıl yardımcı olabilirim?\n• Robot programlama (WPILib - Java/C++/Python)\n• Mekanik tasarım ve motor seçimi\n• Strateji ve oyun analizi\n• Simülasyon ve test\n• Yarışma kuralları\n\nSorularınızı sorabilirsiniz! (Not: FRC dışı sorulara yanıt veremem)"
-        : "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Bu modda da sadece FRC konularında yardımcı olabilirim. FRC ile ilgili sorularınız için buradayım!"
+      content: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Bilgilerimi The Blue Alliance, WPILib Documentation ve FIRST resmi kaynaklarından alıyorum.\n\n**Size nasıl yardımcı olabilirim?**\n• Robot programlama (WPILib - Java/C++/Python)\n• Mekanik tasarım ve motor seçimi\n• Strateji ve oyun analizi\n• Simülasyon ve test\n• Yarışma kuralları ve FRC takımları\n\nSorularınızı sorabilirsiniz! 🚀"
     }]);
     setConversationId(null);
   };
