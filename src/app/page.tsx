@@ -14,11 +14,16 @@ export default function Home() {
       <div className="border-b border-white/20 p-4">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <img
-              src="/8f28b76859c1479d839d270409be3586.jpg"
-              alt="Callister Logo"
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
               className="w-10 h-10 object-cover rounded-xl"
-            />
+            >
+              <source src="/Callister.MP4.mp4" type="video/mp4" />
+              <img src="/8f28b76859c1479d839d270409be3586.jpg" alt="Callister Logo" />
+            </video>
             <h1 className="text-xl font-bold text-white">
               Callister FRC AI
             </h1>
@@ -79,11 +84,16 @@ export default function Home() {
             {/* Content - Ortada */}
             <div className="text-white text-center">
               <div className="flex items-center justify-center space-x-3 mb-6 sm:mb-8">
-                <img
-                  src="/8f28b76859c1479d839d270409be3586.jpg"
-                  alt="Callister Logo"
-                  className="w-16 h-16 sm:w-24 sm:h-24 object-cover rounded-2xl shadow-2xl"
-                />
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-2xl shadow-2xl"
+                >
+                  <source src="/Callister.MP4.mp4" type="video/mp4" />
+                  <img src="/8f28b76859c1479d839d270409be3586.jpg" alt="Callister Logo" />
+                </video>
               </div>
               
               <div className="mb-4">
