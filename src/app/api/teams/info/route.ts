@@ -40,6 +40,15 @@ export async function GET(req: NextRequest) {
     const joinRequests = await teamJoinRequestDb.findByTeamId(currentUser.teamId);
     const pendingRequests = joinRequests.filter(req => req.status === "pending");
 
+    console.log(`[teams/info] Takım ${currentUser.teamId} için:`);
+    console.log(`[teams/info] - ${joinRequests.length} toplam katılma isteği`);
+    console.log(`[teams/info] - ${pendingRequests.length} pending istek`);
+    console.log(`[teams/info] - ${approvedMembers.length} onaylanmış üye`);
+    
+    pendingRequests.forEach(req => {
+      console.log(`[teams/info] Pending: ${req.user.name || req.user.email} (userId: ${req.user.id})`);
+    });
+
     return NextResponse.json({
       team: {
         id: team.id,
