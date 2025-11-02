@@ -317,8 +317,8 @@ GENEL YAKLAŞIM:
 
 CEVAP FORMATI (ÖNEMLİ):
 - Detaylı ve kapsamlı cevaplar ver
-- Markdown formatını tam kullan: ## başlıklar, **kalın**, *italik*, `kod`, kod blokları
-- Kod örnekleri için ```java veya ```python syntax highlighting kullan
+- Markdown formatını tam kullan: başlıklar (##), kalın (**), italik (*), inline kod, kod blokları
+- Kod örnekleri için üç tırnak ile java/python/cpp syntax highlighting kullan
 - Tablolar, listeler, başlıklar kullanabilirsin
 - WPILib dokümantasyon linklerini ekle
 - Adım adım açıklamalar yap

@@ -528,6 +528,7 @@ export const teamJoinRequestDb = {
       }
 
       // Kullanıcı durumunu ve teamId'yi güncelle
+      console.log(`[approve] Updating user ${request.userId} - setting teamId to ${request.teamId}`);
       await tx.user.update({
         where: { id: request.userId },
         data: {
@@ -546,12 +547,14 @@ export const teamJoinRequestDb = {
         where: { id: request.userId }
       });
 
-      console.log(`[approve] Verification - TeamMember: ${verifyMember ? 'EXISTS' : 'MISSING'}, status: ${verifyMember?.status}`);
-      console.log(`[approve] Verification - User: ${verifyUser ? 'EXISTS' : 'MISSING'}, teamId: ${verifyUser?.teamId}, status: ${verifyUser?.status}`);
+      console.log(`[approve] ✅ BAŞARILI - TeamMember: ${verifyMember ? 'EXISTS' : 'MISSING'}, status: ${verifyMember?.status}`);
+      console.log(`[approve] ✅ BAŞARILI - User: ${verifyUser ? 'EXISTS' : 'MISSING'}, teamId: ${verifyUser?.teamId}, status: ${verifyUser?.status}`);
+      console.log(`[approve] ✅ User ${verifyUser?.name || verifyUser?.email} takıma eklendi!`);
 
       return { member: existingMember, user: verifyUser };
     });
 
+    console.log(`[approve] 🎉 Transaction tamamlandı - İstek ${requestId} onaylandı`);
     return true;
   },
 
