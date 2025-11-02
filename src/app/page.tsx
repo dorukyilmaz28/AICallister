@@ -19,7 +19,7 @@ export default function Home() {
               loop
               muted
               playsInline
-              className="w-10 h-10 object-cover rounded-xl"
+              className="w-10 h-10 object-cover rounded-full"
             >
               <source src="/Callister.MP4.mp4" type="video/mp4" />
               <img src="/8f28b76859c1479d839d270409be3586.jpg" alt="Callister Logo" />
@@ -89,7 +89,7 @@ export default function Home() {
                   loop
                   muted
                   playsInline
-                  className="w-40 h-40 sm:w-56 sm:h-56 object-cover rounded-3xl"
+                  className="w-40 h-40 sm:w-56 sm:h-56 object-cover rounded-full"
                   style={{ boxShadow: '0 0 60px rgba(139, 92, 246, 0.5)' }}
                 >
                   <source src="/Callister.MP4.mp4" type="video/mp4" />
