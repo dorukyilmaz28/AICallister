@@ -166,7 +166,8 @@ export default function TeamDetailPage() {
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
         setMessages(newMessages);
-        // Auto-refresh zaten çalışıyor, gereksiz fetch kaldırıldı
+        // Mesaj gönderildikten hemen sonra scroll et
+        setTimeout(() => scrollToBottom(), 100);
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Mesaj gönderilirken hata oluştu.");
@@ -267,6 +268,32 @@ export default function TeamDetailPage() {
     } catch (error) {
       console.error("Error clearing all messages:", error);
       setError("Mesajlar silinirken hata oluştu.");
+    }
+  };
+
+  const handleRemoveMember = async (userId: string, userName: string) => {
+    if (!confirm(`${userName} kullanıcısını takımdan çıkarmak istediğinizden emin misiniz?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/teams/${teamId}/members/${userId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Başarı mesajı göster
+        alert(data.message || "Üye başarıyla çıkarıldı.");
+        // Takım bilgilerini yeniden yükle
+        fetchTeam();
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Üye çıkarılırken hata oluştu.");
+      }
+    } catch (error) {
+      console.error("Error removing member:", error);
+      setError("Üye çıkarılırken hata oluştu.");
     }
   };
 
@@ -468,6 +495,17 @@ export default function TeamDetailPage() {
                         </span>
                       </div>
                     </div>
+                    {/* Silme butonu - sadece yöneticilere görünür ve kendini silemez */}
+                    {(userRole === 'captain' || userRole === 'manager' || userRole === 'mentor' || userRole === 'admin') && 
+                     member.user.id !== session?.user?.id && (
+                      <button
+                        onClick={() => handleRemoveMember(member.user.id, member.user.name)}
+                        className="p-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200"
+                        title={`${member.user.name} kullanıcısını çıkar`}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -580,6 +618,17 @@ export default function TeamDetailPage() {
                               </span>
                             </div>
                           </div>
+                          {/* Silme butonu - sadece yöneticilere görünür ve kendini silemez */}
+                          {(userRole === 'captain' || userRole === 'manager' || userRole === 'mentor' || userRole === 'admin') && 
+                           member.user.id !== session?.user?.id && (
+                            <button
+                              onClick={() => handleRemoveMember(member.user.id, member.user.name)}
+                              className="p-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200"
+                              title={`${member.user.name} kullanıcısını çıkar`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
