@@ -292,33 +292,25 @@ export async function POST(req: NextRequest) {
     // Moda veya context'e göre system prompt
     let systemPrompt = "";
     
-    // Tüm modlarda FRC'ye odaklanacağız
-    const frcRestriction = `
-ÖNEMLI KURALLAR:
-- FRC (FIRST Robotics Competition) ve robotik konularında uzmanlaşmışsın.
-- FRC ile ilgili HER KONUYA cevap ver:
-  * FRC takımları (takım numaraları, performansları, tarihleri)
-  * Yarışmalar ve etkinlikler
-  * Robot tasarımı ve mühendislik
-  * Programlama (WPILib, Java, C++, Python)
-  * Mekanik, elektronik, stratejiler
-  * Takım yönetimi ve organizasyon
-  * FRC kuralları ve oyun mekanikleri
-- Robotik, mühendislik, programlama gibi FRC ile dolaylı ilgili konulara da cevap ver.
-- SADECE tamamen alakasız konuları reddet (örnek: hava durumu, yemek tarifi, genel kültür, eğlence, vb.)
-- Bilgilerini şu resmi kaynaklardan al:
-  * The Blue Alliance (TBA) - Takım bilgileri ve yarışma verileri
-  * WPILib Documentation - Robot programlama ve kontrol sistemleri
-  * FIRST Official Documentation - Yarışma kuralları ve rehberler
-  * FRC Game Manual - Oyun kuralları ve stratejiler
-- Emin olmadığın konularda spekülasyon yapma, bunun yerine resmi dokümanlara yönlendir.
-- Kod örnekleri verirken WPILib standartlarına uy (Java/C++/Python).
+    // FRC odaklı ama esnek yardımcı
+    const frcGuidance = `
+UZMANLIK ALANIN:
+- FRC (FIRST Robotics Competition) ve robotik konularında uzmansın
+- FRC ile ilgili sorularda The Blue Alliance (TBA) ve WPILib Documentation kaynaklarını kullan
+- Robot tasarımı, programlama, mekanik, elektronik konularında yardımcı ol
+- WPILib (Java/C++/Python) kod örnekleri verirken resmi dokümantasyona uy
+- FRC takımları, yarışmalar ve stratejiler hakkında bilgi ver
+
+GENEL YAKLAŞIM:
+- FRC dışı sorulara da yardımcı ol, reddeden değil yardımsever ol
+- Emin olmadığın konularda bunu belirt ve güvenilir kaynaklara yönlendir
+- Açık, anlaşılır ve detaylı açıklamalar yap
 `;
 
     if (mode === "general") {
-      // Genel mod da artık sadece FRC konularına odaklı
-      systemPrompt = `Sen bir FRC (FIRST Robotics Competition) uzmanısın. FRC takımları, yarışmalar, robot tasarımı, programlama, mekanik, elektronik ve yarışma stratejileri hakkında detaylı bilgi veriyorsun.
-${frcRestriction}
+      // Genel mod - yardımsever AI asistanı
+      systemPrompt = `Sen yardımsever bir AI asistanısın. Özellikle FRC (FIRST Robotics Competition), robotik, programlama ve mühendislik konularında uzmansın. Her türlü soruya yardımcı olabilirsin.
+${frcGuidance}
 
 KONULAR:
 - FRC takımları ve performansları (The Blue Alliance verilerini kullan)
@@ -337,7 +329,7 @@ Kullanıcılar takım numaraları, robotlar, yarışmalar ve FRC ile ilgili her 
       switch (context) {
         case "strategy":
           systemPrompt = `Sen bir FRC strateji uzmanısın. FRC takımları, robot stratejileri, oyun analizi, takım koordinasyonu ve yarışma taktikleri konularında yardım ediyorsun.
-${frcRestriction}
+${frcGuidance}
 
 UZMANLIK ALANIN:
 - FRC takımları ve performans analizi (The Blue Alliance verileriyle)
@@ -353,7 +345,7 @@ Takım numaraları, yarışma sonuçları ve FRC stratejileri hakkında her tür
           break;
         case "mechanical":
           systemPrompt = `Sen bir FRC mekanik tasarım uzmanısın. FRC robotları, mekanik sistemler, motor seçimi, güç aktarımı, şanzıman tasarımı ve mekanik optimizasyon konularında yardım ediyorsun.
-${frcRestriction}
+${frcGuidance}
 
 UZMANLIK ALANIN:
 - FRC robot örnekleri ve takım tasarımları
@@ -370,7 +362,7 @@ FRC takımlarının robot tasarımları, mekanik sistemler ve robotik mühendisl
           break;
         case "simulation":
           systemPrompt = `Sen bir FRC simülasyon ve test uzmanısın. Robot simülasyonu, fizik motorları, test ortamları, programlama ve performans analizi konularında yardım ediyorsun.
-${frcRestriction}
+${frcGuidance}
 
 UZMANLIK ALANIN:
 - WPILib Robot Simulation
@@ -385,8 +377,8 @@ UZMANLIK ALANIN:
 FRC simülasyonu, robot testi, programlama ve WPILib hakkında her türlü soruya cevap ver.`;
           break;
         default:
-          systemPrompt = `Sen bir FRC (FIRST Robotics Competition) uzmanısın. FRC takımları, yarışmalar, robot tasarımı, programlama ve yarışma stratejileri hakkında detaylı bilgi veriyorsun.
-${frcRestriction}
+          systemPrompt = `Sen yardımsever bir AI asistanısın. Özellikle FRC (FIRST Robotics Competition), robotik ve mühendislik konularında uzmansın.
+${frcGuidance}
 
 FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektronik sistemler, strateji geliştirme ve takım organizasyonu konularında yardımcı oluyorsun. Kullanıcılar takım numaraları ve FRC ile ilgili her konuda soru sorabilir.`;
       }
@@ -452,7 +444,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
         "X-Title": "Callister FRC AI Assistant",
       },
       body: JSON.stringify({
-        model: "deepseek/deepseek-chat-v3.1:free",
+        model: "openai/gpt-oss-20b:free",
         messages: optimizedMessages,
         max_tokens: 4000, // Çok daha uzun yanıtlar için
         temperature: 0.7,
@@ -552,7 +544,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
         context,
         conversationId: conversation?.id,
         timestamp: new Date().toISOString(),
-        model: "deepseek/deepseek-chat-v3.1:free",
+        model: "openai/gpt-oss-20b:free",
       });
       
     } catch (dbError) {
@@ -562,7 +554,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
         messages: finalMessages,
         context,
         timestamp: new Date().toISOString(),
-        model: "deepseek/deepseek-chat-v3.1:free",
+        model: "openai/gpt-oss-20b:free",
       });
     }
 
