@@ -4,6 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Send, Bot, User, Settings, Wrench, Target, Cpu, Home, UserCircle, Shield, Search } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
 
 interface Message {
   role: "user" | "assistant";
@@ -336,21 +340,38 @@ export function FRCChat() {
                       : "bg-white/20 backdrop-blur-sm text-white border border-white/30"
                   }`}
                 >
-                  <div 
-                    className="whitespace-pre-wrap prose prose-xs sm:prose-sm max-w-none text-sm sm:text-base"
-                    dangerouslySetInnerHTML={{
-                      __html: message.content
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                        .replace(/\n/g, '<br>')
-                        .replace(/<\| begin_of_sentence \|>/g, '')
-                        .replace(/<\| end_of_sentence \|>/g, '')
-                        .replace(/<\|.*?\|>/g, '')
-                        .replace(/REDACTED_SPECIAL_TOKEN/g, '')
-                        .replace(/REDACTED.*?TOKEN/g, '')
-                        .replace(/\[REDACTED.*?\]/g, '')
+                  <ReactMarkdown
+                    className="prose prose-xs sm:prose-sm max-w-none text-sm sm:text-base prose-invert prose-headings:text-white prose-p:text-white/90 prose-strong:text-white prose-code:text-blue-300 prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/20"
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeHighlight]}
+                    components={{
+                      code: ({node, inline, className, children, ...props}: any) => {
+                        return inline ? (
+                          <code className="bg-black/30 px-1 py-0.5 rounded text-blue-300" {...props}>
+                            {children}
+                          </code>
+                        ) : (
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                      a: ({node, children, ...props}: any) => (
+                        <a className="text-blue-300 hover:text-blue-200 underline" target="_blank" rel="noopener noreferrer" {...props}>
+                          {children}
+                        </a>
+                      ),
                     }}
-                  />
+                  >
+                    {message.content
+                      .replace(/<\| begin_of_sentence \|>/g, '')
+                      .replace(/<\| end_of_sentence \|>/g, '')
+                      .replace(/<\|.*?\|>/g, '')
+                      .replace(/REDACTED_SPECIAL_TOKEN/g, '')
+                      .replace(/REDACTED.*?TOKEN/g, '')
+                      .replace(/\[REDACTED.*?\]/g, '')
+                    }
+                  </ReactMarkdown>
                 </div>
               </div>
             </div>

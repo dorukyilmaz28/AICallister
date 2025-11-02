@@ -314,6 +314,15 @@ GENEL YAKLAŞIM:
 - FRC dışı sorulara da yardımcı ol, reddeden değil yardımsever ol
 - Emin olmadığın konularda bunu belirt ve güvenilir kaynaklara yönlendir
 - Açık, anlaşılır ve detaylı açıklamalar yap
+
+CEVAP FORMATI (ÖNEMLİ):
+- Detaylı ve kapsamlı cevaplar ver
+- Markdown formatını tam kullan: ## başlıklar, **kalın**, *italik*, `kod`, kod blokları
+- Kod örnekleri için ```java veya ```python syntax highlighting kullan
+- Tablolar, listeler, başlıklar kullanabilirsin
+- WPILib dokümantasyon linklerini ekle
+- Adım adım açıklamalar yap
+- Örneklerle zenginleştir
 `;
 
     if (mode === "general") {
