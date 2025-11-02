@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send, Bot, User, Settings, Wrench, Target, Cpu, Home, UserCircle, Shield, Search } from "lucide-react";
+import { Send, Bot, User, Settings, Wrench, Target, Cpu, Home, UserCircle, Shield, Search, Trash2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -212,106 +212,19 @@ export function FRCChat() {
             </Link>
             
             <Link
-              href="/discover-teams"
-              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors duration-200 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-white"
-            >
-              <Search className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-xs sm:text-sm font-medium hidden sm:inline">
-                Takım Keşfet
-              </span>
-            </Link>
-            
-            <Link
               href="/profile"
-              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors duration-200 bg-white/20 hover:bg-white/30 text-white"
+              className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-200 bg-white/20 hover:bg-white/30 border border-white/30 text-white"
             >
-              <UserCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-xs sm:text-sm font-medium hidden sm:inline">
-                Profil
-              </span>
+              <UserCircle className="w-4 h-4" />
+              <span className="hidden md:inline">Profil</span>
             </Link>
-            
-            {/* Mode toggle */}
-            <div className="flex items-center bg-white/20 rounded-lg overflow-hidden border border-white/30 mr-2">
-              <button
-                onClick={() => {
-                  if (selectedMode !== "general") {
-                    setSelectedMode("general");
-                    clearChat("general");
-                  }
-                }}
-                className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors min-w-[90px] sm:min-w-[104px] text-center ${selectedMode === "general" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
-                title="FRC genel konular"
-              >
-                FRC Genel
-              </button>
-              <button
-                onClick={() => {
-                  if (selectedMode !== "frc") {
-                    setSelectedMode("frc");
-                    clearChat("frc");
-                  }
-                }}
-                className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium transition-colors min-w-[90px] sm:min-w-[104px] text-center ${selectedMode === "frc" ? "bg-white/40 text-white" : "text-white/80 hover:bg-white/20"}`}
-                title="FRC uzman modları (Strateji, Mekanik, Simülasyon)"
-              >
-                FRC Uzman
-              </button>
-            </div>
-
-            {selectedMode === "frc" && (
-            <div className="relative">
-              <button
-                onClick={() => setShowContextMenu(!showContextMenu)}
-                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors duration-200 bg-white/20 hover:bg-white/30 text-white"
-              >
-                <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="text-xs sm:text-sm font-medium hidden sm:inline">
-                  {contextConfig[selectedContext].label}
-                </span>
-              </button>
-              
-              {showContextMenu && (
-                <div className="absolute right-0 mt-2 w-64 border border-white/20 rounded-lg shadow-lg z-10 bg-white/10 backdrop-blur-sm">
-                  <div className="p-2">
-                    <div className="text-xs font-semibold uppercase tracking-wide mb-2 text-white/70">
-                      Uzmanlık Alanı
-                    </div>
-                    {Object.entries(contextConfig).map(([key, config]) => {
-                      const Icon = config.icon;
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => {
-                            setSelectedContext(key as Context);
-                            setShowContextMenu(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                            selectedContext === key
-                              ? "bg-white/30 text-white"
-                              : "hover:bg-white/20 text-white/80"
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <div>
-                            <div className="font-medium">{config.label}</div>
-                            <div className="text-xs text-white/60">{config.description}</div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-            )}
             
             <button
               onClick={() => clearChat()}
-              className="px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors duration-200 text-white/80 hover:text-white hover:bg-white/20"
+              className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-200 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-white"
             >
-              <span className="hidden sm:inline">Temizle</span>
-              <span className="sm:hidden">×</span>
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden md:inline">Temizle</span>
             </button>
           </div>
         </div>
