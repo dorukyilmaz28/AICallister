@@ -83,29 +83,29 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             {/* Content - Ortada */}
             <div className="text-white text-center">
-              <div className="flex items-center justify-center space-x-3 mb-6 sm:mb-8">
+              <div className="flex items-center justify-center mb-8 sm:mb-10">
                 <video
                   autoPlay
                   loop
                   muted
                   playsInline
-                  className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-2xl shadow-2xl"
+                  className="w-40 h-40 sm:w-56 sm:h-56 object-cover rounded-3xl"
+                  style={{ boxShadow: '0 0 60px rgba(139, 92, 246, 0.5)' }}
                 >
                   <source src="/Callister.MP4.mp4" type="video/mp4" />
-                  <img src="/8f28b76859c1479d839d270409be3586.jpg" alt="Callister Logo" />
                 </video>
               </div>
               
-              <div className="mb-4">
-                <p className="text-blue-300 font-medium text-base sm:text-lg">Callister Team</p>
-                <p className="text-gray-300 text-sm sm:text-base">AI-Powered FRC Assistant</p>
+              <div className="mb-6">
+                <p className="text-blue-200 font-bold text-lg sm:text-xl mb-1">Callister Team</p>
+                <p className="text-white/70 font-medium text-sm sm:text-base">AI-Powered FRC Assistant</p>
               </div>
               
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 text-white drop-shadow-lg">
                 Callister FRC AI Assistant
               </h1>
               
-              <p className="text-lg sm:text-2xl text-gray-300 mb-8 sm:mb-12 leading-relaxed max-w-3xl mx-auto">
+              <p className="text-lg sm:text-2xl text-white/80 mb-8 sm:mb-12 leading-relaxed max-w-3xl mx-auto font-medium">
                 Robot tasarımından stratejiye, mekanikten simülasyona kadar FRC'nin her alanında 
                 uzman desteği alın. Yapay zeka ile güçlendirilmiş akıllı asistanınız.
               </p>
