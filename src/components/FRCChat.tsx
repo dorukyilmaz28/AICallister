@@ -340,38 +340,39 @@ export function FRCChat() {
                       : "bg-white/20 backdrop-blur-sm text-white border border-white/30"
                   }`}
                 >
-                  <ReactMarkdown
-                    className="prose prose-xs sm:prose-sm max-w-none text-sm sm:text-base prose-invert prose-headings:text-white prose-p:text-white/90 prose-strong:text-white prose-code:text-blue-300 prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/20"
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeHighlight]}
-                    components={{
-                      code: ({node, inline, className, children, ...props}: any) => {
-                        return inline ? (
-                          <code className="bg-black/30 px-1 py-0.5 rounded text-blue-300" {...props}>
+                  <div className="prose prose-xs sm:prose-sm max-w-none text-sm sm:text-base prose-invert prose-headings:text-white prose-p:text-white/90 prose-strong:text-white prose-code:text-blue-300 prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/20 prose-a:text-blue-300 prose-a:no-underline hover:prose-a:underline">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeHighlight]}
+                      components={{
+                        code: ({node, inline, className, children, ...props}: any) => {
+                          return inline ? (
+                            <code className="bg-black/30 px-1 py-0.5 rounded text-blue-300" {...props}>
+                              {children}
+                            </code>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                        a: ({node, children, ...props}: any) => (
+                          <a className="text-blue-300 hover:text-blue-200 underline" target="_blank" rel="noopener noreferrer" {...props}>
                             {children}
-                          </code>
-                        ) : (
-                          <code className={className} {...props}>
-                            {children}
-                          </code>
-                        );
-                      },
-                      a: ({node, children, ...props}: any) => (
-                        <a className="text-blue-300 hover:text-blue-200 underline" target="_blank" rel="noopener noreferrer" {...props}>
-                          {children}
-                        </a>
-                      ),
-                    }}
-                  >
-                    {message.content
-                      .replace(/<\| begin_of_sentence \|>/g, '')
-                      .replace(/<\| end_of_sentence \|>/g, '')
-                      .replace(/<\|.*?\|>/g, '')
-                      .replace(/REDACTED_SPECIAL_TOKEN/g, '')
-                      .replace(/REDACTED.*?TOKEN/g, '')
-                      .replace(/\[REDACTED.*?\]/g, '')
-                    }
-                  </ReactMarkdown>
+                          </a>
+                        ),
+                      }}
+                    >
+                      {message.content
+                        .replace(/<\| begin_of_sentence \|>/g, '')
+                        .replace(/<\| end_of_sentence \|>/g, '')
+                        .replace(/<\|.*?\|>/g, '')
+                        .replace(/REDACTED_SPECIAL_TOKEN/g, '')
+                        .replace(/REDACTED.*?TOKEN/g, '')
+                        .replace(/\[REDACTED.*?\]/g, '')
+                      }
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             </div>
