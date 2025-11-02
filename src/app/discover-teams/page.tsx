@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Search, ArrowLeft, CheckCircle, Clock, UserPlus, Shield, Home } from "lucide-react";
+import { User, LogOut, Users, Search, ArrowLeft, CheckCircle, Clock, UserPlus, Shield, Home, Bot } from "lucide-react";
 
 interface Team {
   id: string;
@@ -147,6 +147,13 @@ export default function DiscoverTeamsPage() {
               title="Ana Sayfa"
             >
               <Home className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/chat"
+              className="p-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white transition-colors duration-200"
+              title="AI Asistan"
+            >
+              <Bot className="w-4 h-4" />
             </Link>
             <Link
               href="/teams"

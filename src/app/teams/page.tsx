@@ -203,6 +203,13 @@ export default function TeamsPage() {
             >
               <Home className="w-4 h-4" />
             </Link>
+            <Link
+              href="/chat"
+              className="p-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white transition-colors duration-200"
+              title="AI Asistan"
+            >
+              <Bot className="w-4 h-4" />
+            </Link>
             <button
               onClick={() => setShowCreateForm(true)}
               className="p-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"

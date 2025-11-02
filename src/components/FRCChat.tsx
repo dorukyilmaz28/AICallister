@@ -56,14 +56,6 @@ export function FRCChat() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Karakter sayısı hesaplama fonksiyonu
-  const getCharCount = (text: string) => {
-    return text.trim().length;
-  };
-  
-  const charCount = getCharCount(inputMessage);
-  const maxChars = 200;
-  const isOverLimit = charCount > maxChars;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -74,7 +66,7 @@ export function FRCChat() {
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading || isOverLimit) return;
+    if (!inputMessage.trim() || isLoading) return;
 
     const userMessage: Message = {
       role: "user",
@@ -329,28 +321,17 @@ export function FRCChat() {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder={selectedMode === "frc" ? "FRC hakkında sorunuzu yazın... (Maksimum 200 karakter)" : "Sorunuzu yazın... (Maksimum 200 karakter)"}
-                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-transparent resize-none transition-colors bg-white/20 backdrop-blur-sm text-white placeholder-white/60 text-sm sm:text-base ${
-                    isOverLimit ? 'border-red-400 focus:ring-red-400' : 'border-white/30'
-                  }`}
+                  placeholder={selectedMode === "frc" ? "FRC hakkında sorunuzu yazın..." : "Sorunuzu yazın..."}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-white/30 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-transparent resize-none transition-colors bg-white/20 backdrop-blur-sm text-white placeholder-white/60 text-sm sm:text-base"
                   rows={1}
                   style={{ minHeight: "40px", maxHeight: "120px" }}
                 />
-                <div className={`absolute bottom-2 right-3 text-xs ${
-                  isOverLimit ? 'text-red-400' : 'text-white/60'
-                }`}>
-                  {charCount}/{maxChars}
-                </div>
               </div>
             </div>
             <button
               onClick={sendMessage}
-              disabled={!inputMessage.trim() || isLoading || isOverLimit}
-              className={`px-3 sm:px-6 py-2 sm:py-3 rounded-2xl transition-colors duration-200 flex items-center space-x-1 sm:space-x-2 border ${
-                isOverLimit 
-                  ? 'bg-red-500/20 text-red-300 border-red-400 cursor-not-allowed' 
-                  : 'bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed'
-              }`}
+              disabled={!inputMessage.trim() || isLoading}
+              className="px-3 sm:px-6 py-2 sm:py-3 rounded-2xl transition-colors duration-200 flex items-center space-x-1 sm:space-x-2 border bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline text-sm sm:text-base">Gönder</span>

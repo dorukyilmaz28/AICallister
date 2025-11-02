@@ -248,25 +248,11 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Son kullanıcı mesajını kontrol et
-    const lastUserMessage = messages[messages.length - 1];
-    if (lastUserMessage && lastUserMessage.role === "user") {
-      const charCount = lastUserMessage.content.trim().length;
-      if (charCount > 200) {
-        return NextResponse.json(
-          { 
-            error: "Mesajınız çok uzun. Maksimum 200 karakter kullanabilirsiniz.",
-            charCount,
-            maxChars: 200
-          },
-          { status: 400 }
-        );
-      }
-    }
-
+    
     // RAG: Kullanıcı mesajından takım numaralarını ve programlama konularını çıkar
     let ragContext = "";
     
+    const lastUserMessage = messages[messages.length - 1];
     if (lastUserMessage && lastUserMessage.role === "user") {
       const userText = lastUserMessage.content;
       
@@ -315,24 +301,13 @@ GENEL YAKLAŞIM:
 - Emin olmadığın konularda bunu belirt ve güvenilir kaynaklara yönlendir
 - Açık, anlaşılır ve detaylı açıklamalar yap
 
-CEVAP FORMATI (AKILLI UZUNLUK):
-
-BASIT SORULAR (tanım, genel bilgi, "nedir?" soruları):
-- KISA cevap ver! 100-150 kelime yeterli
-- 2-3 paragraf, bullet points
-- Tablolar kullanma
-- Giriş-sonuç cümleleri atla
-
-TEKNIK SORULAR (kod, programlama, nasıl yapılır, tasarım):
-- Daha detaylı olabilirsin (300-400 kelime)
-- Kod örnekleri verebilirsin (10-20 satır)
-- Adım adım açıklama yapabilirsin
-- WPILib/TBA linklerini ekle
-
-GENEL:
-- Markdown kullan: başlıklar (##), kalın (**), kod blokları
-- Gereksiz tekrar yapma
-- Öz ve anlaşılır ol
+CEVAP FORMATI:
+- Net ve anlaşılır cevaplar ver
+- Gereksiz uzatma, öz ve doğrudan cevap ver
+- Basit sorulara kısa (2-3 paragraf), teknik sorulara daha detaylı cevap ver
+- Kod örnekleri gerektiğinde kullan
+- Markdown kullan: başlıklar (##), kalın (**), kod blokları (\`\`\`)
+- WPILib/TBA linklerini ekleyebilirsin
 `;
 
     if (mode === "general") {
@@ -468,7 +443,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000",
+        "HTTP-Referer": process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "callisterai.com",
         "X-Title": "Callister FRC AI Assistant",
       },
       body: JSON.stringify({
