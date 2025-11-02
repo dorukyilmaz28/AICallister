@@ -316,13 +316,12 @@ GENEL YAKLAŞIM:
 - Açık, anlaşılır ve detaylı açıklamalar yap
 
 CEVAP FORMATI (ÖNEMLİ):
-- Detaylı ve kapsamlı cevaplar ver
-- Markdown formatını tam kullan: başlıklar (##), kalın (**), italik (*), inline kod, kod blokları
-- Kod örnekleri için üç tırnak ile java/python/cpp syntax highlighting kullan
-- Tablolar, listeler, başlıklar kullanabilirsin
+- KISA VE ÖZ cevaplar ver (maksimum 300-400 kelime)
+- Sadece gerekli bilgiyi ver, gereksiz detay ekleme
+- Markdown kullan: başlıklar (##), kalın (**), kod blokları
+- Kod örnekleri verirken SADECE önemli kısmı göster (tam sınıf değil)
 - WPILib dokümantasyon linklerini ekle
-- Adım adım açıklamalar yap
-- Örneklerle zenginleştir
+- Nokta atışı cevaplar, uzatma
 `;
 
     if (mode === "general") {
@@ -464,7 +463,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
       body: JSON.stringify({
         model: "openai/gpt-oss-20b:free",
         messages: optimizedMessages,
-        max_tokens: 4000, // Çok daha uzun yanıtlar için
+        max_tokens: 800, // Kısa ve öz yanıtlar için
         temperature: 0.7,
       }),
     });

@@ -14,16 +14,11 @@ export default function Home() {
       <div className="border-b border-white/20 p-4">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-10 h-10 object-cover rounded-full"
-            >
-              <source src="/Callister.MP4.mp4" type="video/mp4" />
-              <img src="/8f28b76859c1479d839d270409be3586.jpg" alt="Callister Logo" />
-            </video>
+            <img
+              src="/8f28b76859c1479d839d270409be3586.jpg"
+              alt="Callister Logo"
+              className="w-10 h-10 object-cover rounded-xl"
+            />
             <h1 className="text-xl font-bold text-white">
               Callister FRC AI
             </h1>
@@ -178,39 +173,39 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Why Choose Us Section */}
+      {/* Technology Section */}
       <div className="py-20" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Neden Callister AI?</h2>
+            <h2 className="text-4xl font-bold text-white mb-4">Kullandığımız Teknolojiler</h2>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              FRC deneyimimiz ve AI teknolojimizle size en iyi desteği sunuyoruz
+              Güçlü yapay zeka ve güncel FRC verileri ile donatılmış sistememiz
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Zap className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">Anında Yanıt</h3>
-              <p className="text-gray-300">7/24 kesintisiz AI desteği ile sorularınıza anında yanıt alın</p>
-            </div>
-            
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Trophy className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">FRC Uzmanlığı</h3>
-              <p className="text-gray-300">Yıllarca FRC deneyimi olan uzmanlar tarafından eğitilmiş AI</p>
-            </div>
-            
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Bot className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Kişiselleştirilmiş</h3>
-              <p className="text-gray-300">Takımınızın ihtiyaçlarına göre özelleştirilmiş öneriler</p>
+              <h3 className="text-xl font-bold text-white mb-3">GPT-OSS AI Model</h3>
+              <p className="text-gray-300">OpenRouter API ile ücretsiz GPT-OSS-20B modeli - doğal dil işleme ve kod üretimi</p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Trophy className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">The Blue Alliance API</h3>
+              <p className="text-gray-300">Gerçek zamanlı FRC takım verileri, yarışma sonuçları ve performans istatistikleri</p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Wrench className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">WPILib RAG Sistemi</h3>
+              <p className="text-gray-300">Resmi WPILib dokümantasyonu ile zenginleştirilmiş akıllı cevap sistemi</p>
             </div>
           </div>
         </div>
