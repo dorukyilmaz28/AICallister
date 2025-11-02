@@ -188,8 +188,8 @@ export default function Home() {
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Bot className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">GPT-OSS AI Model</h3>
-              <p className="text-gray-300">OpenRouter API ile ücretsiz GPT-OSS-20B modeli - doğal dil işleme ve kod üretimi</p>
+              <h3 className="text-xl font-bold text-white mb-3">OpenAI Model</h3>
+              <p className="text-gray-300">OpenRouter API ile GPT tabanlı yapay zeka - doğal dil işleme ve kod üretimi</p>
             </div>
             
             <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
@@ -234,7 +234,10 @@ export default function Home() {
       <div className="py-8 border-t border-white/10" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-400 text-sm">
-            Powered by OpenRouter API • DeepSeek Model • Built with Next.js
+            © 2025 Callister FRC AI. Tüm hakları saklıdır.
+          </p>
+          <p className="text-gray-500 text-xs mt-2">
+            Powered by OpenAI, The Blue Alliance & WPILib
           </p>
         </div>
       </div>
