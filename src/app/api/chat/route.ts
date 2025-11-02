@@ -26,7 +26,7 @@ function extractTeamNumbers(text: string): string[] {
   return teamNumbers.slice(0, 3); // Max 3 takım
 }
 
-// TBA'dan takım bilgisi çek
+// TBA'dan takım bilgisi çek (güncel verilerle)
 async function fetchTeamInfo(teamNumber: string): Promise<string> {
   try {
     const TBA_API_KEY = process.env.TBA_API_KEY || "";
@@ -38,30 +38,50 @@ async function fetchTeamInfo(teamNumber: string): Promise<string> {
 
     console.log(`[TBA RAG] Takım ${teamNumber} bilgisi çekiliyor...`);
     
-    const response = await fetch(
+    // Temel takım bilgileri
+    const teamResponse = await fetch(
       `https://www.thebluealliance.com/api/v3/team/frc${teamNumber}`,
-      {
-        headers: { "X-TBA-Auth-Key": TBA_API_KEY },
-      }
+      { headers: { "X-TBA-Auth-Key": TBA_API_KEY } }
     );
 
-    console.log(`[TBA RAG] TBA Response Status: ${response.status}`);
-    
-    if (!response.ok) {
-      console.log(`[TBA RAG] Takım ${teamNumber} bulunamadı (${response.status})`);
+    if (!teamResponse.ok) {
+      console.log(`[TBA RAG] Takım ${teamNumber} bulunamadı (${teamResponse.status})`);
       return "";
     }
 
-    const team = await response.json();
+    const team = await teamResponse.json();
+    
+    // Güncel sezon yılını al (2025)
+    const currentYear = new Date().getFullYear();
+    
+    // Son 2 sezonun etkinliklerini çek (2024, 2025)
+    let recentEvents = "";
+    try {
+      const eventsResponse = await fetch(
+        `https://www.thebluealliance.com/api/v3/team/frc${teamNumber}/events/${currentYear}`,
+        { headers: { "X-TBA-Auth-Key": TBA_API_KEY } }
+      );
+      
+      if (eventsResponse.ok) {
+        const events = await eventsResponse.json();
+        if (events && events.length > 0) {
+          recentEvents = `\n- ${currentYear} Etkinlikleri: ${events.slice(0, 3).map((e: any) => e.name).join(", ")}`;
+        }
+      }
+    } catch (e) {
+      // Etkinlik bilgisi yoksa devam et
+    }
+    
     console.log(`[TBA RAG] Takım ${teamNumber} başarıyla çekildi:`, team.nickname);
     
     return `
-FRC Takım ${teamNumber} Bilgileri (The Blue Alliance):
+FRC Takım ${teamNumber} Bilgileri (The Blue Alliance - ${currentYear}):
 - İsim: ${team.nickname || "N/A"}
 - Tam İsim: ${team.name || "N/A"}
 - Şehir: ${team.city || "N/A"}, ${team.state_prov || "N/A"}, ${team.country || "N/A"}
 - Rookie Yılı: ${team.rookie_year || "N/A"}
-- Website: ${team.website || "N/A"}
+- Website: ${team.website || "N/A"}${recentEvents}
+- Veri Kaynağı: The Blue Alliance (Güncel - ${currentYear})
 `;
   } catch (error) {
     return "";
@@ -269,10 +289,11 @@ export async function POST(req: NextRequest) {
         const validInfos = teamInfos.filter(info => info.trim() !== "");
         
         if (validInfos.length > 0) {
-          ragContext += "\n\n=== GÜNCEL TAKIM BİLGİLERİ (The Blue Alliance) ===\n" + 
+          const currentYear = new Date().getFullYear();
+          ragContext += `\n\n=== GÜNCEL TAKIM BİLGİLERİ (The Blue Alliance - ${currentYear}) ===\n` + 
                        validInfos.join("\n") + 
-                       "\n=== BİLGİ SONU ===\n\n" +
-                       "Yukarıdaki güncel takım bilgilerini kullanarak cevap ver.";
+                       `\n=== BİLGİ SONU ===\n\n` +
+                       `ÖNEMLİ: Yukarıdaki veriler The Blue Alliance'dan CANLI çekildi (${currentYear}). Bu GÜNCEL bilgileri kullan, eski eğitim verilerini değil!`;
         }
       }
       
@@ -288,10 +309,14 @@ export async function POST(req: NextRequest) {
     let systemPrompt = "";
     
     // FRC odaklı ama esnek yardımcı
+    const currentYear = new Date().getFullYear();
     const frcGuidance = `
 SEN KİMSİN:
 - FRC (FIRST Robotics Competition) konusunda uzman bir AI asistanısın
 - The Blue Alliance ve WPILib dokümantasyonunu kullanırsın
+- GÜNCEL SEZON: ${currentYear}
+- FRC oyunları: 2024 (Crescendo), 2023 (Charged Up), 2022 (Rapid React), vb.
+- TBA API'den GÜNCEL ve CANLI veri alıyorsun - eski bilgiler verme!
 
 ÖNEMLİ KURALLAR:
 1. KISA VE ÖZ CEVAPLAR VER!
