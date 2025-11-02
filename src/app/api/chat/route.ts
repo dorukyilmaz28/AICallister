@@ -302,7 +302,8 @@ SEN KİMSİN:
 
 CEVAP UZUNLUĞU:
 - Basit soru (ne, kim, nerede?) → 2-3 cümle
-- Teknik soru (nasıl, kod) → 1 paragraf + kod örneği
+- Teknik soru (nasıl yaparım?) → 1 kısa paragraf + açıklama
+- Kod sorusu → Kısa açıklama + kod örneği (15-30 satır max)
 - Karmaşık soru → Maksimum 2 paragraf
 
 YAPMA:
@@ -415,7 +416,7 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
       body: JSON.stringify({
         model: "openai/gpt-oss-20b:free",
         messages: optimizedMessages,
-        max_tokens: 400, // Kısa ve öz cevaplar için sınır
+        max_tokens: 600, // Kod örnekleri için yeterli, ama sınırlı
         temperature: 0.6, // Daha tutarlı ve kısa cevaplar
       }),
     });
