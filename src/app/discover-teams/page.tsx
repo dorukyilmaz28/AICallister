@@ -140,37 +140,31 @@ export default function DiscoverTeamsPage() {
               Takım Keşfet
             </h1>
           </div>
-          <div className="flex items-center space-x-3">
-            {session?.user?.status === "pending" && (
-              <div className="flex items-center space-x-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-300">
-                <Shield className="w-4 h-4" />
-                <span className="hidden md:inline">Onay Bekleniyor</span>
-              </div>
-            )}
+          <div className="flex items-center space-x-2">
             <Link
               href="/"
-              className="flex items-center space-x-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors duration-200"
+              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors duration-200"
             >
               <Home className="w-4 h-4" />
               <span className="hidden md:inline">Ana Sayfa</span>
             </Link>
             <Link
               href="/teams"
-              className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
             >
               <Users className="w-4 h-4" />
               <span className="hidden md:inline">Takımlarım</span>
             </Link>
             <Link
               href="/profile"
-              className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
             >
               <User className="w-4 h-4" />
               <span className="hidden md:inline">Profil</span>
             </Link>
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
+              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden md:inline">Çıkış</span>

@@ -195,41 +195,41 @@ export default function TeamsPage() {
               Takımlarım
             </h1>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <Link
               href="/"
-              className="flex items-center space-x-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors duration-200"
+              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors duration-200"
             >
               <Home className="w-4 h-4" />
-              <span>Ana Sayfa</span>
+              <span className="hidden md:inline">Ana Sayfa</span>
             </Link>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
             >
               <Plus className="w-4 h-4" />
-              <span>Takım Oluştur</span>
+              <span className="hidden md:inline">Oluştur</span>
             </button>
             <Link
               href="/discover-teams"
-              className="flex items-center space-x-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-white transition-colors duration-200"
+              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-white transition-colors duration-200"
             >
               <Search className="w-4 h-4" />
-              <span>Takım Keşfet</span>
+              <span className="hidden md:inline">Keşfet</span>
             </Link>
             <Link
               href="/chat"
-              className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
             >
               <Bot className="w-4 h-4" />
-              <span>AI Sohbet</span>
+              <span className="hidden md:inline">AI</span>
             </Link>
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
+              className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
             >
               <LogOut className="w-4 h-4" />
-              <span>Çıkış Yap</span>
+              <span className="hidden md:inline">Çıkış</span>
             </button>
           </div>
         </div>
