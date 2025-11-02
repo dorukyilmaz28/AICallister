@@ -315,14 +315,24 @@ GENEL YAKLAŞIM:
 - Emin olmadığın konularda bunu belirt ve güvenilir kaynaklara yönlendir
 - Açık, anlaşılır ve detaylı açıklamalar yap
 
-CEVAP FORMATI (KRİTİK - MUTLAKA UYULMALI):
-- AŞIRI KISA cevaplar ver! Maksimum 150-200 kelime
-- Basit sorulara 2-3 paragraf yeterli
-- TABLOLAR YASAK! Sadece bullet points kullan
-- Kod örneklerinde SADECE 5-10 satır göster
-- Gereksiz başlıklar, açıklamalar, kaynaklar ekleme
-- Direkt cevabı ver, giriş-sonuç yazma
-- Örnekler çok kısa olsun
+CEVAP FORMATI (AKILLI UZUNLUK):
+
+BASIT SORULAR (tanım, genel bilgi, "nedir?" soruları):
+- KISA cevap ver! 100-150 kelime yeterli
+- 2-3 paragraf, bullet points
+- Tablolar kullanma
+- Giriş-sonuç cümleleri atla
+
+TEKNIK SORULAR (kod, programlama, nasıl yapılır, tasarım):
+- Daha detaylı olabilirsin (300-400 kelime)
+- Kod örnekleri verebilirsin (10-20 satır)
+- Adım adım açıklama yapabilirsin
+- WPILib/TBA linklerini ekle
+
+GENEL:
+- Markdown kullan: başlıklar (##), kalın (**), kod blokları
+- Gereksiz tekrar yapma
+- Öz ve anlaşılır ol
 `;
 
     if (mode === "general") {
@@ -464,7 +474,7 @@ FRC takımları, robotlar, yarışmalar, programlama, mekanik tasarım, elektron
       body: JSON.stringify({
         model: "openai/gpt-oss-20b:free",
         messages: optimizedMessages,
-        max_tokens: 500, // Çok kısa yanıtlar için
+        max_tokens: 1000, // Esnek limit - basit kısa, teknik uzun
         temperature: 0.7,
       }),
     });
