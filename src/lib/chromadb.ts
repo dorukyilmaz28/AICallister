@@ -54,23 +54,13 @@ export async function getFRCCollection() {
     const client = await initChromaDB();
     if (!client) return null;
 
-    // Serverless ortamda embedding function yok
-    // Chroma Cloud kendi embedding'i sağlar
-    try {
-      // Mevcut collection'ı al
-      frcCollection = await client.getCollection({
-        name: "frc_knowledge"
-      });
-      console.log("[ChromaDB] FRC collection bulundu");
-    } catch (error) {
-      // Collection yoksa oluştur
-      frcCollection = await client.createCollection({
-        name: "frc_knowledge",
-        metadata: { description: "FRC robotics knowledge base" }
-      });
-      console.log("[ChromaDB] FRC collection oluşturuldu");
-    }
-
+    // Chroma Cloud: getOrCreateCollection kullan (embedding otomatik)
+    frcCollection = await client.getOrCreateCollection({
+      name: "frc_knowledge",
+      metadata: { description: "FRC robotics knowledge base" }
+    });
+    
+    console.log("[ChromaDB] FRC collection hazır");
     return frcCollection;
   } catch (error) {
     console.error("[ChromaDB] Collection hatası:", error);
