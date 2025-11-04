@@ -443,8 +443,11 @@ export async function POST(req: NextRequest) {
           chromaResults.documents.forEach((doc, index) => {
             const metadata = chromaResults.metadatas[index];
             const distance = chromaResults.distances[index];
+            const relevance = distance !== null && distance !== undefined 
+              ? (1 - distance).toFixed(2) 
+              : "N/A";
             
-            ragContext += `\n--- Bilgi ${index + 1} (İlgililik: ${(1 - distance).toFixed(2)}) ---\n`;
+            ragContext += `\n--- Bilgi ${index + 1} (İlgililik: ${relevance}) ---\n`;
             if (metadata) {
               ragContext += `Kategori: ${metadata.category || "N/A"} | Konu: ${metadata.topic || "N/A"}\n`;
             }
