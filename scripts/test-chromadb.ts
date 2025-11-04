@@ -51,7 +51,9 @@ async function testChromaDB() {
         results.documents.forEach((doc, index) => {
           const metadata = results.metadatas[index];
           const distance = results.distances[index];
-          const relevance = ((1 - distance) * 100).toFixed(1);
+          const relevance = distance !== null && distance !== undefined 
+            ? ((1 - distance) * 100).toFixed(1) 
+            : "N/A";
           
           console.log(`      - ${metadata?.topic || "N/A"} (İlgililik: %${relevance})`);
         });
