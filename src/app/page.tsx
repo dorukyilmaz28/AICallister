@@ -4,13 +4,12 @@ import Link from "next/link";
 import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Home() {
   const { session, isAuthenticated } = useAuthGuard({ requireAuth: false });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-600 dark:from-[#3A006F] dark:via-[#5A008F] dark:to-[#8A00FF]">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
       {/* Header */}
       <div className="border-b border-white/20 p-4">
         <div className="container mx-auto flex items-center justify-between">
@@ -20,12 +19,11 @@ export default function Home() {
               alt="Callister Logo"
               className="w-10 h-10 object-cover rounded-xl"
             />
-            <h1 className="text-xl font-bold text-purple-900 dark:text-white">
+            <h1 className="text-xl font-bold text-white">
               Callister FRC AI
             </h1>
           </div>
           <div className="flex items-center space-x-3">
-            <ThemeToggle />
             {isAuthenticated ? (
               <>
                 {session?.user.status === "pending" && (
@@ -78,7 +76,7 @@ export default function Home() {
         <div className="relative container mx-auto px-4 py-12 sm:py-20">
           <div className="max-w-4xl mx-auto">
             {/* Content - Ortada */}
-            <div className="text-purple-900 dark:text-white text-center">
+            <div className="text-white text-center">
               <div className="flex items-center justify-center mb-8 sm:mb-10">
                 <video
                   autoPlay
@@ -93,15 +91,15 @@ export default function Home() {
               </div>
               
               <div className="mb-6">
-                <p className="text-purple-600 dark:text-blue-200 font-bold text-lg sm:text-xl mb-1">Callister Team</p>
-                <p className="text-purple-800/70 dark:text-white/70 font-medium text-sm sm:text-base">AI-Powered FRC Assistant</p>
+                <p className="text-blue-200 font-bold text-lg sm:text-xl mb-1">Callister Team</p>
+                <p className="text-white/70 font-medium text-sm sm:text-base">AI-Powered FRC Assistant</p>
               </div>
               
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 text-purple-900 dark:text-white drop-shadow-lg">
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 text-white drop-shadow-lg">
                 Callister FRC AI Assistant
               </h1>
               
-              <p className="text-lg sm:text-2xl text-purple-800 dark:text-white/80 mb-8 sm:mb-12 leading-relaxed max-w-3xl mx-auto font-medium">
+              <p className="text-lg sm:text-2xl text-white/80 mb-8 sm:mb-12 leading-relaxed max-w-3xl mx-auto font-medium">
                 Robot tasarımından stratejiye, mekanikten simülasyona kadar FRC'nin her alanında 
                 uzman desteği alın. Yapay zeka ile güçlendirilmiş akıllı asistanınız.
               </p>
@@ -124,8 +122,8 @@ export default function Home() {
       <div className="py-12 sm:py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-4xl font-bold text-purple-900 dark:text-white mb-4">Uzmanlık Alanları</h2>
-            <p className="text-base sm:text-xl text-purple-800 dark:text-gray-300 max-w-2xl mx-auto">
+            <h2 className="text-2xl sm:text-4xl font-bold text-white mb-4">Uzmanlık Alanları</h2>
+            <p className="text-base sm:text-xl text-gray-300 max-w-2xl mx-auto">
               FRC'nin her alanında uzman desteği alın
             </p>
           </div>
@@ -135,8 +133,8 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-purple-900 dark:text-white mb-2 sm:mb-3">Genel FRC</h3>
-              <p className="text-sm sm:text-base text-purple-800 dark:text-gray-300 leading-relaxed">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Genel FRC</h3>
+              <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
                 Robot tasarımı, yarışma kuralları ve genel FRC konularında kapsamlı rehberlik.
               </p>
             </div>
@@ -145,8 +143,8 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Target className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-purple-900 dark:text-white mb-2 sm:mb-3">Strateji</h3>
-              <p className="text-sm sm:text-base text-purple-800 dark:text-gray-300 leading-relaxed">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Strateji</h3>
+              <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
                 Oyun analizi, takım koordinasyonu ve rekabet stratejileri konularında uzmanlık.
               </p>
             </div>
@@ -155,8 +153,8 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Wrench className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-purple-900 dark:text-white mb-2 sm:mb-3">Mekanik</h3>
-              <p className="text-sm sm:text-base text-purple-800 dark:text-gray-300 leading-relaxed">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Mekanik</h3>
+              <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
                 Motor seçimi, güç aktarımı ve mekanik tasarım konularında teknik destek.
               </p>
             </div>
@@ -165,8 +163,8 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Cpu className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-purple-900 dark:text-white mb-2 sm:mb-3">Simülasyon</h3>
-              <p className="text-sm sm:text-base text-purple-800 dark:text-gray-300 leading-relaxed">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Simülasyon</h3>
+              <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
                 Robot simülasyonu, fizik motorları ve test ortamları konularında rehberlik.
               </p>
             </div>
@@ -178,8 +176,8 @@ export default function Home() {
       <div className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-purple-900 dark:text-white mb-4">Kullandığımız Teknolojiler</h2>
-            <p className="text-xl text-purple-800 dark:text-gray-300 max-w-2xl mx-auto">
+            <h2 className="text-4xl font-bold text-white mb-4">Kullandığımız Teknolojiler</h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
               Güçlü yapay zeka ve güncel FRC verileri ile donatılmış sistememiz
             </p>
           </div>
@@ -189,24 +187,24 @@ export default function Home() {
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Bot className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-purple-900 dark:text-white mb-3">OpenAI Model</h3>
-              <p className="text-purple-800 dark:text-gray-300">OpenRouter API ile GPT tabanlı yapay zeka - doğal dil işleme ve kod üretimi</p>
+              <h3 className="text-xl font-bold text-white mb-3">OpenAI Model</h3>
+              <p className="text-gray-300">OpenRouter API ile GPT tabanlı yapay zeka - doğal dil işleme ve kod üretimi</p>
             </div>
             
             <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
               <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Trophy className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-purple-900 dark:text-white mb-3">The Blue Alliance API</h3>
-              <p className="text-purple-800 dark:text-gray-300">Gerçek zamanlı FRC takım verileri, yarışma sonuçları ve performans istatistikleri</p>
+              <h3 className="text-xl font-bold text-white mb-3">The Blue Alliance API</h3>
+              <p className="text-gray-300">Gerçek zamanlı FRC takım verileri, yarışma sonuçları ve performans istatistikleri</p>
             </div>
             
             <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
               <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Wrench className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-purple-900 dark:text-white mb-3">WPILib RAG Sistemi</h3>
-              <p className="text-purple-800 dark:text-gray-300">Resmi WPILib dokümantasyonu ile zenginleştirilmiş akıllı cevap sistemi</p>
+              <h3 className="text-xl font-bold text-white mb-3">WPILib RAG Sistemi</h3>
+              <p className="text-gray-300">Resmi WPILib dokümantasyonu ile zenginleştirilmiş akıllı cevap sistemi</p>
             </div>
           </div>
         </div>
@@ -215,10 +213,10 @@ export default function Home() {
       {/* CTA Section */}
       <div className="py-20">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-purple-900 dark:text-white mb-6">
+          <h2 className="text-4xl font-bold text-white mb-6">
             Callister AI ile FRC Yolculuğunuza Başlayın
           </h2>
-          <p className="text-xl text-purple-800 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Callister AI asistanınızla robot tasarımından yarışma stratejisine kadar her adımda yanınızda.
           </p>
           <Link
@@ -232,12 +230,12 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <div className="py-8 border-t border-white/10 dark:border-white/10 border-purple-300/30">
+      <div className="py-8 border-t border-white/10" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
         <div className="container mx-auto px-4 text-center">
-          <p className="text-purple-700 dark:text-gray-400 text-sm">
+          <p className="text-gray-400 text-sm">
             © 2025 Callister FRC AI. Tüm hakları saklıdır.
           </p>
-          <p className="text-purple-600 dark:text-gray-500 text-xs mt-2">
+          <p className="text-gray-500 text-xs mt-2">
             Powered by OpenAI, The Blue Alliance & WPILib
           </p>
         </div>

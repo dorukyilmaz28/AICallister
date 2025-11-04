@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { SessionProvider } from '@/components/SessionProvider'
-import { ThemeProvider } from '@/components/ThemeProvider'
 import Link from 'next/link'
 import { Home } from 'lucide-react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -20,18 +19,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html lang="tr">
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <SessionProvider>
-            {children}
-          </SessionProvider>
-        </ThemeProvider>
+        <SessionProvider>
+          {children}
+        </SessionProvider>
         <SpeedInsights />
       </body>
     </html>

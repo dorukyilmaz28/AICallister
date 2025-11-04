@@ -8,7 +8,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
-import { ThemeToggle } from "./ThemeToggle";
 
 interface Message {
   role: "user" | "assistant";
@@ -164,9 +163,9 @@ export function FRCChat() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-600 dark:from-[#3A006F] dark:via-[#5A008F] dark:to-[#8A00FF]">
+    <div className="flex flex-col min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
       {/* Header */}
-      <div className="border-b border-white/20 dark:border-white/20 border-purple-300/30 p-3 sm:p-4">
+      <div className="border-b border-white/20 p-3 sm:p-4" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2 sm:space-x-3 group">
             <img
@@ -175,10 +174,10 @@ export function FRCChat() {
               className="w-8 h-8 sm:w-12 sm:h-12 object-cover rounded-xl transition-transform group-hover:scale-[1.02]"
             />
             <div className="min-w-0 flex-1">
-              <h1 className="text-sm sm:text-xl font-bold text-purple-900 dark:text-white truncate">
+              <h1 className="text-sm sm:text-xl font-bold text-white truncate">
                 Callister FRC AI Assistant
               </h1>
-              <p className="text-xs sm:text-sm text-purple-700 dark:text-gray-400 truncate">
+              <p className="text-xs sm:text-sm text-gray-400 truncate">
                 {selectedMode === "frc" ? contextConfig[selectedContext].description : "FRC konularında yardımcı"}
               </p>
             </div>
@@ -190,8 +189,6 @@ export function FRCChat() {
                 <span className="text-xs sm:text-sm font-medium hidden sm:inline">Onay Bekleniyor</span>
               </div>
             )}
-            
-            <ThemeToggle />
             
             <Link
               href="/"
@@ -315,7 +312,7 @@ export function FRCChat() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-white/20 dark:border-white/20 border-purple-300/30 p-3 sm:p-4">
+      <div className="border-t border-white/20 p-3 sm:p-4" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
         <div className="max-w-4xl mx-auto">
           <div className="flex space-x-2 sm:space-x-3">
             <div className="flex-1">
