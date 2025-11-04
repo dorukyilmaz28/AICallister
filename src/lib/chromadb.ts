@@ -1,22 +1,14 @@
-import { ChromaClient, Collection, OpenAIEmbeddingFunction } from "chromadb";
+import { ChromaClient, Collection } from "chromadb";
 
 // ChromaDB client singleton
 let chromaClient: ChromaClient | null = null;
 let frcCollection: Collection | null = null;
 
-// OpenAI embedding function
+// OpenAI embedding function (manuel - serverless için)
 const getEmbeddingFunction = () => {
-  const apiKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
-  
-  if (!apiKey) {
-    console.warn("[ChromaDB] API key bulunamadı, ChromaDB devre dışı");
-    return null;
-  }
-
-  return new OpenAIEmbeddingFunction({
-    openai_api_key: apiKey,
-    openai_model: "text-embedding-3-small"
-  });
+  // Serverless ortamda OpenAIEmbeddingFunction kullanılamaz
+  // Chroma Cloud kullanılmalı veya embeddings manuel yapılmalı
+  return null;
 };
 
 // ChromaDB client'ı başlat (Local veya Cloud)
@@ -60,24 +52,18 @@ export async function getFRCCollection() {
     const client = await initChromaDB();
     if (!client) return null;
 
-    const embeddingFunction = getEmbeddingFunction();
-    if (!embeddingFunction) {
-      console.warn("[ChromaDB] Embedding function oluşturulamadı");
-      return null;
-    }
-
+    // Serverless ortamda embedding function yok
+    // Chroma Cloud kendi embedding'i sağlar
     try {
       // Mevcut collection'ı al
       frcCollection = await client.getCollection({
-        name: "frc_knowledge",
-        embeddingFunction
+        name: "frc_knowledge"
       });
       console.log("[ChromaDB] FRC collection bulundu");
     } catch (error) {
       // Collection yoksa oluştur
       frcCollection = await client.createCollection({
         name: "frc_knowledge",
-        embeddingFunction,
         metadata: { description: "FRC robotics knowledge base" }
       });
       console.log("[ChromaDB] FRC collection oluşturuldu");
