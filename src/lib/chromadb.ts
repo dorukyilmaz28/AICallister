@@ -1,43 +1,45 @@
-import { ChromaClient, Collection } from "chromadb";
+import { ChromaClient, CloudClient, Collection } from "chromadb";
 
 // ChromaDB client singleton
-let chromaClient: ChromaClient | null = null;
+let chromaClient: ChromaClient | CloudClient | null = null;
 let frcCollection: Collection | null = null;
-
-// OpenAI embedding function (manuel - serverless için)
-const getEmbeddingFunction = () => {
-  // Serverless ortamda OpenAIEmbeddingFunction kullanılamaz
-  // Chroma Cloud kullanılmalı veya embeddings manuel yapılmalı
-  return null;
-};
 
 // ChromaDB client'ı başlat (Local veya Cloud)
 export async function initChromaDB() {
   try {
     if (chromaClient) return chromaClient;
 
-    const chromaUrl = process.env.CHROMA_URL || "http://localhost:8000";
     const chromaApiKey = process.env.CHROMA_API_KEY;
+    const chromaTenant = process.env.CHROMA_TENANT;
+    const chromaDatabase = process.env.CHROMA_DATABASE;
+    const chromaUrl = process.env.CHROMA_URL;
 
-    // Chroma Cloud için API key gerekli
-    const clientConfig: any = {
-      path: chromaUrl
-    };
-
-    if (chromaApiKey) {
-      clientConfig.auth = {
-        provider: "token",
-        credentials: chromaApiKey
-      };
-      console.log("[ChromaDB] Chroma Cloud modu (API key ile)");
-    } else {
+    // Chroma Cloud kullan (production)
+    if (chromaApiKey && chromaTenant && chromaDatabase) {
+      console.log("[ChromaDB] Chroma Cloud modu başlatılıyor...");
+      
+      chromaClient = new CloudClient({
+        apiKey: chromaApiKey,
+        tenant: chromaTenant,
+        database: chromaDatabase
+      });
+      
+      console.log("[ChromaDB] Chroma Cloud bağlantısı başarılı");
+      return chromaClient;
+    }
+    
+    // Local ChromaClient kullan (development)
+    if (chromaUrl) {
       console.log("[ChromaDB] Local modu");
+      chromaClient = new ChromaClient({
+        path: chromaUrl
+      });
+      console.log("[ChromaDB] Local client başlatıldı:", chromaUrl);
+      return chromaClient;
     }
 
-    chromaClient = new ChromaClient(clientConfig);
-
-    console.log("[ChromaDB] Client başlatıldı:", chromaUrl);
-    return chromaClient;
+    console.warn("[ChromaDB] Credentials bulunamadı");
+    return null;
   } catch (error) {
     console.error("[ChromaDB] Client başlatma hatası:", error);
     return null;
