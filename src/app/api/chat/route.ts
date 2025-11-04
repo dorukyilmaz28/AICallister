@@ -72,6 +72,78 @@ async function fetchTeamInfo(teamNumber: string): Promise<string> {
       // Etkinlik bilgisi yoksa devam et
     }
     
+    // Ödülleri çek (Awards)
+    let awardsInfo = "";
+    try {
+      // Son 3 yılın ödüllerini çek
+      const years = [currentYear, currentYear - 1, currentYear - 2];
+      const allAwards: any[] = [];
+      
+      for (const year of years) {
+        try {
+          const awardsResponse = await fetch(
+            `https://www.thebluealliance.com/api/v3/team/frc${teamNumber}/awards/${year}`,
+            { headers: { "X-TBA-Auth-Key": TBA_API_KEY } }
+          );
+          
+          if (awardsResponse.ok) {
+            const yearAwards = await awardsResponse.json();
+            if (yearAwards && yearAwards.length > 0) {
+              allAwards.push(...yearAwards.map((a: any) => ({ ...a, year })));
+            }
+          }
+        } catch (e) {
+          // Yıl için ödül yoksa devam et
+        }
+      }
+      
+      if (allAwards.length > 0) {
+        // Ödülleri yıl ve etkinliğe göre grupla
+        const awardsByYear = allAwards.reduce((acc: any, award: any) => {
+          const year = award.year;
+          if (!acc[year]) acc[year] = [];
+          acc[year].push(award);
+          return acc;
+        }, {});
+        
+        awardsInfo = "\n\n🏆 ÖDÜLLER:";
+        
+        for (const year of years) {
+          if (awardsByYear[year] && awardsByYear[year].length > 0) {
+            awardsInfo += `\n\n${year} Sezonu (${awardsByYear[year].length} ödül):`;
+            
+            // En önemli ödülleri üstte göster
+            const sortedAwards = awardsByYear[year].sort((a: any, b: any) => {
+              const importantTypes = ['Winner', 'Finalist', 'Chairman', 'Engineering', 'Innovation', 'Quality'];
+              const aImportant = importantTypes.some(type => a.award_type?.toString().includes(type.toString()));
+              const bImportant = importantTypes.some(type => b.award_type?.toString().includes(type.toString()));
+              if (aImportant && !bImportant) return -1;
+              if (!aImportant && bImportant) return 1;
+              return 0;
+            });
+            
+            sortedAwards.forEach((award: any, index: number) => {
+              if (index < 15) { // Maksimum 15 ödül göster
+                const eventName = award.event_key ? ` (${award.event_key.replace(/\d{4}/, '')})` : '';
+                awardsInfo += `\n  • ${award.name}${eventName}`;
+              }
+            });
+            
+            if (awardsByYear[year].length > 15) {
+              awardsInfo += `\n  ... ve ${awardsByYear[year].length - 15} ödül daha`;
+            }
+          }
+        }
+        
+        console.log(`[TBA RAG] Takım ${teamNumber} için ${allAwards.length} ödül bulundu`);
+      } else {
+        console.log(`[TBA RAG] Takım ${teamNumber} için ödül bulunamadı`);
+      }
+      
+    } catch (e) {
+      console.log(`[TBA RAG] Ödül çekerken hata:`, e);
+    }
+    
     console.log(`[TBA RAG] Takım ${teamNumber} başarıyla çekildi:`, team.nickname);
     
     return `
@@ -80,7 +152,7 @@ FRC Takım ${teamNumber} Bilgileri (The Blue Alliance - ${currentYear}):
 - Tam İsim: ${team.name || "N/A"}
 - Şehir: ${team.city || "N/A"}, ${team.state_prov || "N/A"}, ${team.country || "N/A"}
 - Rookie Yılı: ${team.rookie_year || "N/A"}
-- Website: ${team.website || "N/A"}${recentEvents}
+- Website: ${team.website || "N/A"}${recentEvents}${awardsInfo}
 - Veri Kaynağı: The Blue Alliance (Güncel - ${currentYear})
 `;
   } catch (error) {
@@ -293,7 +365,8 @@ export async function POST(req: NextRequest) {
           ragContext += `\n\n=== GÜNCEL TAKIM BİLGİLERİ (The Blue Alliance - ${currentYear}) ===\n` + 
                        validInfos.join("\n") + 
                        `\n=== BİLGİ SONU ===\n\n` +
-                       `ÖNEMLİ: Yukarıdaki veriler The Blue Alliance'dan CANLI çekildi (${currentYear}). Bu GÜNCEL bilgileri kullan, eski eğitim verilerini değil!`;
+                       `ÖNEMLİ: Yukarıdaki veriler The Blue Alliance'dan CANLI çekildi (${currentYear}). Bu GÜNCEL bilgileri kullan, eski eğitim verilerini değil!\n` +
+                       `ÖDÜLLER: Yukarıda 🏆 sembolü ile gösterilen ödüller TBA API'den canlı çekildi. Ödül soruları için bu listeyi kullan!`;
         }
       }
       
@@ -317,24 +390,28 @@ SEN KİMSİN:
 - GÜNCEL SEZON: ${currentYear}
 - FRC oyunları: 2024 (Crescendo), 2023 (Charged Up), 2022 (Rapid React), vb.
 - TBA API'den GÜNCEL ve CANLI veri alıyorsun - eski bilgiler verme!
+- Takım bilgileri: isim, şehir, rookie year, etkinlikler, ÖDÜLLER (son 3 yıl)
 
 ÖNEMLİ KURALLAR:
 1. Doğal ve yardımsever ol
 2. Sadece SORULAN soruyu cevapla - alakasız bilgi verme
 3. Gereksiz tekrar yapma
 4. Direkt konuya gir
+5. ÖDÜLLER sorulduğunda, TBA'dan gelen CANLI ödül listesini kullan
 
 YAPMA:
 ❌ Alakasız bilgi verme (SORULAN KONU DIŞINA ÇIKMA!)
 ❌ Aynı şeyi tekrar tekrar söyleme
 ❌ Soru sorulmamış konuları açıklama
 ❌ Gereksiz ön bilgi verme
+❌ TBA verisi varken eski/tahmin bilgi verme
 
 YAP:
 ✅ Soruyu cevapla
 ✅ Net ve anlaşılır ol
 ✅ Gerekirse kod/örnek ver
 ✅ Yeterince açıkla (az değil, çok değil)
+✅ Ödüller için TBA'dan gelen güncel veriyi kullan
 `;
 
     if (mode === "general") {
