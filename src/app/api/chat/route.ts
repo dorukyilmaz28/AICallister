@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { conversationDb } from "@/lib/database";
-import { searchFRCKnowledge } from "@/lib/chromadb";
 
 // FRC takım numaralarını tespit et
 function extractTeamNumbers(text: string): string[] {
@@ -349,118 +348,7 @@ export async function POST(req: NextRequest) {
     if (lastUserMessage && lastUserMessage.role === "user") {
       const userText = lastUserMessage.content;
       
-      // 0. ChromaDB RAG - Semantik FRC bilgi araması (Akıllı Filtreleme)
-      try {
-        console.log("[ChromaDB] Semantik arama başlatılıyor:", userText.substring(0, 50));
-        
-        // Akıllı sonuç sayısı belirleme (sorulara göre)
-        let nResults = 3; // varsayılan
-        const textLower = userText.toLowerCase();
-        
-        // Programlama/kod soruları için daha fazla örnek
-        if (textLower.includes("kod") || textLower.includes("program") || 
-            textLower.includes("java") || textLower.includes("python") ||
-            textLower.includes("nasıl yap")) {
-          nResults = 4;
-        }
-        
-        // "Nedir?" türü sorular için 2 yeter
-        if (textLower.includes("nedir") || textLower.includes("ne demek")) {
-          nResults = 2;
-        }
-        
-        // Liste/çoklu sorular için daha fazla
-        if (textLower.includes("hangi") || textLower.includes("liste") ||
-            textLower.includes("öneriler")) {
-          nResults = 5;
-        }
-        
-        // Akıllı filtreleme
-        const filters: any = {};
-        
-        // Zorluk seviyesi tespiti
-        if (textLower.includes("başlangıç") || textLower.includes("yeni") || 
-            textLower.includes("kolay")) {
-          filters.difficulty = "beginner";
-        }
-        if (textLower.includes("ileri") || textLower.includes("advanced") ||
-            textLower.includes("karmaşık")) {
-          filters.difficulty = "advanced";
-        }
-        
-        // Kategori tespiti
-        if (textLower.includes("strateji") || textLower.includes("oyun") ||
-            textLower.includes("scouting") || textLower.includes("alliance")) {
-          filters.category = "game-strategy";
-        }
-        if (textLower.includes("elektrik") || textLower.includes("wiring") ||
-            textLower.includes("battery") || textLower.includes("power")) {
-          filters.category = "electrical";
-        }
-        if (textLower.includes("vision") || textLower.includes("camera") ||
-            textLower.includes("limelight") || textLower.includes("apriltag")) {
-          filters.category = "vision";
-        }
-        if (textLower.includes("yarışma") || textLower.includes("competition") ||
-            textLower.includes("match")) {
-          filters.category = "competition";
-        }
-        if (textLower.includes("takım") || textLower.includes("build season") ||
-            textLower.includes("team management")) {
-          filters.category = "team-management";
-        }
-        
-        // Yıl tespiti
-        const yearMatch = userText.match(/20(2[0-9])/);
-        if (yearMatch) {
-          filters.year = parseInt(yearMatch[0]);
-        }
-        
-        // Dil tespiti
-        if (textLower.includes("python")) {
-          filters.language = "python";
-        }
-        if (textLower.includes("java")) {
-          filters.language = "java";
-        }
-        if (textLower.includes("c++")) {
-          filters.language = "cpp";
-        }
-        
-        console.log("[ChromaDB] Arama parametreleri:", { nResults, filters });
-        
-        const chromaResults = await searchFRCKnowledge(
-          userText,
-          nResults,
-          Object.keys(filters).length > 0 ? filters : undefined
-        );
-        
-        if (chromaResults && chromaResults.documents.length > 0) {
-          console.log(`[ChromaDB] ${chromaResults.documents.length} alakalı bilgi bulundu`);
-          
-          ragContext += "\n\n=== FRC BİLGİ TABANI (ChromaDB - Semantik Arama) ===\n";
-          
-          chromaResults.documents.forEach((doc, index) => {
-            const metadata = chromaResults.metadatas[index];
-            const distance = chromaResults.distances[index];
-            const relevance = distance !== null && distance !== undefined 
-              ? (1 - distance).toFixed(2) 
-              : "N/A";
-            
-            ragContext += `\n--- Bilgi ${index + 1} (İlgililik: ${relevance}) ---\n`;
-            if (metadata) {
-              ragContext += `Kategori: ${metadata.category || "N/A"} | Konu: ${metadata.topic || "N/A"}\n`;
-            }
-            ragContext += `${doc}\n`;
-          });
-          
-          ragContext += "\n=== BİLGİ TABANI SONU ===\n\n";
-          ragContext += "ÖNEMLİ: Yukarıdaki bilgiler FRC bilgi tabanından semantik arama ile bulundu. Bu bilgileri kullanarak cevap ver!\n";
-        }
-      } catch (error) {
-        console.error("[ChromaDB] Arama hatası:", error);
-        // ChromaDB hatası durumunda devam et
-      }
+      // ChromaDB disabled (Vercel serverless incompatible)
       
       // 1. TBA RAG - Takım bilgileri
       const teamNumbers = extractTeamNumbers(userText);
