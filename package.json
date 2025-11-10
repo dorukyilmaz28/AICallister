@@ -8,12 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "vercel-build": "next build",
-    "test:chromadb": "ts-node scripts/test-chromadb.ts",
-    "chromadb:reset": "ts-node scripts/test-chromadb.ts --reset",
-    "scrape:chiefdelphi": "ts-node scripts/scrape-chiefdelphi.ts"
+    "vercel-build": "next build"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
     "@types/bcryptjs": "^2.4.6",
     "@vercel/speed-insights": "^1.2.0",

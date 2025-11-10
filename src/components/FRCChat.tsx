@@ -58,6 +58,7 @@ export function FRCChat() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [voiceLanguage, setVoiceLanguage] = useState<'tr-TR' | 'en-US'>('tr-TR');
   const [autoSpeak, setAutoSpeak] = useState(false); // AI cevabını otomatik oku
+  const [aiProvider, setAiProvider] = useState<'openrouter' | 'gemini'>('gemini'); // AI provider seçimi
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Speech hooks
@@ -123,7 +124,10 @@ export function FRCChat() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      // AI provider'a göre endpoint seç
+      const endpoint = aiProvider === 'gemini' ? '/api/chat/gemini' : '/api/chat';
+      
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -227,6 +231,32 @@ export function FRCChat() {
             </div>
           </Link>
           <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* AI Provider Seçici */}
+            <div className="flex items-center space-x-1 bg-white/10 border border-white/20 rounded-lg px-2 py-1">
+              <button
+                onClick={() => setAiProvider('gemini')}
+                className={`px-2 py-1 rounded text-xs transition-colors ${
+                  aiProvider === 'gemini' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="Google Gemini 1.5 Flash"
+              >
+                🔷 Gemini
+              </button>
+              <button
+                onClick={() => setAiProvider('openrouter')}
+                className={`px-2 py-1 rounded text-xs transition-colors ${
+                  aiProvider === 'openrouter' 
+                    ? 'bg-purple-500 text-white' 
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="GLM-4.5-Air"
+              >
+                🟣 GLM
+              </button>
+            </div>
+            
             {session?.user?.status === "pending" && (
               <div className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-300">
                 <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
