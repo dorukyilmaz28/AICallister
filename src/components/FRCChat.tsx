@@ -3,13 +3,11 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send, Bot, User, Settings, Wrench, Target, Cpu, Home, UserCircle, Shield, Search, Trash2, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import { Send, Bot, User, Settings, Wrench, Target, Cpu, Home, UserCircle, Shield, Search, Trash2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
-import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
-import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
 interface Message {
   role: "user" | "assistant";
@@ -56,28 +54,7 @@ export function FRCChat() {
   const [selectedContext, setSelectedContext] = useState<Context>("general");
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [voiceLanguage, setVoiceLanguage] = useState<'tr-TR' | 'en-US'>('tr-TR');
-  const [autoSpeak, setAutoSpeak] = useState(false); // AI cevabını otomatik oku
-  const [aiProvider, setAiProvider] = useState<'openrouter' | 'gemini'>('gemini'); // AI provider seçimi
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Speech hooks
-  const { 
-    isListening, 
-    transcript, 
-    isSupported: speechSupported,
-    error: speechError,
-    startListening, 
-    stopListening,
-    resetTranscript 
-  } = useSpeechRecognition(voiceLanguage);
-  
-  const {
-    speak,
-    stop: stopSpeaking,
-    isSpeaking,
-    isSupported: ttsSupported
-  } = useSpeechSynthesis(voiceLanguage);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -86,29 +63,6 @@ export function FRCChat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // Sesli transcript'i input'a yaz
-  useEffect(() => {
-    if (transcript) {
-      setInputMessage(transcript);
-    }
-  }, [transcript]);
-
-  // AI cevabını otomatik sesli oku
-  useEffect(() => {
-    if (autoSpeak && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'assistant' && !isLoading) {
-        // Markdown'ı temizle (sadece metin oku)
-        const cleanText = lastMessage.content
-          .replace(/[#*`_\[\]]/g, '') // Markdown karakterleri
-          .replace(/https?:\/\/[^\s]+/g, '') // URL'leri kaldır
-          .substring(0, 500); // İlk 500 karakter
-        
-        speak(cleanText);
-      }
-    }
-  }, [messages, autoSpeak, isLoading, speak]);
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -124,10 +78,7 @@ export function FRCChat() {
     setIsLoading(true);
 
     try {
-      // AI provider'a göre endpoint seç
-      const endpoint = aiProvider === 'gemini' ? '/api/chat/gemini' : '/api/chat';
-      
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/chat', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -231,32 +182,6 @@ export function FRCChat() {
             </div>
           </Link>
           <div className="flex items-center space-x-1 sm:space-x-2">
-            {/* AI Provider Seçici */}
-            <div className="flex items-center space-x-1 bg-white/10 border border-white/20 rounded-lg px-2 py-1">
-              <button
-                onClick={() => setAiProvider('gemini')}
-                className={`px-2 py-1 rounded text-xs transition-colors ${
-                  aiProvider === 'gemini' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'text-white/60 hover:text-white'
-                }`}
-                title="Google Gemini 1.5 Flash"
-              >
-                🔷 Gemini
-              </button>
-              <button
-                onClick={() => setAiProvider('openrouter')}
-                className={`px-2 py-1 rounded text-xs transition-colors ${
-                  aiProvider === 'openrouter' 
-                    ? 'bg-purple-500 text-white' 
-                    : 'text-white/60 hover:text-white'
-                }`}
-                title="GLM-4.5-Air"
-              >
-                🟣 GLM
-              </button>
-            </div>
-            
             {session?.user?.status === "pending" && (
               <div className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-300">
                 <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -388,126 +313,18 @@ export function FRCChat() {
       {/* Input */}
       <div className="border-t border-white/20 p-3 sm:p-4" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
         <div className="max-w-4xl mx-auto">
-          {/* Sesli kontroller */}
-          {(speechSupported || ttsSupported) && (
-            <div className="mb-2 flex items-center justify-between text-white/80 text-xs sm:text-sm">
-              <div className="flex items-center space-x-2">
-                {speechSupported && (
-                  <div className="flex items-center space-x-1">
-                    <Mic className="w-3 h-3" />
-                    <span>Sesli soru</span>
-                  </div>
-                )}
-                {ttsSupported && (
-                  <div className="flex items-center space-x-1">
-                    <Volume2 className="w-3 h-3" />
-                    <span>Sesli yanıt</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center space-x-2">
-                {/* Dil seçici */}
-                <select
-                  value={voiceLanguage}
-                  onChange={(e) => setVoiceLanguage(e.target.value as 'tr-TR' | 'en-US')}
-                  className="px-2 py-1 rounded bg-white/10 border border-white/20 text-white text-xs"
-                >
-                  <option value="tr-TR">🇹🇷 Türkçe</option>
-                  <option value="en-US">🇺🇸 English</option>
-                </select>
-                {/* Otomatik okuma toggle */}
-                {ttsSupported && (
-                  <button
-                    onClick={() => setAutoSpeak(!autoSpeak)}
-                    className={`px-2 py-1 rounded text-xs transition-colors ${
-                      autoSpeak 
-                        ? 'bg-green-500/30 border border-green-500/50' 
-                        : 'bg-white/10 border border-white/20'
-                    }`}
-                    title="AI cevabını otomatik sesli oku"
-                  >
-                    {autoSpeak ? '🔊 Auto' : '🔇 Manuel'}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-          
           <div className="flex space-x-2 sm:space-x-3">
             <div className="flex-1">
-              <div className="relative">
-                <textarea
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder={isListening ? "🎤 Dinleniyor..." : selectedMode === "frc" ? "FRC hakkında sorunuzu yazın veya 🎤 kullanın..." : "Sorunuzu yazın..."}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-12 border border-white/30 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-transparent resize-none transition-colors bg-white/20 backdrop-blur-sm text-white placeholder-white/60 text-sm sm:text-base"
-                  rows={1}
-                  style={{ minHeight: "40px", maxHeight: "120px" }}
-                />
-                {/* Mikrofon butonu (textarea içinde sağda) */}
-                {speechSupported && (
-                  <button
-                    onClick={() => {
-                      if (isListening) {
-                        stopListening();
-                      } else {
-                        resetTranscript();
-                        startListening();
-                      }
-                    }}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all ${
-                      isListening 
-                        ? 'bg-red-500 text-white animate-pulse' 
-                        : 'bg-white/10 text-white hover:bg-white/20'
-                    }`}
-                    title={isListening ? "Dinlemeyi durdur" : "Sesli soru sor"}
-                  >
-                    {isListening ? (
-                      <MicOff className="w-4 h-4" />
-                    ) : (
-                      <Mic className="w-4 h-4" />
-                    )}
-                  </button>
-                )}
-              </div>
-              {/* Sesli hata mesajı */}
-              {speechError && (
-                <p className="text-red-300 text-xs mt-1">{speechError}</p>
-              )}
+              <textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={selectedMode === "frc" ? "FRC hakkında sorunuzu yazın..." : "Sorunuzu yazın..."}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-white/30 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-transparent resize-none transition-colors bg-white/20 backdrop-blur-sm text-white placeholder-white/60 text-sm sm:text-base"
+                rows={1}
+                style={{ minHeight: "40px", maxHeight: "120px" }}
+              />
             </div>
-            
-            {/* Speaker butonu (AI cevabını oku) */}
-            {ttsSupported && messages.length > 1 && (
-              <button
-                onClick={() => {
-                  if (isSpeaking) {
-                    stopSpeaking();
-                  } else {
-                    const lastAssistant = messages.filter(m => m.role === 'assistant').pop();
-                    if (lastAssistant) {
-                      const cleanText = lastAssistant.content
-                        .replace(/[#*`_\[\]]/g, '')
-                        .replace(/https?:\/\/[^\s]+/g, '')
-                        .substring(0, 500);
-                      speak(cleanText);
-                    }
-                  }
-                }}
-                className={`px-3 sm:px-4 py-2 sm:py-3 rounded-2xl transition-colors duration-200 flex items-center space-x-1 border ${
-                  isSpeaking
-                    ? 'bg-blue-500/30 border-blue-500/50 text-white'
-                    : 'bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30'
-                }`}
-                title={isSpeaking ? "Okumayı durdur" : "Son cevabı sesli oku"}
-              >
-                {isSpeaking ? (
-                  <VolumeX className="w-4 h-4" />
-                ) : (
-                  <Volume2 className="w-4 h-4" />
-                )}
-              </button>
-            )}
             
             <button
               onClick={sendMessage}

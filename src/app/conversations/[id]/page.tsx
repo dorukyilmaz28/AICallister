@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, MessageSquare, Settings, Calendar, Bot, ArrowLeft, Send, Trash2 } from "lucide-react";
+import { User, LogOut, MessageSquare, Settings, Calendar, Bot, ArrowLeft, Send, Trash2, Download, Share2, Printer, Copy, Check } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -36,6 +36,8 @@ export default function ConversationDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -94,6 +96,81 @@ export default function ConversationDetail() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleExportMarkdown = async () => {
+    if (!conversationId) return;
+    
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}/export?format=markdown`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `conversation-${conversationId}.md`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error("Error exporting conversation:", error);
+    }
+  };
+
+  const handleExportJSON = async () => {
+    if (!conversationId) return;
+    
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}/export?format=json`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `conversation-${conversationId}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error("Error exporting conversation:", error);
+    }
+  };
+
+  const handleCreateShareLink = async () => {
+    if (!conversationId) return;
+    
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}/share`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ expiresInDays: 30 })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setShareUrl(data.shareUrl);
+      }
+    } catch (error) {
+      console.error("Error creating share link:", error);
+    }
+  };
+
+  const handleCopyShareLink = async () => {
+    if (shareUrl) {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const formatDate = (dateString: string) => {
@@ -170,6 +247,27 @@ export default function ConversationDetail() {
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2">
             <button
+              onClick={handleExportMarkdown}
+              className="p-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors duration-200"
+              title="Markdown olarak indir"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleCreateShareLink}
+              className="p-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white transition-colors duration-200"
+              title="Paylaşım linki oluştur"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handlePrint}
+              className="p-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-white transition-colors duration-200"
+              title="Yazdır"
+            >
+              <Printer className="w-4 h-4" />
+            </button>
+            <button
               onClick={handleDeleteConversation}
               disabled={isDeleting}
               className="p-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200 disabled:opacity-50"
@@ -184,13 +282,6 @@ export default function ConversationDetail() {
             >
               <Bot className="w-4 h-4" />
             </Link>
-            <button
-              onClick={handleSignOut}
-              className="p-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
-              title="Çıkış Yap"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </div>
@@ -207,7 +298,7 @@ export default function ConversationDetail() {
                   <span className="text-white text-sm">{getContextLabel(conversation.context)}</span>
                 </div>
               </div>
-              <div className="flex items-center space-x-6 text-sm text-white/70">
+              <div className="flex items-center space-x-6 text-sm text-white/70 mb-4">
                 <span className="flex items-center space-x-1">
                   <MessageSquare className="w-4 h-4" />
                   <span>{conversation.messageCount} mesaj</span>
@@ -221,6 +312,28 @@ export default function ConversationDetail() {
                   <span>{conversation.user.name}</span>
                 </span>
               </div>
+              {shareUrl && (
+                <div className="mt-4 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-white text-sm mb-2">Paylaşım Linki:</p>
+                      <input
+                        type="text"
+                        value={shareUrl}
+                        readOnly
+                        className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white text-sm"
+                      />
+                    </div>
+                    <button
+                      onClick={handleCopyShareLink}
+                      className="ml-2 p-2 bg-white/20 hover:bg-white/30 rounded-lg text-white transition-colors"
+                      title="Kopyala"
+                    >
+                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

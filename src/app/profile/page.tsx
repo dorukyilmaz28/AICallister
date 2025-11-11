@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, MessageSquare, Settings, Calendar, Bot, Users, Shield, Search, Home } from "lucide-react";
+import { User, LogOut, MessageSquare, Settings, Calendar, Bot, Users, Shield, Search, Home, Code2 } from "lucide-react";
 
 interface Conversation {
   id: string;
@@ -158,6 +158,13 @@ export default function Profile() {
               title="Takım Keşfet"
             >
               <Search className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/code-snippets"
+              className="p-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-lg text-white transition-colors duration-200"
+              title="Kod Snippet Kütüphanesi"
+            >
+              <Code2 className="w-4 h-4" />
             </Link>
             <button
               onClick={handleSignOut}

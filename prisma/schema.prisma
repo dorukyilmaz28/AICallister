@@ -8,36 +8,39 @@ datasource db {
 }
 
 model User {
-  id                String             @id @default(cuid())
-  email             String             @unique
+  id                String                @id @default(cuid())
+  email             String                @unique
   name              String?
   password          String
   teamNumber        String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  role              String             @default("member")
-  status            String             @default("pending")
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  role              String                @default("member")
+  status            String                @default("pending")
   teamId            String?
   conversations     Conversation[]
   teamChats         TeamChat[]
   teamJoinRequests  TeamJoinRequest[]
   teamMemberships   TeamMember[]
   teamNotifications TeamNotification[]
-  adminTeams        Team[]             @relation("TeamAdmin")
-  team              Team?              @relation(fields: [teamId], references: [id])
+  adminTeams        Team[]                @relation("TeamAdmin")
+  team              Team?                 @relation(fields: [teamId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  codeSnippets      CodeSnippet[]
+  favoriteSnippets  UserFavoriteSnippet[]
 
   @@map("users")
 }
 
 model Conversation {
-  id        String    @id @default(cuid())
+  id        String              @id @default(cuid())
   title     String?
-  context   String    @default("general")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  context   String              @default("general")
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
   userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  Message[]
+  shares    ConversationShare[]
 
   @@map("conversations")
 }
@@ -65,7 +68,7 @@ model Team {
   joinRequests  TeamJoinRequest[]
   members       TeamMember[]
   notifications TeamNotification[]
-  admin         User?              @relation("TeamAdmin", fields: [adminId], references: [id])
+  admin         User?              @relation("TeamAdmin", fields: [adminId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   users         User[]
 
   @@map("teams")
@@ -125,4 +128,50 @@ model TeamNotification {
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("team_notifications")
+}
+
+model CodeSnippet {
+  id            String                @id @default(cuid())
+  title         String
+  description   String?
+  code          String                @db.Text
+  language      String // java, cpp, python, etc.
+  category      String // motor, sensor, autonomous, etc.
+  tags          String[]              @default([])
+  isPublic      Boolean               @default(false)
+  shareToken    String?               @unique
+  viewCount     Int                   @default(0)
+  favoriteCount Int                   @default(0)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  userId        String
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favorites     UserFavoriteSnippet[]
+
+  @@map("code_snippets")
+}
+
+model UserFavoriteSnippet {
+  id        String      @id @default(cuid())
+  userId    String
+  snippetId String
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snippet   CodeSnippet @relation(fields: [snippetId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, snippetId])
+  @@map("user_favorite_snippets")
+}
+
+model ConversationShare {
+  id             String       @id @default(cuid())
+  conversationId String
+  shareToken     String       @unique
+  isActive       Boolean      @default(true)
+  expiresAt      DateTime?
+  viewCount      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("conversation_shares")
 }
