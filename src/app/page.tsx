@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings } from "lucide-react";
+import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings, MessageSquare, Code, Sparkles, ChevronRight } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 
@@ -9,237 +9,313 @@ export default function Home() {
   const { session, isAuthenticated } = useAuthGuard({ requireAuth: false });
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
-      {/* Header */}
-      <div className="border-b border-white/20 p-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <img
-              src="/8f28b76859c1479d839d270409be3586.jpg"
-              alt="Callister Logo"
-              className="w-10 h-10 object-cover rounded-xl"
-            />
-            <h1 className="text-xl font-bold text-white">
-              Callister FRC AI
-            </h1>
-          </div>
-          <div className="flex items-center space-x-3">
-            {isAuthenticated ? (
-              <>
-                {session?.user.status === "pending" && (
-                  <div className="flex items-center space-x-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-300">
-                    <Shield className="w-4 h-4" />
-                    <span>Onay Bekleniyor</span>
-                  </div>
-                )}
-                {session?.user.role === "admin" && (
+    <div className="min-h-screen bg-white">
+      {/* Header - Minimal and Clean */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 lg:h-20">
+            <div className="flex items-center space-x-3">
+              <img
+                src="/8f28b76859c1479d839d270409be3586.jpg"
+                alt="Callister Logo"
+                className="w-8 h-8 lg:w-10 lg:h-10 object-cover rounded-xl"
+              />
+              <h1 className="text-lg lg:text-xl font-bold text-gray-900">
+                Callister AI
+              </h1>
+            </div>
+            
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/chat" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                Chat
+              </Link>
+              <Link href="/code-snippets" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                Snippets
+              </Link>
+              {session?.user.role === "admin" && (
+                <Link href="/teams/admin" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                  Admin
+                </Link>
+              )}
+            </nav>
+
+            <div className="flex items-center space-x-3">
+              {isAuthenticated ? (
+                <>
+                  {session?.user.status === "pending" && (
+                    <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-xs font-medium">
+                      <Shield className="w-3 h-3" />
+                      <span>Pending</span>
+                    </div>
+                  )}
                   <Link
-                    href="/teams/admin"
-                    className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-300 hover:text-blue-200 transition-colors duration-200"
+                    href="/profile"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
                   >
-                    <Settings className="w-4 h-4" />
-                    <span className="hidden md:inline">Yönetim</span>
+                    <User className="w-4 h-4" />
+                    <span className="hidden sm:inline">{session?.user.name}</span>
                   </Link>
-                )}
-                <Link
-                  href="/profile"
-                  className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
-                >
-                  <User className="w-4 h-4" />
-                  <span className="hidden sm:inline">{session?.user.name}</span>
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/auth/signin"
-                  className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span className="hidden md:inline">Giriş</span>
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-white/30 hover:bg-white/40 border border-white/40 rounded-lg text-white transition-colors duration-200"
-                >
-                  <User className="w-4 h-4" />
-                  <span className="hidden md:inline">Kayıt</span>
-                </Link>
-              </>
-            )}
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/signin"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/auth/signup"
+                    className="px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="relative container mx-auto px-4 py-12 sm:py-20">
-          <div className="max-w-4xl mx-auto">
-            {/* Content - Ortada */}
-            <div className="text-white text-center">
-              <div className="flex items-center justify-center mb-8 sm:mb-10">
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-40 h-40 sm:w-56 sm:h-56 object-cover rounded-full"
-                  style={{ boxShadow: '0 0 60px rgba(139, 92, 246, 0.5)' }}
-                >
-                  <source src="/Callister.MP4.mp4" type="video/mp4" />
-                </video>
+      <section className="pt-20 pb-24 lg:pt-32 lg:pb-40">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-5xl mx-auto text-center">
+            <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-50 to-blue-50 rounded-full mb-8">
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              <span className="text-sm font-medium text-gray-700">Powered by Advanced AI</span>
+            </div>
+            
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 tracking-tight leading-[1.1]">
+              The new standard in{" "}
+              <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                FRC AI assistance
+              </span>
+            </h1>
+            
+            <p className="text-xl lg:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+              Meet the AI platform that accelerates robot development, automates programming tasks, and helps your team win competitions.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link
+                href="/chat"
+                className="group inline-flex items-center justify-center space-x-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                <span>Start Chatting</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/code-snippets"
+                className="inline-flex items-center justify-center space-x-3 bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 border-2 border-gray-200 hover:border-gray-300"
+              >
+                <Code className="w-5 h-5" />
+                <span>Browse Snippets</span>
+              </Link>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-8 mt-20 max-w-3xl mx-auto">
+              <div className="text-center">
+                <div className="text-4xl lg:text-5xl font-bold text-gray-900 mb-2">10x</div>
+                <div className="text-sm lg:text-base text-gray-600">Faster Development</div>
               </div>
-              
-              <div className="mb-6">
-                <p className="text-blue-200 font-bold text-lg sm:text-xl mb-1">Callister Team</p>
-                <p className="text-white/70 font-medium text-sm sm:text-base">AI-Powered FRC Assistant</p>
+              <div className="text-center border-x border-gray-200">
+                <div className="text-4xl lg:text-5xl font-bold text-gray-900 mb-2">24/7</div>
+                <div className="text-sm lg:text-base text-gray-600">AI Availability</div>
               </div>
-              
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 text-white drop-shadow-lg">
-                Callister FRC AI Assistant
-              </h1>
-              
-              <p className="text-lg sm:text-2xl text-white/80 mb-8 sm:mb-12 leading-relaxed max-w-3xl mx-auto font-medium">
-                Robot tasarımından stratejiye, mekanikten simülasyona kadar FRC'nin her alanında 
-                uzman desteği alın. Yapay zeka ile güçlendirilmiş akıllı asistanınız.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href="/chat"
-                  className="inline-flex items-center justify-center space-x-3 bg-gradient-to-r from-blue-500/30 to-purple-500/30 backdrop-blur-sm text-white px-8 sm:px-12 py-4 sm:py-5 rounded-2xl font-bold text-lg sm:text-xl hover:from-blue-500/40 hover:to-purple-500/40 transition-all duration-300 shadow-2xl hover:shadow-white/25 transform hover:-translate-y-1 border border-white/30"
-                >
-                  <Play className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span>AI Asistanı ile Sohbet Et</span>
-                </Link>
+              <div className="text-center">
+                <div className="text-4xl lg:text-5xl font-bold text-gray-900 mb-2">100%</div>
+                <div className="text-sm lg:text-base text-gray-600">FRC Focused</div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Features Section */}
-      <div className="py-12 sm:py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-4xl font-bold text-white mb-4">Uzmanlık Alanları</h2>
-            <p className="text-base sm:text-xl text-gray-300 max-w-2xl mx-auto">
-              FRC'nin her alanında uzman desteği alın
+      {/* Features Grid */}
+      <section className="py-24 lg:py-32 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 lg:mb-20">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Designed to accelerate. Built to scale.
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Everything your FRC team needs to build, program, and compete at the highest level.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
-            <div className="group bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-2 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className="group bg-white rounded-2xl p-8 lg:p-10 hover:shadow-xl transition-all duration-300 border border-gray-100">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <MessageSquare className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Genel FRC</h3>
-              <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
-                Robot tasarımı, yarışma kuralları ve genel FRC konularında kapsamlı rehberlik.
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">AI-Powered Chat</h3>
+              <p className="text-gray-600 leading-relaxed mb-6">
+                Get instant answers to your FRC questions. Our AI understands WPILib, robot mechanics, and competition strategies.
               </p>
+              <Link href="/chat" className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold group">
+                <span>Start chatting</span>
+                <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
 
-            <div className="group bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Target className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+            {/* Feature 2 */}
+            <div className="group bg-white rounded-2xl p-8 lg:p-10 hover:shadow-xl transition-all duration-300 border border-gray-100">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Code className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Strateji</h3>
-              <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
-                Oyun analizi, takım koordinasyonu ve rekabet stratejileri konularında uzmanlık.
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Code Snippets</h3>
+              <p className="text-gray-600 leading-relaxed mb-6">
+                Access a library of ready-to-use code examples for motors, sensors, autonomous modes, and more.
               </p>
+              <Link href="/code-snippets" className="inline-flex items-center text-purple-600 hover:text-purple-700 font-semibold group">
+                <span>Browse library</span>
+                <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
 
-            <div className="group bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-2 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Wrench className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+            {/* Feature 3 */}
+            <div className="group bg-white rounded-2xl p-8 lg:p-10 hover:shadow-xl transition-all duration-300 border border-gray-100">
+              <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Trophy className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Mekanik</h3>
-              <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
-                Motor seçimi, güç aktarımı ve mekanik tasarım konularında teknik destek.
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Live TBA Data</h3>
+              <p className="text-gray-600 leading-relaxed mb-6">
+                Real-time team statistics, match results, and rankings from The Blue Alliance API.
               </p>
-            </div>
-
-            <div className="group bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-2 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Cpu className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Simülasyon</h3>
-              <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
-                Robot simülasyonu, fizik motorları ve test ortamları konularında rehberlik.
-              </p>
+              <Link href="/chat" className="inline-flex items-center text-green-600 hover:text-green-700 font-semibold group">
+                <span>Explore data</span>
+                <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Technology Section */}
-      <div className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Kullandığımız Teknolojiler</h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Güçlü yapay zeka ve güncel FRC verileri ile donatılmış sistememiz
+      {/* Expertise Areas */}
+      <section className="py-24 lg:py-32">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 lg:mb-20">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Expert in every FRC domain
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              From mechanical design to software development, our AI covers all aspects of FRC robotics.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 border border-blue-200">
+              <Bot className="w-10 h-10 text-blue-600 mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">General FRC</h3>
+              <p className="text-gray-700">Robot design, competition rules, and game strategy.</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 border border-green-200">
+              <Target className="w-10 h-10 text-green-600 mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Strategy</h3>
+              <p className="text-gray-700">Game analysis, match planning, and alliance coordination.</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 border border-orange-200">
+              <Wrench className="w-10 h-10 text-orange-600 mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Mechanical</h3>
+              <p className="text-gray-700">Motor selection, power transmission, and mechanism design.</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-8 border border-purple-200">
+              <Cpu className="w-10 h-10 text-purple-600 mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Programming</h3>
+              <p className="text-gray-700">WPILib, simulation, autonomous, and sensor integration.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Technology Stack */}
+      <section className="py-24 lg:py-32 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 lg:mb-20">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Powered by cutting-edge technology
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Built on industry-leading AI models and real-time FRC data sources.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
+              <div className="w-16 h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Bot className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">OpenAI Model</h3>
-              <p className="text-gray-300">OpenRouter API ile GPT tabanlı yapay zeka - doğal dil işleme ve kod üretimi</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">OpenAI GPT</h3>
+              <p className="text-gray-600">Advanced language models for natural conversation and code generation.</p>
             </div>
             
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Trophy className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">The Blue Alliance API</h3>
-              <p className="text-gray-300">Gerçek zamanlı FRC takım verileri, yarışma sonuçları ve performans istatistikleri</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">The Blue Alliance</h3>
+              <p className="text-gray-600">Real-time FRC team data, match results, and competition insights.</p>
             </div>
             
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-600 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Wrench className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">WPILib RAG Sistemi</h3>
-              <p className="text-gray-300">Resmi WPILib dokümantasyonu ile zenginleştirilmiş akıllı cevap sistemi</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">WPILib Docs</h3>
+              <p className="text-gray-600">Integrated official documentation for accurate programming guidance.</p>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* CTA Section */}
-      <div className="py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">
-            Callister AI ile FRC Yolculuğunuza Başlayın
-          </h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Callister AI asistanınızla robot tasarımından yarışma stratejisine kadar her adımda yanınızda.
-          </p>
-          <Link
-            href="/chat"
-            className="inline-flex items-center space-x-3 bg-white/20 backdrop-blur-sm text-white px-12 py-5 rounded-2xl font-bold text-xl hover:bg-white/30 transition-all duration-300 shadow-2xl hover:shadow-white/25 transform hover:-translate-y-1 border border-white/30"
-          >
-            <span>Callister AI ile Sohbet Et</span>
-            <ArrowRight className="w-6 h-6" />
-          </Link>
+      <section className="py-24 lg:py-32">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
+              Ready to transform your FRC journey?
+            </h2>
+            <p className="text-xl lg:text-2xl text-gray-600 mb-12 leading-relaxed">
+              Join teams using Callister AI to build better robots, write cleaner code, and win more matches.
+            </p>
+            <Link
+              href="/chat"
+              className="inline-flex items-center space-x-3 bg-gray-900 hover:bg-gray-800 text-white px-10 py-5 rounded-xl font-bold text-lg transition-all duration-200 shadow-xl hover:shadow-2xl"
+            >
+              <span>Get Started Now</span>
+              <ArrowRight className="w-6 h-6" />
+            </Link>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Footer */}
-      <div className="py-8 border-t border-white/10" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-gray-400 text-sm">
-            © 2025 Callister FRC AI. Tüm hakları saklıdır.
-          </p>
-          <p className="text-gray-500 text-xs mt-2">
+      <footer className="py-12 border-t border-gray-200">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="flex items-center space-x-3 mb-4 md:mb-0">
+              <img
+                src="/8f28b76859c1479d839d270409be3586.jpg"
+                alt="Callister Logo"
+                className="w-8 h-8 object-cover rounded-xl"
+              />
+              <span className="text-lg font-bold text-gray-900">Callister AI</span>
+            </div>
+            <div className="text-sm text-gray-600">
+              © 2025 Callister FRC AI. All rights reserved.
+            </div>
+          </div>
+          <div className="mt-4 text-center text-xs text-gray-500">
             Powered by OpenAI, The Blue Alliance & WPILib
-          </p>
+          </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

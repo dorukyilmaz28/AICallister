@@ -3,11 +3,11 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send, Bot, User, Settings, Wrench, Target, Cpu, Home, UserCircle, Shield, Search, Trash2 } from "lucide-react";
+import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import 'highlight.js/styles/github-dark.css';
+import 'highlight.js/styles/github.css';
 
 interface Message {
   role: "user" | "assistant";
@@ -20,22 +20,18 @@ type Mode = "frc" | "general";
 const contextConfig = {
   general: {
     label: "Genel FRC",
-    icon: Bot,
     description: "Genel FRC konuları"
   },
   strategy: {
     label: "Strateji",
-    icon: Target,
     description: "Robot stratejileri ve oyun analizi"
   },
   mechanical: {
     label: "Mekanik",
-    icon: Wrench,
     description: "Robot mekaniği ve tasarım"
   },
   simulation: {
     label: "Simülasyon",
-    icon: Cpu,
     description: "Robot simülasyonu ve test"
   }
 };
@@ -52,8 +48,8 @@ export function FRCChat() {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedContext, setSelectedContext] = useState<Context>("general");
-  const [showContextMenu, setShowContextMenu] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -101,15 +97,13 @@ export function FRCChat() {
         throw new Error(data.error);
       }
 
-      // Typing effect for assistant message
       const assistantMessage = data.messages[data.messages.length - 1];
       const assistantText = assistantMessage?.content || "";
 
-      // Start with empty assistant message, then type it out
       setMessages(prev => [...prev, { role: "assistant", content: "" }]);
 
       let index = 0;
-      const typingIntervalMs = 15; // speed of typing effect
+      const typingIntervalMs = 15;
 
       await new Promise<void>((resolve) => {
         const intervalId = setInterval(() => {
@@ -153,7 +147,7 @@ export function FRCChat() {
     }
   };
 
-  const clearChat = (mode?: Mode) => {
+  const clearChat = () => {
     setMessages([{
       role: "assistant",
       content: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Bilgilerimi The Blue Alliance, WPILib Documentation ve FIRST resmi kaynaklarından alıyorum.\n\n**Size nasıl yardımcı olabilirim?**\n• Robot programlama (WPILib - Java/C++/Python)\n• Mekanik tasarım ve motor seçimi\n• Strateji ve oyun analizi\n• Simülasyon ve test\n• Yarışma kuralları ve FRC takımları\n\nSorularınızı sorabilirsiniz! 🚀"
@@ -162,177 +156,213 @@ export function FRCChat() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
+    <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
-      <div className="border-b border-white/20 p-3 sm:p-4" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2 sm:space-x-3 group">
-            <img
-              src="/8f28b76859c1479d839d270409be3586.jpg"
-              alt="Callister Logo"
-              className="w-8 h-8 sm:w-12 sm:h-12 object-cover rounded-xl transition-transform group-hover:scale-[1.02]"
-            />
-            <div className="min-w-0 flex-1">
-              <h1 className="text-sm sm:text-xl font-bold text-white truncate">
-                Callister FRC AI Assistant
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-400 truncate">
-                {selectedMode === "frc" ? contextConfig[selectedContext].description : "FRC konularında yardımcı"}
-              </p>
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <img
+                src="/8f28b76859c1479d839d270409be3586.jpg"
+                alt="Callister Logo"
+                className="w-8 h-8 lg:w-10 lg:h-10 object-cover rounded-xl transition-transform group-hover:scale-105"
+              />
+              <div>
+                <h1 className="text-base lg:text-lg font-bold text-gray-900">
+                  Callister AI
+                </h1>
+                <p className="text-xs text-gray-500 hidden sm:block">
+                  FRC AI Assistant
+                </p>
+              </div>
+            </Link>
+            
+            <div className="hidden md:flex items-center space-x-2">
+              <Link
+                href="/"
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Home className="w-4 h-4" />
+                <span className="text-sm font-medium">Ana Sayfa</span>
+              </Link>
+              
+              <Link
+                href="/profile"
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <UserCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">Profil</span>
+              </Link>
+              
+              <button
+                onClick={clearChat}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Temizle</span>
+              </button>
             </div>
-          </Link>
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            {session?.user?.status === "pending" && (
-              <div className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-300">
-                <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="text-xs sm:text-sm font-medium hidden sm:inline">Onay Bekleniyor</span>
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-50"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+
+          {/* Mobile menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden py-4 space-y-2 border-t border-gray-100">
+              <Link
+                href="/"
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Home className="w-4 h-4" />
+                <span className="text-sm font-medium">Ana Sayfa</span>
+              </Link>
+              
+              <Link
+                href="/profile"
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <UserCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">Profil</span>
+              </Link>
+              
+              <button
+                onClick={() => {
+                  clearChat();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Temizle</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="space-y-6">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`flex items-start space-x-3 max-w-3xl ${
+                    message.role === "user" ? "flex-row-reverse space-x-reverse" : ""
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      message.role === "user"
+                        ? "bg-gray-900"
+                        : "bg-gradient-to-br from-blue-500 to-purple-600"
+                    }`}
+                  >
+                    {message.role === "user" ? (
+                      <User className="w-4 h-4 text-white" />
+                    ) : (
+                      <Bot className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                  <div
+                    className={`px-6 py-4 rounded-2xl max-w-full ${
+                      message.role === "user"
+                        ? "bg-gray-900 text-white"
+                        : "bg-white border border-gray-200 text-gray-900"
+                    }`}
+                  >
+                    <div className={`prose prose-sm max-w-none ${message.role === "user" ? "prose-invert" : ""}`}>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeHighlight]}
+                        components={{
+                          code: ({node, inline, className, children, ...props}: any) => {
+                            return inline ? (
+                              <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm" {...props}>
+                                {children}
+                              </code>
+                            ) : (
+                              <code className={className} {...props}>
+                                {children}
+                              </code>
+                            );
+                          },
+                          a: ({node, children, ...props}: any) => (
+                            <a className="text-blue-600 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer" {...props}>
+                              {children}
+                            </a>
+                          ),
+                        }}
+                      >
+                        {message.content
+                          .replace(/<\| begin_of_sentence \|>/g, '')
+                          .replace(/<\| end_of_sentence \|>/g, '')
+                          .replace(/<\|.*?\|>/g, '')
+                          .replace(/REDACTED_SPECIAL_TOKEN/g, '')
+                          .replace(/REDACTED.*?TOKEN/g, '')
+                          .replace(/\[REDACTED.*?\]/g, '')
+                        }
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="flex items-start space-x-3 max-w-3xl">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600">
+                    <Bot className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="px-6 py-4 rounded-2xl bg-white border border-gray-200">
+                    <div className="flex space-x-1.5">
+                      <div className="w-2 h-2 rounded-full animate-bounce bg-gray-400"></div>
+                      <div className="w-2 h-2 rounded-full animate-bounce bg-gray-400" style={{ animationDelay: "0.1s" }}></div>
+                      <div className="w-2 h-2 rounded-full animate-bounce bg-gray-400" style={{ animationDelay: "0.2s" }}></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             
-            <Link
-              href="/"
-              className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 px-3 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-colors duration-200 bg-green-500/25 hover:bg-green-500/35 border border-green-500/40 text-white text-center"
-            >
-              <Home className="w-5 h-5 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm font-medium">
-                Ana Sayfa
-              </span>
-            </Link>
-            
-            <Link
-              href="/profile"
-              className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-colors duration-200 bg-white/25 hover:bg-white/35 border border-white/35 text-white text-center"
-            >
-              <UserCircle className="w-5 h-5 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm font-medium">Profil</span>
-            </Link>
-            
-            <button
-              onClick={() => clearChat()}
-              className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-colors duration-200 bg-red-500/25 hover:bg-red-500/35 border border-red-500/35 text-white text-center"
-            >
-              <Trash2 className="w-5 h-5 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm font-medium">Temizle</span>
-            </button>
+            <div ref={messagesEndRef} />
           </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto p-2 sm:p-4 space-y-4 sm:space-y-6">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`flex items-start space-x-2 sm:space-x-3 max-w-3xl ${
-                  message.role === "user" ? "flex-row-reverse space-x-reverse" : ""
-                }`}
-              >
-                <div
-                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    message.role === "user"
-                      ? "bg-white/30 backdrop-blur-sm border border-white/40"
-                      : "bg-white/20 backdrop-blur-sm border border-white/30"
-                  }`}
-                >
-                  {message.role === "user" ? (
-                    <User className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                  ) : (
-                    <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                  )}
-                </div>
-                <div
-                  className={`px-3 sm:px-4 py-2 sm:py-3 rounded-2xl max-w-full transition-colors duration-200 ${
-                    message.role === "user"
-                      ? "bg-white/30 backdrop-blur-sm text-white border border-white/40"
-                      : "bg-white/20 backdrop-blur-sm text-white border border-white/30"
-                  }`}
-                >
-                  <div className="prose prose-xs sm:prose-sm max-w-none text-sm sm:text-base prose-invert prose-headings:text-white prose-p:text-white/90 prose-strong:text-white prose-code:text-blue-300 prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/20 prose-a:text-blue-300 prose-a:no-underline hover:prose-a:underline">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeHighlight]}
-                      components={{
-                        code: ({node, inline, className, children, ...props}: any) => {
-                          return inline ? (
-                            <code className="bg-black/30 px-1 py-0.5 rounded text-blue-300" {...props}>
-                              {children}
-                            </code>
-                          ) : (
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                        a: ({node, children, ...props}: any) => (
-                          <a className="text-blue-300 hover:text-blue-200 underline" target="_blank" rel="noopener noreferrer" {...props}>
-                            {children}
-                          </a>
-                        ),
-                      }}
-                    >
-                      {message.content
-                        .replace(/<\| begin_of_sentence \|>/g, '')
-                        .replace(/<\| end_of_sentence \|>/g, '')
-                        .replace(/<\|.*?\|>/g, '')
-                        .replace(/REDACTED_SPECIAL_TOKEN/g, '')
-                        .replace(/REDACTED.*?TOKEN/g, '')
-                        .replace(/\[REDACTED.*?\]/g, '')
-                      }
-                    </ReactMarkdown>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-          
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="flex items-start space-x-2 sm:space-x-3 max-w-3xl">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-white/20 backdrop-blur-sm border border-white/30">
-                  <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                </div>
-                <div className="px-3 sm:px-4 py-2 sm:py-3 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 rounded-full animate-bounce bg-white/60"></div>
-                    <div className="w-2 h-2 rounded-full animate-bounce bg-white/60" style={{ animationDelay: "0.1s" }}></div>
-                    <div className="w-2 h-2 rounded-full animate-bounce bg-white/60" style={{ animationDelay: "0.2s" }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
       {/* Input */}
-      <div className="border-t border-white/20 p-3 sm:p-4" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
-        <div className="max-w-4xl mx-auto">
-          <div className="flex space-x-2 sm:space-x-3">
-            <div className="flex-1">
-              <textarea
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={selectedMode === "frc" ? "FRC hakkında sorunuzu yazın..." : "Sorunuzu yazın..."}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-white/30 rounded-2xl focus:ring-2 focus:ring-white/50 focus:border-transparent resize-none transition-colors bg-white/20 backdrop-blur-sm text-white placeholder-white/60 text-sm sm:text-base"
-                rows={1}
-                style={{ minHeight: "40px", maxHeight: "120px" }}
-              />
-            </div>
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 py-4">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="flex space-x-3">
+            <textarea
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="FRC hakkında sorunuzu yazın..."
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white text-gray-900 placeholder-gray-400"
+              rows={1}
+              style={{ minHeight: "48px", maxHeight: "120px" }}
+            />
             
             <button
               onClick={sendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="px-3 sm:px-6 py-2 sm:py-3 rounded-2xl transition-colors duration-200 flex items-center space-x-1 sm:space-x-2 border bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
             >
-              <Send className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline text-sm sm:text-base">Gönder</span>
+              <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">Gönder</span>
             </button>
           </div>
         </div>
