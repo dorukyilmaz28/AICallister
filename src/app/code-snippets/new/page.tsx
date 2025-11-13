@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/link";
 import Link from "next/link";
-import { Code2, Save, X, Home } from "lucide-react";
+import { Code2, Save, X, Home, ArrowLeft } from "lucide-react";
 
 const categories = [
   { value: "motor", label: "Motor Kontrol" },
@@ -38,8 +38,8 @@ export default function NewCodeSnippetPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title || !code || !language || !category) {
-      alert("Başlık, kod, dil ve kategori gereklidir.");
+    if (!title || !code) {
+      alert("Başlık ve kod gereklidir.");
       return;
     }
 
@@ -71,7 +71,6 @@ export default function NewCodeSnippetPage() {
         alert(errorData.error || "Snippet oluşturulurken hata oluştu.");
       }
     } catch (error) {
-      console.error("Error creating snippet:", error);
       alert("Snippet oluşturulurken hata oluştu.");
     } finally {
       setIsSaving(false);
@@ -79,144 +78,151 @@ export default function NewCodeSnippetPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="border-b border-white/20 p-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Code2 className="w-8 h-8 text-white" />
-            <h1 className="text-xl font-bold text-white">Yeni Kod Snippet</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Link
-              href="/code-snippets"
-              className="p-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/"
-              className="p-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors"
-            >
-              <Home className="w-4 h-4" />
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/code-snippets"
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm font-medium">Geri Dön</span>
+              </Link>
+              <div className="h-6 w-px bg-gray-200"></div>
+              <h1 className="text-base lg:text-lg font-bold text-gray-900">
+                Yeni Snippet
+              </h1>
+            </div>
+            <Link href="/" className="p-2 hover:bg-gray-100 rounded-lg">
+              <Home className="w-5 h-5 text-gray-600" />
             </Link>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto px-4 py-8">
+      {/* Form */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSubmit} className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <div className="space-y-6">
-              <div>
-                <label className="block text-white text-sm mb-2">Başlık *</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Örn: TalonFX Motor Kontrolü"
-                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
-                  required
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Title */}
+            <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-200 shadow-sm">
+              <label className="block text-sm font-bold text-gray-900 mb-2">
+                Başlık *
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Örn: Tank Drive Implementation"
+              />
+            </div>
 
-              <div>
-                <label className="block text-white text-sm mb-2">Açıklama</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Snippet hakkında kısa açıklama..."
-                  rows={3}
-                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none"
-                />
-              </div>
+            {/* Description */}
+            <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-200 shadow-sm">
+              <label className="block text-sm font-bold text-gray-900 mb-2">
+                Açıklama
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                placeholder="Snippet hakkında kısa açıklama..."
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-white text-sm mb-2">Kategori *</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50"
-                    required
-                  >
-                    {categories.map(cat => (
-                      <option key={cat.value} value={cat.value} className="bg-gray-800">
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-white text-sm mb-2">Dil *</label>
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50"
-                    required
-                  >
-                    {languages.map(lang => (
-                      <option key={lang.value} value={lang.value} className="bg-gray-800">
-                        {lang.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-white text-sm mb-2">Etiketler (virgülle ayırın)</label>
-                <input
-                  type="text"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="Örn: motor, talon, wpilib"
-                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white text-sm mb-2">Kod *</label>
-                <textarea
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="Kodunuzu buraya yazın..."
-                  rows={15}
-                  className="w-full px-4 py-2 bg-black/30 border border-white/30 rounded-lg text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-white/50 resize-none"
-                  required
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isPublic"
-                  checked={isPublic}
-                  onChange={(e) => setIsPublic(e.target.checked)}
-                  className="w-4 h-4 rounded"
-                />
-                <label htmlFor="isPublic" className="text-white text-sm">
-                  Public olarak paylaş (herkes görebilir)
+            {/* Category & Language */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-200 shadow-sm">
+                <label className="block text-sm font-bold text-gray-900 mb-2">
+                  Kategori *
                 </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {categories.map(cat => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              <div className="flex items-center justify-end space-x-4">
-                <Link
-                  href="/code-snippets"
-                  className="px-6 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors"
+              <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-200 shadow-sm">
+                <label className="block text-sm font-bold text-gray-900 mb-2">
+                  Dil *
+                </label>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  İptal
-                </Link>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="px-6 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center space-x-2"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>{isSaving ? "Kaydediliyor..." : "Kaydet"}</span>
-                </button>
+                  {languages.map(lang => (
+                    <option key={lang.value} value={lang.value}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
               </div>
+            </div>
+
+            {/* Tags */}
+            <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-200 shadow-sm">
+              <label className="block text-sm font-bold text-gray-900 mb-2">
+                Etiketler
+              </label>
+              <input
+                type="text"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="tag1, tag2, tag3"
+              />
+              <p className="text-sm text-gray-500 mt-2">Virgülle ayırın</p>
+            </div>
+
+            {/* Code */}
+            <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-200 shadow-sm">
+              <label className="block text-sm font-bold text-gray-900 mb-2">
+                Kod *
+              </label>
+              <textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                required
+                rows={20}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                placeholder="Kodunuzu buraya yazın..."
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3">
+              <Link
+                href="/code-snippets"
+                className="flex items-center space-x-2 px-6 py-3 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-semibold transition-all"
+              >
+                <X className="w-4 h-4" />
+                <span>İptal</span>
+              </Link>
+
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="flex items-center space-x-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 rounded-xl text-white font-semibold transition-all disabled:opacity-50 shadow-lg"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSaving ? "Kaydediliyor..." : "Snippet Oluştur"}</span>
+              </button>
             </div>
           </form>
         </div>
@@ -224,4 +230,3 @@ export default function NewCodeSnippetPage() {
     </div>
   );
 }
-
