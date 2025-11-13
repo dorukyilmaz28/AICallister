@@ -181,7 +181,7 @@ export function FRCChat() {
               </p>
             </div>
           </Link>
-          <div className="flex items-center space-x-1 sm:space-x-2">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {session?.user?.status === "pending" && (
               <div className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-300">
                 <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -191,28 +191,28 @@ export function FRCChat() {
             
             <Link
               href="/"
-              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg transition-colors duration-200 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-white"
+              className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 px-3 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-colors duration-200 bg-green-500/25 hover:bg-green-500/35 border border-green-500/40 text-white text-center"
             >
-              <Home className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-xs sm:text-sm font-medium hidden sm:inline">
+              <Home className="w-5 h-5 sm:w-5 sm:h-5" />
+              <span className="text-xs sm:text-sm font-medium">
                 Ana Sayfa
               </span>
             </Link>
             
             <Link
               href="/profile"
-              className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-200 bg-white/20 hover:bg-white/30 border border-white/30 text-white"
+              className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-colors duration-200 bg-white/25 hover:bg-white/35 border border-white/35 text-white text-center"
             >
-              <UserCircle className="w-4 h-4" />
-              <span className="hidden md:inline">Profil</span>
+              <UserCircle className="w-5 h-5 sm:w-5 sm:h-5" />
+              <span className="text-xs sm:text-sm font-medium">Profil</span>
             </Link>
             
             <button
               onClick={() => clearChat()}
-              className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-200 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-white"
+              className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-colors duration-200 bg-red-500/25 hover:bg-red-500/35 border border-red-500/35 text-white text-center"
             >
-              <Trash2 className="w-4 h-4" />
-              <span className="hidden md:inline">Temizle</span>
+              <Trash2 className="w-5 h-5 sm:w-5 sm:h-5" />
+              <span className="text-xs sm:text-sm font-medium">Temizle</span>
             </button>
           </div>
         </div>

@@ -1,10 +1,10 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, MessageSquare, Settings, Calendar, Bot, ArrowLeft, Send, Trash2, Download, Share2, Printer, Copy, Check } from "lucide-react";
+import { User, MessageSquare, Settings, Calendar, Bot, ArrowLeft } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -35,9 +35,6 @@ export default function ConversationDetail() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -66,111 +63,6 @@ export default function ConversationDetail() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/" });
-  };
-
-  const handleDeleteConversation = async () => {
-    if (!conversationId) return;
-    
-    const confirmed = window.confirm("Bu konuşmayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.");
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        router.push("/profile");
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Konuşma silinirken hata oluştu.");
-      }
-    } catch (error) {
-      console.error("Error deleting conversation:", error);
-      setError("Konuşma silinirken hata oluştu.");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleExportMarkdown = async () => {
-    if (!conversationId) return;
-    
-    try {
-      const response = await fetch(`/api/conversations/${conversationId}/export?format=markdown`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `conversation-${conversationId}.md`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
-    } catch (error) {
-      console.error("Error exporting conversation:", error);
-    }
-  };
-
-  const handleExportJSON = async () => {
-    if (!conversationId) return;
-    
-    try {
-      const response = await fetch(`/api/conversations/${conversationId}/export?format=json`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `conversation-${conversationId}.json`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
-    } catch (error) {
-      console.error("Error exporting conversation:", error);
-    }
-  };
-
-  const handleCreateShareLink = async () => {
-    if (!conversationId) return;
-    
-    try {
-      const response = await fetch(`/api/conversations/${conversationId}/share`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ expiresInDays: 30 })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setShareUrl(data.shareUrl);
-      }
-    } catch (error) {
-      console.error("Error creating share link:", error);
-    }
-  };
-
-  const handleCopyShareLink = async () => {
-    if (shareUrl) {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   const formatDate = (dateString: string) => {
@@ -226,7 +118,7 @@ export default function ConversationDetail() {
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
       {/* Header */}
       <div className="border-b border-white/20 p-4">
-        <div className="container mx-auto flex items-center justify-between">
+        <div className="container mx-auto flex items-center">
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             <Link
               href="/profile"
@@ -244,44 +136,6 @@ export default function ConversationDetail() {
             <h1 className="text-sm sm:text-xl font-bold text-white truncate">
               Konuşma Detayı
             </h1>
-          </div>
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            <button
-              onClick={handleExportMarkdown}
-              className="p-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors duration-200"
-              title="Markdown olarak indir"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleCreateShareLink}
-              className="p-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white transition-colors duration-200"
-              title="Paylaşım linki oluştur"
-            >
-              <Share2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handlePrint}
-              className="p-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-white transition-colors duration-200"
-              title="Yazdır"
-            >
-              <Printer className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleDeleteConversation}
-              disabled={isDeleting}
-              className="p-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200 disabled:opacity-50"
-              title={isDeleting ? "Siliniyor..." : "Konuşmayı Sil"}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-            <Link
-              href="/chat"
-              className="p-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
-              title="Yeni Sohbet"
-            >
-              <Bot className="w-4 h-4" />
-            </Link>
           </div>
         </div>
       </div>
@@ -312,28 +166,6 @@ export default function ConversationDetail() {
                   <span>{conversation.user.name}</span>
                 </span>
               </div>
-              {shareUrl && (
-                <div className="mt-4 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-white text-sm mb-2">Paylaşım Linki:</p>
-                      <input
-                        type="text"
-                        value={shareUrl}
-                        readOnly
-                        className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white text-sm"
-                      />
-                    </div>
-                    <button
-                      onClick={handleCopyShareLink}
-                      className="ml-2 p-2 bg-white/20 hover:bg-white/30 rounded-lg text-white transition-colors"
-                      title="Kopyala"
-                    >
-                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
