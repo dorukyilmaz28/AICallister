@@ -26,64 +26,61 @@ export default function PendingApproval() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
-        <div className="text-white text-xl">Yükleniyor...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-900 text-xl">Yükleniyor...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12">
       <div className="max-w-md w-full mx-4">
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 text-center">
-          {/* Header */}
+        <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm text-center">
+          {/* Icon */}
           <div className="mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                <Clock className="w-8 h-8 text-yellow-400" />
-              </div>
+            <div className="w-20 h-20 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Clock className="w-10 h-10 text-yellow-600" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Onay Bekleniyor
             </h1>
-            <p className="text-white/70">
+            <p className="text-gray-600">
               Takım yöneticisinin onayını bekliyorsunuz
             </p>
           </div>
 
           {/* Content */}
           <div className="space-y-6">
-            <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
               <div className="flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-blue-400 mr-2" />
-                <span className="text-white font-medium">Takım Bilgileri</span>
+                <Users className="w-5 h-5 text-blue-600 mr-2" />
+                <span className="text-gray-900 font-semibold">Takım Bilgileri</span>
               </div>
-              <div className="text-white/70 text-sm space-y-2">
+              <div className="text-gray-700 text-sm space-y-2">
                 <p><strong>Takım:</strong> #{session?.user.teamNumber}</p>
                 <p><strong>Durum:</strong> Onay bekleniyor</p>
                 <p><strong>Email:</strong> {session?.user.email}</p>
               </div>
             </div>
 
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-              <p className="text-blue-200 text-sm">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <p className="text-blue-900 text-sm">
                 <strong>Bilgi:</strong> Takım yöneticisi onayınızı verdikten sonra 
-                sistemin tüm özelliklerini kullanabileceksiniz. Bu süreç genellikle 
-                birkaç saat içinde tamamlanır.
+                sistemin tüm özelliklerini kullanabileceksiniz.
               </p>
             </div>
 
             <div className="flex flex-col space-y-3">
               <button
                 onClick={() => window.location.reload()}
-                className="w-full py-3 px-4 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white font-medium transition-colors duration-200"
+                className="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 rounded-xl text-white font-semibold transition-colors shadow-md"
               >
                 Durumu Yenile
               </button>
               
               <Link
                 href="/auth/signin"
-                className="w-full py-3 px-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white/80 font-medium transition-colors duration-200 flex items-center justify-center"
+                className="w-full py-3 px-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium transition-colors flex items-center justify-center"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Çıkış Yap
@@ -93,7 +90,7 @@ export default function PendingApproval() {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <p className="text-white/50 text-xs">
+            <p className="text-gray-500 text-xs">
               Sorunuz varsa takım yöneticinizle iletişime geçin.
             </p>
           </div>
