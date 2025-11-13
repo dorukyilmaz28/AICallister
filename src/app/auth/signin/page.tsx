@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { Bot, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -24,13 +24,9 @@ export default function SignIn() {
         redirect: false,
       });
 
-      console.log("Sign in result:", result);
-
       if (result?.error) {
-        console.error("Sign in error:", result.error);
         setError("Email veya şifre hatalı!");
       } else if (result?.ok) {
-        console.log("Sign in successful, redirecting...");
         window.location.href = "/teams";
       } else {
         setError("Beklenmeyen bir hata oluştu.");
@@ -43,72 +39,74 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
-      <div className="max-w-md w-full mx-4">
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <img
-                src="/8f28b76859c1479d839d270409be3586.jpg"
-                alt="Callister Logo"
-                className="w-16 h-16 object-cover rounded-xl"
-              />
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Callister FRC AI
-            </h1>
-            <p className="text-white/70">
-              Hesabınıza giriş yapın
-            </p>
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md px-4">
+        {/* Logo and Title */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center justify-center space-x-3 mb-8 group">
+            <img
+              src="/8f28b76859c1479d839d270409be3586.jpg"
+              alt="Callister Logo"
+              className="w-12 h-12 object-cover rounded-xl transition-transform group-hover:scale-105"
+            />
+            <span className="text-2xl font-bold text-gray-900">Callister AI</span>
+          </Link>
+          <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">
+            Hoş Geldiniz
+          </h1>
+          <p className="text-lg text-gray-600">
+            Hesabınıza giriş yapın
+          </p>
+        </div>
 
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 text-sm">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
               {error}
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-white/80 mb-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50" />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="ornek@email.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-white/80 mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
                 Şifre
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full pl-10 pr-12 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                  className="w-full pl-12 pr-12 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white/70"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -118,24 +116,35 @@ export default function SignIn() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 px-4 bg-gray-900 hover:bg-gray-800 rounded-xl text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
             >
-              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+              <span>{isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}</span>
+              {!isLoading && <ArrowRight className="w-5 h-5" />}
             </button>
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center">
-            <p className="text-white/70 text-sm">
+          <div className="mt-8 text-center">
+            <p className="text-gray-600 text-sm">
               Hesabınız yok mu?{" "}
               <Link
                 href="/auth/signup"
-                className="text-white hover:text-white/80 font-medium underline"
+                className="text-gray-900 hover:text-gray-700 font-semibold transition-colors"
               >
                 Kayıt olun
               </Link>
             </p>
           </div>
+        </div>
+
+        {/* Bottom Link */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/"
+            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            ← Ana sayfaya dön
+          </Link>
         </div>
       </div>
     </div>
