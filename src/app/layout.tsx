@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { SessionProvider } from '@/components/SessionProvider'
+import { LanguageProvider } from '@/contexts/LanguageContext'
 import Link from 'next/link'
 import { Home } from 'lucide-react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -22,7 +23,9 @@ export default function RootLayout({
     <html lang="tr">
       <body className={inter.className}>
         <SessionProvider>
-          {children}
+          <LanguageProvider>
+            {children}
+          </LanguageProvider>
         </SessionProvider>
         <SpeedInsights />
       </body>

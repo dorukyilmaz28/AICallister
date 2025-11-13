@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings, MessageSquare, Code, Sparkles, ChevronRight } from "lucide-react";
+import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings, MessageSquare, Code, Sparkles, ChevronRight, Languages } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
   const { session, isAuthenticated } = useAuthGuard({ requireAuth: false });
+  const { language, setLanguage, t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-white">
@@ -27,10 +29,10 @@ export default function Home() {
             
             <nav className="hidden md:flex items-center space-x-8">
               <Link href="/chat" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                Chat
+                {t("common.chat")}
               </Link>
               <Link href="/code-snippets" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                Snippets
+                {t("common.snippets")}
               </Link>
               {session?.user.role === "admin" && (
                 <Link href="/teams/admin" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
@@ -40,6 +42,15 @@ export default function Home() {
             </nav>
 
             <div className="flex items-center space-x-3">
+              {/* Language Switcher */}
+              <button
+                onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+              >
+                <Languages className="w-4 h-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">{language.toUpperCase()}</span>
+              </button>
               {isAuthenticated ? (
                 <>
                   {session?.user.status === "pending" && (
@@ -87,14 +98,14 @@ export default function Home() {
             </div>
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 tracking-tight leading-[1.1]">
-              The new standard in{" "}
+              {t("home.title").split("FRC AI assistance")[0]}
               <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                FRC AI assistance
+                {language === "tr" ? "FRC AI asistanlığında" : "FRC AI assistance"}
               </span>
             </h1>
             
             <p className="text-xl lg:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Meet the AI platform that accelerates robot development, automates programming tasks, and helps your team win competitions.
+              {t("home.subtitle")}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -102,7 +113,7 @@ export default function Home() {
                 href="/chat"
                 className="group inline-flex items-center justify-center space-x-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                <span>Start Chatting</span>
+                <span>{t("home.startChat")}</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
@@ -110,7 +121,7 @@ export default function Home() {
                 className="inline-flex items-center justify-center space-x-3 bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 border-2 border-gray-200 hover:border-gray-300"
               >
                 <Code className="w-5 h-5" />
-                <span>Browse Snippets</span>
+                <span>{t("home.browseSnippets")}</span>
               </Link>
             </div>
 
