@@ -5,12 +5,10 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
-  Code2, Plus, Search, Filter, Heart, Share2, Eye, 
-  Copy, Check, Home, User, Bot, Trash2, Edit, Star
+  Code2, Plus, Search, Heart, Eye, 
+  Copy, Check, Home, ChevronRight, Sparkles
 } from "lucide-react";
-import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import 'highlight.js/styles/github-dark.css';
+import 'highlight.js/styles/github.css';
 
 interface CodeSnippet {
   id: string;
@@ -20,26 +18,22 @@ interface CodeSnippet {
   language: string;
   category: string;
   tags: string[];
-  isPublic: boolean;
-  shareToken: string | null;
   viewCount: number;
   favoriteCount: number;
   isFavorite: boolean;
   createdAt: string;
   user: {
-    id: string;
     name: string | null;
-    email: string;
   };
 }
 
 const categories = [
-  { value: "motor", label: "Motor Kontrol" },
-  { value: "sensor", label: "Sensor" },
-  { value: "autonomous", label: "Autonomous" },
-  { value: "vision", label: "Vision" },
-  { value: "pneumatics", label: "Pneumatics" },
-  { value: "other", label: "Diğer" }
+  { value: "motor", label: "Motor Kontrol", color: "from-blue-500 to-blue-600" },
+  { value: "sensor", label: "Sensor", color: "from-green-500 to-green-600" },
+  { value: "autonomous", label: "Autonomous", color: "from-purple-500 to-purple-600" },
+  { value: "vision", label: "Vision", color: "from-orange-500 to-orange-600" },
+  { value: "pneumatics", label: "Pneumatics", color: "from-pink-500 to-pink-600" },
+  { value: "other", label: "Diğer", color: "from-gray-500 to-gray-600" }
 ];
 
 const languages = [
@@ -47,7 +41,6 @@ const languages = [
   { value: "cpp", label: "C++" },
   { value: "python", label: "Python" },
   { value: "javascript", label: "JavaScript" },
-  { value: "other", label: "Diğer" }
 ];
 
 export default function CodeSnippetsPage() {
@@ -116,15 +109,6 @@ export default function CodeSnippetsPage() {
     }
   };
 
-  const handleCopyShareLink = async (snippet: CodeSnippet) => {
-    if (!snippet.shareToken) return;
-
-    const shareUrl = `${window.location.origin}/code-snippets/share/${snippet.shareToken}`;
-    await navigator.clipboard.writeText(shareUrl);
-    setCopiedId(snippet.id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
   const handleCopyCode = async (code: string, snippetId: string) => {
     await navigator.clipboard.writeText(code);
     setCopiedId(snippetId);
@@ -133,188 +117,254 @@ export default function CodeSnippetsPage() {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
-        <div className="text-white text-xl">Yükleniyor...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-900 text-xl">Yükleniyor...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="border-b border-white/20 p-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Code2 className="w-8 h-8 text-white" />
-            <h1 className="text-xl font-bold text-white">Kod Snippet Kütüphanesi</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Link
-              href="/"
-              className="p-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white transition-colors"
-            >
-              <Home className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/code-snippets/new"
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Yeni Snippet</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
-        {/* Filters */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-white/20">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-white text-sm mb-2">Ara</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Snippet ara..."
-                  className="w-full pl-10 pr-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
-                />
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <img
+                src="/8f28b76859c1479d839d270409be3586.jpg"
+                alt="Callister Logo"
+                className="w-8 h-8 lg:w-10 lg:h-10 object-cover rounded-xl transition-transform group-hover:scale-105"
+              />
+              <div>
+                <h1 className="text-base lg:text-lg font-bold text-gray-900">
+                  Code Snippets
+                </h1>
+                <p className="text-xs text-gray-500 hidden sm:block">
+                  WPILib Kod Kütüphanesi
+                </p>
               </div>
-            </div>
-            <div>
-              <label className="block text-white text-sm mb-2">Kategori</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+            </Link>
+            
+            <div className="flex items-center space-x-2">
+              <Link
+                href="/"
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
               >
-                <option value="">Tümü</option>
-                {categories.map(cat => (
-                  <option key={cat.value} value={cat.value} className="bg-gray-800">
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-white text-sm mb-2">Dil</label>
-              <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                <Home className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/code-snippets/new"
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
               >
-                <option value="">Tümü</option>
-                {languages.map(lang => (
-                  <option key={lang.value} value={lang.value} className="bg-gray-800">
-                    {lang.label}
-                  </option>
-                ))}
-              </select>
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Yeni Snippet</span>
+              </Link>
             </div>
           </div>
         </div>
+      </header>
 
-        {/* Snippets Grid */}
-        {snippets.length === 0 ? (
-          <div className="text-center py-12">
-            <Code2 className="w-16 h-16 text-white/30 mx-auto mb-4" />
-            <p className="text-white/70 text-lg mb-4">Henüz snippet bulunmuyor</p>
-            <Link
-              href="/code-snippets/new"
-              className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              <span>İlk Snippet'i Oluştur</span>
-            </Link>
+      {/* Hero Section */}
+      <section className="py-12 lg:py-16 bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white rounded-full mb-6 shadow-sm">
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              <span className="text-sm font-medium text-gray-700">WPILib Code Library</span>
+            </div>
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Kod Snippet Kütüphanesi
+            </h2>
+            <p className="text-xl text-gray-600 mb-8">
+              FRC robotlarınız için hazır kod örnekleri
+            </p>
+
+            {/* Search Bar */}
+            <div className="relative max-w-2xl mx-auto">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Snippet ara..."
+                className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all"
+              />
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {snippets.map((snippet) => (
-              <div
-                key={snippet.id}
-                className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-white/40 transition-colors"
+        </div>
+      </section>
+
+      {/* Filters */}
+      <section className="py-8 bg-white border-b border-gray-100">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-semibold text-gray-700">Filtrele:</span>
+            
+            {/* Category Pills */}
+            <button
+              onClick={() => setSelectedCategory("")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                selectedCategory === ""
+                  ? "bg-gray-900 text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Tümü
+            </button>
+            
+            {categories.map(cat => (
+              <button
+                key={cat.value}
+                onClick={() => setSelectedCategory(cat.value === selectedCategory ? "" : cat.value)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  selectedCategory === cat.value
+                    ? `bg-gradient-to-r ${cat.color} text-white shadow-md`
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white mb-2">{snippet.title}</h3>
-                    {snippet.description && (
-                      <p className="text-white/70 text-sm mb-3">{snippet.description}</p>
-                    )}
-                    <div className="flex items-center space-x-4 text-xs text-white/60">
-                      <span className="px-2 py-1 bg-white/20 rounded">{snippet.category}</span>
-                      <span className="px-2 py-1 bg-white/20 rounded">{snippet.language}</span>
-                      <span className="flex items-center space-x-1">
-                        <Eye className="w-3 h-3" />
-                        <span>{snippet.viewCount}</span>
+                {cat.label}
+              </button>
+            ))}
+
+            {/* Language Filter */}
+            <select
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className="px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-700 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            >
+              <option value="">Tüm Diller</option>
+              {languages.map(lang => (
+                <option key={lang.value} value={lang.value}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </section>
+
+      {/* Snippets Grid */}
+      <section className="py-12 lg:py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {snippets.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Code2 className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Henüz snippet bulunmuyor</h3>
+              <p className="text-gray-600 mb-8">İlk kod örneğini siz oluşturun!</p>
+              <Link
+                href="/code-snippets/new"
+                className="inline-flex items-center space-x-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 rounded-lg text-white font-semibold transition-colors shadow-lg"
+              >
+                <Plus className="w-5 h-5" />
+                <span>İlk Snippet'i Oluştur</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {snippets.map((snippet, index) => (
+                <div
+                  key={snippet.id}
+                  className="group bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  style={{ 
+                    animation: `fadeIn 0.5s ease-out ${index * 0.1}s both`
+                  }}
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                        {snippet.title}
+                      </h3>
+                      {snippet.description && (
+                        <p className="text-sm text-gray-600 mb-3">{snippet.description}</p>
+                      )}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-3 py-1 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg text-blue-700 text-xs font-semibold">
+                          {snippet.category}
+                        </span>
+                        <span className="px-3 py-1 bg-gray-100 rounded-lg text-gray-700 text-xs font-medium">
+                          {snippet.language}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Code Preview */}
+                  <div className="bg-gray-50 rounded-xl p-4 mb-4 max-h-48 overflow-hidden relative group/code">
+                    <pre className="text-sm text-gray-800 font-mono overflow-x-auto">
+                      <code>{snippet.code.substring(0, 300)}{snippet.code.length > 300 ? '...' : ''}</code>
+                    </pre>
+                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-gray-50 to-transparent"></div>
+                  </div>
+
+                  {/* Actions & Stats */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-4 h-4" />
+                        {snippet.viewCount}
                       </span>
-                      <span className="flex items-center space-x-1">
-                        <Heart className="w-3 h-3" />
-                        <span>{snippet.favoriteCount}</span>
+                      <span className="flex items-center gap-1">
+                        <Heart className={`w-4 h-4 ${snippet.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+                        {snippet.favoriteCount}
                       </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleToggleFavorite(snippet.id)}
+                        className={`p-2 rounded-lg transition-all duration-200 ${
+                          snippet.isFavorite
+                            ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                        title={snippet.isFavorite ? "Favorilerden çıkar" : "Favorilere ekle"}
+                      >
+                        <Heart className={`w-4 h-4 ${snippet.isFavorite ? 'fill-current' : ''}`} />
+                      </button>
+
+                      <button
+                        onClick={() => handleCopyCode(snippet.code, snippet.id)}
+                        className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors"
+                        title="Kodu kopyala"
+                      >
+                        {copiedId === snippet.id ? (
+                          <Check className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+
+                      <Link
+                        href={`/code-snippets/${snippet.id}`}
+                        className="inline-flex items-center space-x-1 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+                      >
+                        <span>Detay</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </Link>
                     </div>
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
-                {/* Code Preview */}
-                <div className="bg-black/30 rounded-lg p-4 mb-4 max-h-64 overflow-auto">
-                  <pre className="text-sm">
-                    <code className={`language-${snippet.language}`}>{snippet.code.substring(0, 500)}{snippet.code.length > 500 ? '...' : ''}</code>
-                  </pre>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleToggleFavorite(snippet.id)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        snippet.isFavorite
-                          ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
-                          : 'bg-white/10 text-white/70 hover:bg-white/20'
-                      }`}
-                    >
-                      <Heart className={`w-4 h-4 ${snippet.isFavorite ? 'fill-current' : ''}`} />
-                    </button>
-                    {snippet.shareToken && (
-                      <button
-                        onClick={() => handleCopyShareLink(snippet)}
-                        className="p-2 bg-white/10 text-white/70 hover:bg-white/20 rounded-lg transition-colors"
-                        title="Paylaşım linkini kopyala"
-                      >
-                        {copiedId === snippet.id ? (
-                          <Check className="w-4 h-4" />
-                        ) : (
-                          <Share2 className="w-4 h-4" />
-                        )}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleCopyCode(snippet.code, snippet.id)}
-                      className="p-2 bg-white/10 text-white/70 hover:bg-white/20 rounded-lg transition-colors"
-                      title="Kodu kopyala"
-                    >
-                      {copiedId === snippet.id ? (
-                        <Check className="w-4 h-4" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                  <Link
-                    href={`/code-snippets/${snippet.id}`}
-                    className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white transition-colors text-sm"
-                  >
-                    Detay
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
-
