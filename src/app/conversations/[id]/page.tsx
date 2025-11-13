@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, MessageSquare, Settings, Calendar, Bot, ArrowLeft } from "lucide-react";
+import { User, MessageSquare, Settings, Calendar, Bot, ArrowLeft, Trash2, Home } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -35,6 +35,7 @@ export default function ConversationDetail() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -65,6 +66,32 @@ export default function ConversationDetail() {
     }
   };
 
+  const handleDeleteConversation = async () => {
+    if (!conversationId) return;
+    
+    const confirmed = window.confirm("Bu konuşmayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.");
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        router.push("/profile");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Konuşma silinirken hata oluştu.");
+      }
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      setError("Konuşma silinirken hata oluştu.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("tr-TR", {
       day: "numeric",
@@ -87,8 +114,8 @@ export default function ConversationDetail() {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
-        <div className="text-white text-xl">Yükleniyor...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-900 text-xl">Yükleniyor...</div>
       </div>
     );
   }
@@ -99,12 +126,12 @@ export default function ConversationDetail() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="text-white text-xl mb-4">{error}</div>
+          <div className="text-gray-900 text-xl mb-4">{error}</div>
           <Link
             href="/profile"
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Profile Dön</span>
@@ -115,44 +142,63 @@ export default function ConversationDetail() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="border-b border-white/20 p-4">
-        <div className="container mx-auto flex items-center">
-          <div className="flex items-center space-x-2 flex-1 min-w-0">
-            <Link
-              href="/profile"
-              className="flex items-center space-x-1 text-white/70 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline text-sm">Profil</span>
-            </Link>
-            <div className="h-6 w-px bg-white/30 hidden sm:block"></div>
-            <img
-              src="/8f28b76859c1479d839d270409be3586.jpg"
-              alt="Callister Logo"
-              className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-xl"
-            />
-            <h1 className="text-sm sm:text-xl font-bold text-white truncate">
-              Konuşma Detayı
-            </h1>
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/profile"
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:inline">Profil</span>
+              </Link>
+              <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+              <img
+                src="/8f28b76859c1479d839d270409be3586.jpg"
+                alt="Callister Logo"
+                className="w-8 h-8 object-cover rounded-xl"
+              />
+              <h1 className="text-base lg:text-lg font-bold text-gray-900">
+                Konuşma Detayı
+              </h1>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleDeleteConversation}
+                disabled={isDeleting}
+                className="p-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-red-600 transition-colors disabled:opacity-50"
+                title={isDeleting ? "Siliniyor..." : "Konuşmayı Sil"}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <Link
+                href="/chat"
+                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
+                title="Yeni Sohbet"
+              >
+                Yeni Sohbet
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Conversation Info */}
           {conversation && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-white/20">
+            <div className="bg-white rounded-2xl p-6 lg:p-8 mb-8 border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-white">{conversation.title}</h2>
-                <div className="flex items-center space-x-2 px-3 py-1 bg-white/20 rounded-lg">
-                  <Settings className="w-4 h-4 text-white" />
-                  <span className="text-white text-sm">{getContextLabel(conversation.context)}</span>
+                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">{conversation.title}</h2>
+                <div className="flex items-center space-x-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg">
+                  <Settings className="w-4 h-4 text-blue-600" />
+                  <span className="text-blue-700 text-sm font-medium">{getContextLabel(conversation.context)}</span>
                 </div>
               </div>
-              <div className="flex items-center space-x-6 text-sm text-white/70 mb-4">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                 <span className="flex items-center space-x-1">
                   <MessageSquare className="w-4 h-4" />
                   <span>{conversation.messageCount} mesaj</span>
@@ -170,20 +216,23 @@ export default function ConversationDetail() {
           )}
 
           {/* Messages */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold text-white mb-6">Mesajlar</h3>
+          <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-200 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Mesajlar</h3>
             
             {messages.length === 0 ? (
               <div className="text-center py-12">
-                <MessageSquare className="w-16 h-16 text-white/30 mx-auto mb-4" />
-                <p className="text-white/70 text-lg">Bu konuşmada mesaj bulunmuyor</p>
+                <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600 text-lg">Bu konuşmada mesaj bulunmuyor</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {messages.map((message, index) => (
                   <div
                     key={index}
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                    style={{ 
+                      animation: `fadeIn 0.5s ease-out ${index * 0.1}s both`
+                    }}
                   >
                     <div
                       className={`flex items-start space-x-3 max-w-3xl ${
@@ -193,8 +242,8 @@ export default function ConversationDetail() {
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                           message.role === "user"
-                            ? "bg-white/30 backdrop-blur-sm border border-white/40"
-                            : "bg-white/20 backdrop-blur-sm border border-white/30"
+                            ? "bg-gray-900"
+                            : "bg-gradient-to-br from-blue-500 to-purple-600"
                         }`}
                       >
                         {message.role === "user" ? (
@@ -204,28 +253,22 @@ export default function ConversationDetail() {
                         )}
                       </div>
                       <div
-                        className={`px-4 py-3 rounded-2xl max-w-full transition-colors duration-200 ${
+                        className={`px-5 py-4 rounded-2xl max-w-full ${
                           message.role === "user"
-                            ? "bg-white/30 backdrop-blur-sm text-white border border-white/40"
-                            : "bg-white/20 backdrop-blur-sm text-white border border-white/30"
+                            ? "bg-gray-900 text-white"
+                            : "bg-gray-50 border border-gray-200 text-gray-900"
                         }`}
                       >
                         <div 
-                          className="whitespace-pre-wrap prose prose-sm max-w-none text-sm"
+                          className="whitespace-pre-wrap text-sm leading-relaxed"
                           dangerouslySetInnerHTML={{
                             __html: message.content
                               .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                               .replace(/\*(.*?)\*/g, '<em>$1</em>')
                               .replace(/\n/g, '<br>')
-                              .replace(/<\| begin_of_sentence \|>/g, '')
-                              .replace(/<\| end_of_sentence \|>/g, '')
-                              .replace(/<\|.*?\|>/g, '')
-                              .replace(/REDACTED_SPECIAL_TOKEN/g, '')
-                              .replace(/REDACTED.*?TOKEN/g, '')
-                              .replace(/\[REDACTED.*?\]/g, '')
                           }}
                         />
-                        <div className="text-xs text-white/50 mt-2">
+                        <div className={`text-xs mt-2 ${message.role === "user" ? "text-gray-300" : "text-gray-500"}`}>
                           {formatDate(message.createdAt)}
                         </div>
                       </div>
@@ -237,6 +280,19 @@ export default function ConversationDetail() {
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
