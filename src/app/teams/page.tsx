@@ -162,8 +162,8 @@ export default function TeamsPage() {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
-        <div className="text-white text-xl">Yükleniyor...</div>
+      <div className="min-h-screen flex items-center justify-center" className="bg-gray-50">
+        <div className="text-gray-900 text-xl">Yükleniyor...</div>
       </div>
     );
   }
@@ -173,7 +173,7 @@ export default function TeamsPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #3A006F 0%, #5A008F 50%, #8A00FF 100%)' }}>
+    <div className="min-h-screen" className="bg-gray-50">
       {/* Header */}
       <div className="border-b border-white/20 p-4">
         <div className="container mx-auto flex items-center justify-between">
