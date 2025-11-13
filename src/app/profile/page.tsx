@@ -20,6 +20,8 @@ export default function Profile() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [teamInfo, setTeamInfo] = useState<{ teamId: string; teamName: string; teamNumber?: string } | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [seedMessage, setSeedMessage] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -74,6 +76,30 @@ export default function Profile() {
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/" });
+  };
+
+  const handleSeedSnippets = async () => {
+    setIsSeeding(true);
+    setSeedMessage("");
+    
+    try {
+      const response = await fetch("/api/admin/seed-snippets", {
+        method: "POST"
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSeedMessage(`✅ ${data.message}`);
+      } else {
+        setSeedMessage(`❌ ${data.error}`);
+      }
+    } catch (error) {
+      console.error("Error seeding snippets:", error);
+      setSeedMessage("❌ Snippet yükleme başarısız oldu.");
+    } finally {
+      setIsSeeding(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -165,6 +191,30 @@ export default function Profile() {
       {/* Profile Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div className="max-w-6xl mx-auto">
+          {/* Admin Seed Snippets Button */}
+          {session?.user.role === "admin" && (
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6 mb-6 border border-purple-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">Admin: Seed Snippets</h3>
+                  <p className="text-sm text-gray-600">WPILib 2025 kod örneklerini yükle</p>
+                </div>
+                <button
+                  onClick={handleSeedSnippets}
+                  disabled={isSeeding}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-lg text-white font-semibold transition-all disabled:opacity-50 shadow-md hover:shadow-lg"
+                >
+                  {isSeeding ? "Yükleniyor..." : "Snippet'leri Yükle"}
+                </button>
+              </div>
+              {seedMessage && (
+                <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200">
+                  <p className="text-sm text-gray-700">{seedMessage}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Profile Header */}
           <div className="bg-white rounded-2xl p-8 lg:p-10 mb-8 border border-gray-200 shadow-sm">
             <div className="flex items-start justify-between">
