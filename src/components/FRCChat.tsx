@@ -3,11 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X } from "lucide-react";
+import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github.css';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Message {
   role: "user" | "assistant";
@@ -38,11 +39,19 @@ const contextConfig = {
 
 export function FRCChat() {
   const { data: session } = useSession();
+  const { language, setLanguage, t } = useLanguage();
   const [selectedMode, setSelectedMode] = useState<Mode>("frc");
+  
+  const getWelcomeMessage = () => {
+    return language === "en"
+      ? "Hello! I'm your FRC (FIRST Robotics Competition) AI assistant. I get my knowledge from The Blue Alliance, WPILib Documentation, and official FIRST resources.\n\n**How can I help you?**\n• Robot programming (WPILib - Java/C++/Python)\n• Mechanical design and motor selection\n• Strategy and game analysis\n• Simulation and testing\n• Competition rules and FRC teams\n\nFeel free to ask me anything! 🚀"
+      : "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Bilgilerimi The Blue Alliance, WPILib Documentation ve FIRST resmi kaynaklarından alıyorum.\n\n**Size nasıl yardımcı olabilirim?**\n• Robot programlama (WPILib - Java/C++/Python)\n• Mekanik tasarım ve motor seçimi\n• Strateji ve oyun analizi\n• Simülasyon ve test\n• Yarışma kuralları ve FRC takımları\n\nSorularınızı sorabilirsiniz! 🚀";
+  };
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Bilgilerimi The Blue Alliance, WPILib Documentation ve FIRST resmi kaynaklarından alıyorum.\n\n**Size nasıl yardımcı olabilirim?**\n• Robot programlama (WPILib - Java/C++/Python)\n• Mekanik tasarım ve motor seçimi\n• Strateji ve oyun analizi\n• Simülasyon ve test\n• Yarışma kuralları ve FRC takımları\n\nSorularınızı sorabilirsiniz! 🚀"
+      content: getWelcomeMessage()
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
@@ -84,6 +93,7 @@ export function FRCChat() {
           context: selectedContext,
           mode: selectedMode,
           conversationId: conversationId,
+          language: language,
         }),
       });
 
@@ -150,10 +160,20 @@ export function FRCChat() {
   const clearChat = () => {
     setMessages([{
       role: "assistant",
-      content: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Bilgilerimi The Blue Alliance, WPILib Documentation ve FIRST resmi kaynaklarından alıyorum.\n\n**Size nasıl yardımcı olabilirim?**\n• Robot programlama (WPILib - Java/C++/Python)\n• Mekanik tasarım ve motor seçimi\n• Strateji ve oyun analizi\n• Simülasyon ve test\n• Yarışma kuralları ve FRC takımları\n\nSorularınızı sorabilirsiniz! 🚀"
+      content: getWelcomeMessage()
     }]);
     setConversationId(null);
   };
+  
+  // Update welcome message when language changes
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].role === "assistant") {
+      setMessages([{
+        role: "assistant",
+        content: getWelcomeMessage()
+      }]);
+    }
+  }, [language]);
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -178,12 +198,21 @@ export function FRCChat() {
             </Link>
             
             <div className="hidden md:flex items-center space-x-2">
+              <button
+                onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+              >
+                <Languages className="w-4 h-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">{language.toUpperCase()}</span>
+              </button>
+              
               <Link
                 href="/"
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Home className="w-4 h-4" />
-                <span className="text-sm font-medium">Ana Sayfa</span>
+                <span className="text-sm font-medium">{t("common.home")}</span>
               </Link>
               
               <Link
@@ -191,7 +220,7 @@ export function FRCChat() {
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <UserCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">Profil</span>
+                <span className="text-sm font-medium">{t("common.profile")}</span>
               </Link>
               
               <button
@@ -199,7 +228,7 @@ export function FRCChat() {
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
-                <span className="text-sm font-medium">Temizle</span>
+                <span className="text-sm font-medium">{t("common.clear")}</span>
               </button>
             </div>
 
@@ -350,7 +379,7 @@ export function FRCChat() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="FRC hakkında sorunuzu yazın..."
+              placeholder={t("chat.placeholder")}
               className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white text-gray-900 placeholder-gray-400"
               rows={1}
               style={{ minHeight: "48px", maxHeight: "120px" }}
@@ -362,7 +391,7 @@ export function FRCChat() {
               className="px-6 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
             >
               <Send className="w-4 h-4" />
-              <span className="hidden sm:inline">Gönder</span>
+              <span className="hidden sm:inline">{t("chat.send")}</span>
             </button>
           </div>
         </div>
