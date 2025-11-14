@@ -361,136 +361,120 @@ export default function TeamDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Header */}
-      <div className="border-b border-white/20 p-3 md:p-4 bg-white/5 backdrop-blur-sm">
-        <div className="container mx-auto">
-          {/* Pending approval banner - Top level */}
-          {!team?.isMember && team?.pendingJoinRequest && (
-            <div className="mb-3 md:mb-4 bg-yellow-500/10 border border-yellow-500/30 text-yellow-200 px-3 py-2 rounded-lg">
-              Katılım isteğiniz gönderildi. Yönetici onayı bekleniyor.
-            </div>
-          )}
-          {/* Mobile Header */}
-          <div className="flex items-center justify-between mb-3 md:hidden">
-            <Link
-              href="/teams"
-              className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="text-sm">Geri</span>
-            </Link>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleSignOut}
-                className="p-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
-                title="Çıkış Yap"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Desktop Header */}
-          <div className="hidden md:flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+    <div className="min-h-screen bg-white">
+      {/* Modern Header */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 lg:h-20">
+            {/* Left: Back + Team Info */}
+            <div className="flex items-center space-x-4">
               <Link
                 href="/teams"
-                className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors"
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Takımlara Dön</span>
+                <ArrowLeft className="w-5 h-5" />
+                <span className="hidden sm:inline text-sm font-medium">Takımlara Dön</span>
               </Link>
-              <div className="h-6 w-px bg-white/30"></div>
-              <img
-                src="/8f28b76859c1479d839d270409be3586.jpg"
-                alt="Callister Logo"
-                className="w-10 h-10 object-cover rounded-xl"
-              />
-              <div>
-                <h1 className="text-xl font-bold text-white">{team?.name}</h1>
-                {team?.teamNumber && (
-                  <p className="text-white/60 text-sm">#{team.teamNumber}</p>
-                )}
+              <div className="h-6 w-px bg-gray-200"></div>
+              <div className="flex items-center space-x-3">
+                <img
+                  src="/8f28b76859c1479d839d270409be3586.jpg"
+                  alt="Callister Logo"
+                  className="w-10 h-10 object-cover rounded-xl"
+                />
+                <div>
+                  <h1 className="text-lg font-bold text-gray-900">{team?.name}</h1>
+                  {team?.teamNumber && (
+                    <p className="text-gray-500 text-sm">#{team.teamNumber}</p>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Right: Actions */}
             <div className="flex items-center space-x-3">
               <Link
                 href="/chat"
-                className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
               >
                 <Bot className="w-4 h-4" />
-                <span>AI Sohbet</span>
+                <span className="hidden sm:inline">AI Sohbet</span>
               </Link>
               <button
                 onClick={handleSignOut}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white transition-colors duration-200"
+                className="flex items-center space-x-2 px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-red-600 text-sm font-medium transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Çıkış Yap</span>
+                <span className="hidden sm:inline">Çıkış Yap</span>
               </button>
             </div>
           </div>
-
-          {/* Mobile Team Info */}
-          <div className="md:hidden flex items-center space-x-3">
-            <img
-              src="/8f28b76859c1479d839d270409be3586.jpg"
-              alt="Callister Logo"
-              className="w-8 h-8 object-cover rounded-lg"
-            />
-            <div>
-              <h1 className="text-lg font-bold text-white">{team?.name}</h1>
-              {team?.teamNumber && (
-                <p className="text-white/60 text-xs">#{team.teamNumber}</p>
-              )}
+        </div>
+        
+        {/* Pending approval banner */}
+        {!team?.isMember && team?.pendingJoinRequest && (
+          <div className="bg-yellow-50 border-b border-yellow-200 px-4 sm:px-6 lg:px-8 py-2">
+            <div className="container mx-auto">
+              <p className="text-yellow-800 text-sm font-medium">
+                Katılım isteğiniz gönderildi. Yönetici onayı bekleniyor.
+              </p>
             </div>
           </div>
-        </div>
-      </div>
+        )}
+      </header>
 
-      <div className="container mx-auto px-3 md:px-4 py-4 md:py-8">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-          {/* Team Info Sidebar - Hidden on mobile */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          {/* Team Info Sidebar - Modern Design */}
           <div className="hidden lg:block lg:col-span-1">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white/20 shadow-xl sticky top-4">
-              <h2 className="text-lg font-bold text-white mb-4">Takım Bilgileri</h2>
+            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm sticky top-24">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Takım Bilgileri</h2>
               
               {team?.description && (
-                <p className="text-white/70 text-sm mb-4">{team.description}</p>
+                <p className="text-gray-600 text-sm mb-6 leading-relaxed">{team.description}</p>
               )}
               
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center space-x-2 text-sm text-white/60">
-                  <Users className="w-4 h-4" />
-                  <span>{team?.members.length} üye</span>
+              <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
+                <div className="flex items-center space-x-3 text-sm">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs">Üyeler</p>
+                    <p className="text-gray-900 font-semibold">{team?.members.length} kişi</p>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2 text-sm text-white/60">
-                  <MessageSquare className="w-4 h-4" />
-                  <span>{team?.chats.length} mesaj</span>
+                <div className="flex items-center space-x-3 text-sm">
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs">Mesajlar</p>
+                    <p className="text-gray-900 font-semibold">{team?.chats.length} mesaj</p>
+                  </div>
                 </div>
-                <div className="text-xs text-white/50">
+                <div className="text-xs text-gray-500 pt-2">
                   Oluşturuldu: {team && formatDate(team.createdAt)}
                 </div>
               </div>
 
-              <h3 className="text-md font-bold text-white mb-3">Takım Üyeleri</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Takım Üyeleri</h3>
               <div className="space-y-2">
                 {team?.members.map((member) => (
                   <div
                     key={member.id}
-                    className="flex items-center space-x-3 p-2 bg-white/10 rounded-lg"
+                    className="flex items-center space-x-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
                   >
-                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      {member.user.name?.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium truncate">
+                      <p className="text-gray-900 text-sm font-medium truncate">
                         {member.user.name}
                       </p>
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center space-x-1.5 mt-0.5">
                         {getRoleIcon(member.role)}
-                        <span className="text-white/60 text-xs">
+                        <span className="text-gray-500 text-xs">
                           {getRoleLabel(member.role)}
                         </span>
                       </div>
@@ -500,10 +484,10 @@ export default function TeamDetailPage() {
                      member.user.id !== session?.user?.id && (
                       <button
                         onClick={() => handleRemoveMember(member.user.id, member.user.name)}
-                        className="p-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200"
+                        className="opacity-0 group-hover:opacity-100 p-1.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-red-600 hover:text-red-700 transition-all duration-200"
                         title={`${member.user.name} kullanıcısını çıkar`}
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -512,17 +496,17 @@ export default function TeamDetailPage() {
             </div>
           </div>
 
-          {/* Chat Area - Full width on mobile */}
+          {/* Chat Area - Modern Design */}
           <div className="lg:col-span-2">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl h-[500px] md:h-[600px] flex flex-col">
-              {/* Chat Header with Clear All Button */}
-              <div className="flex items-center justify-between p-3 md:p-4 border-b border-white/20">
-                <div className="flex items-center space-x-2">
-                  <h3 className="text-base md:text-lg font-bold text-white">Takım Sohbeti</h3>
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm h-[500px] md:h-[600px] lg:h-[700px] flex flex-col">
+              {/* Chat Header */}
+              <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
+                <div className="flex items-center space-x-3">
+                  <h3 className="text-lg font-bold text-gray-900">Takım Sohbeti</h3>
                   {/* Mobile Team Info Button */}
                   <button
                     onClick={() => setShowTeamInfo(!showTeamInfo)}
-                    className="lg:hidden p-1 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-white transition-colors duration-200"
+                    className="lg:hidden p-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 transition-colors"
                     title="Takım bilgileri"
                   >
                     <Info className="w-4 h-4" />
@@ -531,7 +515,7 @@ export default function TeamDetailPage() {
                   {(userRole === 'captain' || userRole === 'manager' || userRole === 'mentor') && (
                     <Link
                       href={`/teams/${teamId}/admin`}
-                      className="p-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-purple-300 hover:text-purple-200 transition-colors duration-200"
+                      className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-purple-600 transition-colors"
                       title="Admin Paneli"
                     >
                       <Settings2 className="w-4 h-4" />
@@ -539,13 +523,13 @@ export default function TeamDetailPage() {
                   )}
                   {/* Notification Button */}
                   <button
-                  onClick={toggleNotifications}
-                    className="relative p-1 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-300 hover:text-blue-200 transition-colors duration-200"
+                    onClick={toggleNotifications}
+                    className="relative p-2 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-600 transition-colors"
                     title="Bildirimler"
                   >
                     <Bell className="w-4 h-4" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
                         {unreadCount}
                       </span>
                     )}
@@ -554,10 +538,10 @@ export default function TeamDetailPage() {
                 {messages.length > 0 && (
                   <button
                     onClick={handleClearAllMessages}
-                    className="flex items-center space-x-1 md:space-x-2 px-2 md:px-3 py-1 md:py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200 text-xs md:text-sm"
+                    className="flex items-center space-x-2 px-3 py-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-red-600 hover:text-red-700 transition-colors text-sm font-medium"
                     title="Tüm mesajları sil"
                   >
-                    <Trash className="w-3 h-3 md:w-4 md:h-4" />
+                    <Trash className="w-4 h-4" />
                     <span className="hidden sm:inline">Tümünü Sil</span>
                     <span className="sm:hidden">Sil</span>
                   </button>
@@ -566,54 +550,60 @@ export default function TeamDetailPage() {
               
               {/* Mobile Team Info Dropdown */}
               {showTeamInfo && (
-                <div className="lg:hidden border-t border-white/20 p-4 bg-white/5">
-                  <div className="space-y-3">
+                <div className="lg:hidden border-t border-gray-200 p-4 bg-white">
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-white">Takım Bilgileri</h4>
+                      <h4 className="text-base font-bold text-gray-900">Takım Bilgileri</h4>
                       <button
                         onClick={() => setShowTeamInfo(false)}
-                        className="text-white/60 hover:text-white"
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
                       >
                         ×
                       </button>
                     </div>
                     
                     {team?.description && (
-                      <p className="text-white/70 text-xs">{team.description}</p>
+                      <p className="text-gray-600 text-sm leading-relaxed">{team.description}</p>
                     )}
                     
-                    <div className="grid grid-cols-2 gap-2 text-xs text-white/60">
-                      <div className="flex items-center space-x-1">
-                        <Users className="w-3 h-3" />
-                        <span>{team?.members.length} üye</span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded-lg">
+                        <Users className="w-4 h-4 text-blue-600" />
+                        <div>
+                          <p className="text-gray-500 text-xs">Üyeler</p>
+                          <p className="text-gray-900 font-semibold text-sm">{team?.members.length}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <MessageSquare className="w-3 h-3" />
-                        <span>{team?.chats.length} mesaj</span>
+                      <div className="flex items-center space-x-2 p-2 bg-purple-50 rounded-lg">
+                        <MessageSquare className="w-4 h-4 text-purple-600" />
+                        <div>
+                          <p className="text-gray-500 text-xs">Mesajlar</p>
+                          <p className="text-gray-900 font-semibold text-sm">{team?.chats.length}</p>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="text-xs text-white/50">
+                    <div className="text-xs text-gray-500 pt-2 border-t border-gray-200">
                       Oluşturuldu: {team && formatDate(team.createdAt)}
                     </div>
                     
-                    <div className="space-y-2">
-                      <h5 className="text-xs font-bold text-white">Takım Üyeleri</h5>
+                    <div className="space-y-2 pt-2 border-t border-gray-200">
+                      <h5 className="text-sm font-bold text-gray-900 mb-3">Takım Üyeleri</h5>
                       {team?.members.map((member) => (
                         <div
                           key={member.id}
-                          className="flex items-center space-x-2 p-2 bg-white/10 rounded-lg"
+                          className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg"
                         >
-                          <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                            <User className="w-3 h-3 text-white" />
+                          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                            {member.user.name?.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white text-xs font-medium truncate">
+                            <p className="text-gray-900 text-sm font-medium truncate">
                               {member.user.name}
                             </p>
-                            <div className="flex items-center space-x-1">
+                            <div className="flex items-center space-x-1.5 mt-0.5">
                               {getRoleIcon(member.role)}
-                              <span className="text-white/60 text-xs">
+                              <span className="text-gray-500 text-xs">
                                 {getRoleLabel(member.role)}
                               </span>
                             </div>
@@ -623,10 +613,10 @@ export default function TeamDetailPage() {
                            member.user.id !== session?.user?.id && (
                             <button
                               onClick={() => handleRemoveMember(member.user.id, member.user.name)}
-                              className="p-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200"
+                              className="p-1.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-red-600 hover:text-red-700 transition-colors"
                               title={`${member.user.name} kullanıcısını çıkar`}
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           )}
                         </div>
@@ -638,13 +628,13 @@ export default function TeamDetailPage() {
               
               {/* Notification Dropdown (Mobile) */}
               {showNotifications && (
-                <div className="lg:hidden border-t border-white/20 p-4 bg-white/5">
+                <div className="lg:hidden border-t border-gray-200 p-4 bg-white">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-white">Bildirimler</h4>
+                      <h4 className="text-base font-bold text-gray-900">Bildirimler</h4>
                       <button
                         onClick={() => setShowNotifications(false)}
-                        className="text-white/60 hover:text-white"
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
                       >
                         ×
                       </button>
@@ -652,8 +642,8 @@ export default function TeamDetailPage() {
                     
                     {notifications.length === 0 ? (
                       <div className="text-center py-8">
-                        <Bell className="w-12 h-12 text-white/30 mx-auto mb-2" />
-                        <p className="text-white/70 text-sm">Henüz bildirim yok</p>
+                        <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-600 text-sm">Henüz bildirim yok</p>
                       </div>
                     ) : (
                       <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -662,24 +652,24 @@ export default function TeamDetailPage() {
                             key={notification.id}
                             className={`p-3 rounded-lg border ${
                               notification.isRead 
-                                ? 'bg-white/5 border-white/10' 
-                                : 'bg-blue-500/10 border-blue-500/20'
+                                ? 'bg-gray-50 border-gray-200' 
+                                : 'bg-blue-50 border-blue-200'
                             }`}
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <h5 className="text-white text-sm font-medium mb-1">
+                                <h5 className="text-gray-900 text-sm font-medium mb-1">
                                   {notification.title}
                                 </h5>
-                                <p className="text-white/70 text-xs mb-2">
+                                <p className="text-gray-600 text-xs mb-2">
                                   {notification.message}
                                 </p>
-                                <div className="text-white/50 text-xs">
+                                <div className="text-gray-500 text-xs">
                                   {formatDate(notification.createdAt)}
                                 </div>
                               </div>
                               {!notification.isRead && (
-                                <div className="w-2 h-2 bg-blue-400 rounded-full ml-2 mt-1"></div>
+                                <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>
                               )}
                             </div>
                           </div>
@@ -693,20 +683,20 @@ export default function TeamDetailPage() {
               {/* Notification Dropdown (Desktop) */}
               {showNotifications && (
                 <div className="hidden lg:block relative">
-                  <div className="absolute z-20 right-4 top-2 w-96 max-h-96 overflow-y-auto bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-bold text-white">Bildirimler</h4>
+                  <div className="absolute z-20 right-4 top-2 w-96 max-h-96 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-base font-bold text-gray-900">Bildirimler</h4>
                       <button
                         onClick={() => setShowNotifications(false)}
-                        className="text-white/60 hover:text-white"
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
                       >
                         ×
                       </button>
                     </div>
                     {notifications.length === 0 ? (
                       <div className="text-center py-8">
-                        <Bell className="w-12 h-12 text-white/30 mx-auto mb-2" />
-                        <p className="text-white/70 text-sm">Henüz bildirim yok</p>
+                        <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-600 text-sm">Henüz bildirim yok</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -715,24 +705,24 @@ export default function TeamDetailPage() {
                             key={notification.id}
                             className={`p-3 rounded-lg border ${
                               notification.isRead 
-                                ? 'bg-white/5 border-white/10' 
-                                : 'bg-blue-500/10 border-blue-500/20'
+                                ? 'bg-gray-50 border-gray-200' 
+                                : 'bg-blue-50 border-blue-200'
                             }`}
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <h5 className="text-white text-sm font-medium mb-1">
+                                <h5 className="text-gray-900 text-sm font-medium mb-1">
                                   {notification.title}
                                 </h5>
-                                <p className="text-white/70 text-xs mb-2">
+                                <p className="text-gray-600 text-xs mb-2">
                                   {notification.message}
                                 </p>
-                                <div className="text-white/50 text-xs">
+                                <div className="text-gray-500 text-xs">
                                   {formatDate(notification.createdAt)}
                                 </div>
                               </div>
                               {!notification.isRead && (
-                                <div className="w-2 h-2 bg-blue-400 rounded-full ml-2 mt-1"></div>
+                                <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>
                               )}
                             </div>
                           </div>
@@ -744,12 +734,12 @@ export default function TeamDetailPage() {
               )}
               
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 md:space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-gray-50">
                 {messages.length === 0 ? (
                   <div className="text-center py-12">
-                    <MessageSquare className="w-16 h-16 text-white/30 mx-auto mb-4" />
-                    <p className="text-white/70 text-lg">Henüz mesaj yok</p>
-                    <p className="text-white/50 text-sm">İlk mesajı siz gönderin!</p>
+                    <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600 text-lg font-medium">Henüz mesaj yok</p>
+                    <p className="text-gray-400 text-sm mt-1">İlk mesajı siz gönderin!</p>
                   </div>
                 ) : (
                   messages.map((message) => (
@@ -758,41 +748,48 @@ export default function TeamDetailPage() {
                       className={`flex ${message.user.id === session.user?.id ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`flex items-start space-x-2 md:space-x-3 max-w-xs md:max-w-3xl ${
+                        className={`flex items-start space-x-3 max-w-[75%] md:max-w-md ${
                           message.user.id === session.user?.id ? "flex-row-reverse space-x-reverse" : ""
                         }`}
                       >
-                        <div className="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm ${
+                          message.user.id === session.user?.id 
+                            ? "bg-gradient-to-br from-purple-500 to-blue-500" 
+                            : "bg-gradient-to-br from-gray-400 to-gray-500"
+                        }`}>
+                          {message.user.name?.charAt(0).toUpperCase()}
                         </div>
-                        <div
-                          className={`px-3 md:px-4 py-2 md:py-3 rounded-xl md:rounded-2xl max-w-full transition-colors duration-200 group relative ${
-                            message.user.id === session.user?.id
-                              ? "bg-white/30 backdrop-blur-sm text-white border border-white/40"
-                              : "bg-white/20 backdrop-blur-sm text-white border border-white/30"
-                          }`}
-                        >
-                          <div className="text-xs md:text-sm font-medium text-white/80 mb-1">
-                            <span className="hidden sm:inline">{message.user.name} ({message.user.email})</span>
-                            <span className="sm:hidden">{message.user.name}</span>
+                        <div className="flex flex-col space-y-1">
+                          <div className="text-xs text-gray-500 px-2">
+                            {message.user.id === session.user?.id ? "Sen" : message.user.name}
                           </div>
-                          <div className="text-xs md:text-sm whitespace-pre-wrap">
-                            {message.content}
-                          </div>
-                          <div className="flex items-center justify-between mt-2">
-                            <div className="text-xs text-white/50">
-                              {formatDate(message.createdAt)}
+                          <div
+                            className={`px-4 py-2.5 rounded-2xl max-w-full transition-colors duration-200 group ${
+                              message.user.id === session.user?.id
+                                ? "bg-gradient-to-br from-purple-500 to-blue-500 text-white rounded-br-sm"
+                                : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm shadow-sm"
+                            }`}
+                          >
+                            <div className="text-sm whitespace-pre-wrap break-words">
+                              {message.content}
                             </div>
-                            {/* Sadece kendi mesajlarını silebilir */}
-                            {message.user.id === session.user?.id && (
-                              <button
-                                onClick={() => handleDeleteMessage(message.id)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-red-500/20 rounded-full"
-                                title="Mesajı sil"
-                              >
-                                <Trash2 className="w-3 h-3 text-red-400 hover:text-red-300" />
-                              </button>
-                            )}
+                            <div className={`flex items-center justify-between mt-1.5 ${
+                              message.user.id === session.user?.id ? "text-white/70" : "text-gray-400"
+                            }`}>
+                              <div className="text-xs">
+                                {formatDate(message.createdAt)}
+                              </div>
+                              {/* Sadece kendi mesajlarını silebilir */}
+                              {message.user.id === session.user?.id && (
+                                <button
+                                  onClick={() => handleDeleteMessage(message.id)}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-white/20 rounded-full ml-2"
+                                  title="Mesajı sil"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -803,22 +800,22 @@ export default function TeamDetailPage() {
               </div>
 
               {/* Message Input */}
-              <div className="border-t border-white/20 p-3 md:p-4">
-                <form onSubmit={handleSendMessage} className="flex space-x-2 md:space-x-3">
+              <div className="border-t border-gray-200 p-4 bg-white rounded-b-2xl">
+                <form onSubmit={handleSendMessage} className="flex space-x-3">
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Mesaj yazın..."
-                    className="flex-1 px-3 md:px-4 py-2 md:py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm md:text-base"
+                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm transition-all"
                     disabled={isSending}
                   />
                   <button
                     type="submit"
                     disabled={!newMessage.trim() || isSending}
-                    className="px-3 md:px-4 py-2 bg-white/30 hover:bg-white/40 border border-white/40 rounded-lg text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="px-4 py-3 bg-gradient-to-br from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md hover:shadow-lg disabled:shadow-none"
                   >
-                    <Send className="w-4 h-4 md:w-5 md:h-5" />
+                    <Send className="w-5 h-5" />
                   </button>
                 </form>
               </div>
