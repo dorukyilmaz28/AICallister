@@ -361,9 +361,9 @@ export default function TeamDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
       {/* Header */}
-      <div className="border-b border-white/20 p-3 md:p-4">
+      <div className="border-b border-white/20 p-3 md:p-4 bg-white/5 backdrop-blur-sm">
         <div className="container mx-auto">
           {/* Pending approval banner - Top level */}
           {!team?.isMember && team?.pendingJoinRequest && (
@@ -453,7 +453,7 @@ export default function TeamDetailPage() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
           {/* Team Info Sidebar - Hidden on mobile */}
           <div className="hidden lg:block lg:col-span-1">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/20 sticky top-4">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white/20 shadow-xl sticky top-4">
               <h2 className="text-lg font-bold text-white mb-4">Takım Bilgileri</h2>
               
               {team?.description && (
@@ -514,7 +514,7 @@ export default function TeamDetailPage() {
 
           {/* Chat Area - Full width on mobile */}
           <div className="lg:col-span-2">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 h-[500px] md:h-[600px] flex flex-col">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl h-[500px] md:h-[600px] flex flex-col">
               {/* Chat Header with Clear All Button */}
               <div className="flex items-center justify-between p-3 md:p-4 border-b border-white/20">
                 <div className="flex items-center space-x-2">
