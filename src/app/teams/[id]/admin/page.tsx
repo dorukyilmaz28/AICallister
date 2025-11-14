@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Users, CheckCircle, XCircle, Clock, User, Mail, MessageSquare, Bell, Home, Bot } from "lucide-react";
+import Loading from "@/components/Loading";
 
 interface JoinRequest {
   id: string;
@@ -209,7 +210,7 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-white text-xl">Yükleniyor...</div>
+        <Loading />
       </div>
     );
   }

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Code2, Heart, Copy, Check, Home, ArrowLeft } from "lucide-react";
 import 'highlight.js/styles/github.css';
+import Loading from "@/components/Loading";
 
 interface CodeSnippet {
   id: string;
@@ -65,7 +66,7 @@ export default function SharedCodeSnippetPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-900 text-xl">Yükleniyor...</div>
+        <Loading />
       </div>
     );
   }

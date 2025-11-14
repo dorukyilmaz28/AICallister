@@ -17,6 +17,7 @@ import {
   Sparkles
 } from "lucide-react";
 import Link from "next/link";
+import Loading from "@/components/Loading";
 
 interface TeamMember {
   id: string;
@@ -118,7 +119,7 @@ export default function TeamAdminPanel() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-900 text-xl">Yükleniyor...</div>
+        <Loading />
       </div>
     );
   }

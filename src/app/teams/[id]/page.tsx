@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash, Info, Settings2, Bell } from "lucide-react";
+import Loading from "@/components/Loading";
 
 interface TeamMember {
   id: string;
@@ -334,7 +335,7 @@ export default function TeamDetailPage() {
   if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-white text-xl">Yükleniyor...</div>
+        <Loading />
       </div>
     );
   }

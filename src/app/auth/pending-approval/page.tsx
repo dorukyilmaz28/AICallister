@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Clock, Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import Loading from "@/components/Loading";
 
 export default function PendingApproval() {
   const { data: session, status } = useSession();
@@ -27,7 +28,7 @@ export default function PendingApproval() {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-900 text-xl">Yükleniyor...</div>
+        <Loading />
       </div>
     );
   }

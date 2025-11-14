@@ -2,6 +2,7 @@
 
 import { FRCChat } from "@/components/FRCChat";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import Loading from "@/components/Loading";
 
 export default function ChatPage() {
   const { isLoading } = useAuthGuard({ 
@@ -12,7 +13,7 @@ export default function ChatPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-900 text-xl">Yükleniyor...</div>
+        <Loading />
       </div>
     );
   }

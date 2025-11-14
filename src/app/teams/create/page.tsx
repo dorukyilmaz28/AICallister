@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { Bot, Users, ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import Loading from "@/components/Loading";
 
 function CreateTeamForm() {
   const router = useRouter();
@@ -73,7 +74,7 @@ function CreateTeamForm() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-white text-xl">Yükleniyor...</div>
+        <Loading />
       </div>
     );
   }
@@ -215,7 +216,7 @@ export default function CreateTeam() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-white text-xl">Yükleniyor...</div>
+        <Loading />
       </div>
     }>
       <CreateTeamForm />

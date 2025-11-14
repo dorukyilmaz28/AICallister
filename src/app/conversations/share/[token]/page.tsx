@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bot, User, ArrowLeft, Home } from "lucide-react";
+import Loading from "@/components/Loading";
 
 interface Message {
   role: "user" | "assistant";
@@ -70,7 +71,7 @@ export default function SharedConversationPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-900 text-xl">Yükleniyor...</div>
+        <Loading />
       </div>
     );
   }

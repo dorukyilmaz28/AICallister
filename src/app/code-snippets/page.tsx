@@ -9,6 +9,7 @@ import {
   Copy, Check, Home, ChevronRight, Sparkles
 } from "lucide-react";
 import 'highlight.js/styles/github.css';
+import Loading from "@/components/Loading";
 
 interface CodeSnippet {
   id: string;
@@ -118,7 +119,7 @@ export default function CodeSnippetsPage() {
   if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-900 text-xl">Yükleniyor...</div>
+        <Loading />
       </div>
     );
   }
