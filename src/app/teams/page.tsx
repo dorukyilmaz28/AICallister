@@ -201,38 +201,43 @@ export default function TeamsPage() {
             <div className="flex items-center space-x-2">
               <Link
                 href="/"
-                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
                 title="Ana Sayfa"
               >
                 <Home className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-medium">Ana Sayfa</span>
               </Link>
               <Link
                 href="/chat"
-                className="p-2 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-600 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-600 transition-colors"
                 title="AI Asistan"
               >
                 <Bot className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-medium">AI Asistan</span>
               </Link>
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-purple-600 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-purple-600 transition-colors"
                 title="Takım Oluştur"
               >
                 <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-medium">Takım Oluştur</span>
               </button>
               <Link
                 href="/discover-teams"
-                className="p-2 bg-green-100 hover:bg-green-200 rounded-lg text-green-600 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-green-100 hover:bg-green-200 rounded-lg text-green-600 transition-colors"
                 title="Takım Keşfet"
               >
                 <Search className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-medium">Takım Keşfet</span>
               </Link>
               <button
                 onClick={handleSignOut}
-                className="p-2 bg-red-100 hover:bg-red-200 rounded-lg text-red-600 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-red-100 hover:bg-red-200 rounded-lg text-red-600 transition-colors"
                 title="Çıkış Yap"
               >
                 <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-medium">Çıkış Yap</span>
               </button>
             </div>
           </div>
