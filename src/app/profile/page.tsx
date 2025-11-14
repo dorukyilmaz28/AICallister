@@ -19,6 +19,7 @@ interface Conversation {
 export default function Profile() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { language, setLanguage } = useLanguage();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [teamInfo, setTeamInfo] = useState<{ teamId: string; teamName: string; teamNumber?: string } | null>(null);
