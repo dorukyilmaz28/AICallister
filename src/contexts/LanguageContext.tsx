@@ -33,7 +33,7 @@ const translations = {
     "common.clear": "Temizle",
     
     // Home page
-    "home.title": "FRC AI asistanlığında yeni standart",
+    "home.title": "Callister AI",
     "home.subtitle": "Robot geliştirmeyi hızlandıran, programlama görevlerini otomatikleştiren ve takımınızın yarışmaları kazanmasına yardımcı olan AI platformuyla tanışın.",
     "home.startChat": "Sohbet Başlat",
     "home.browseSnippets": "Snippet'leri Keşfet",
@@ -147,7 +147,7 @@ const translations = {
     "common.clear": "Clear",
     
     // Home page
-    "home.title": "The new standard in FRC AI assistance",
+    "home.title": "Callister AI",
     "home.subtitle": "Meet the AI platform that accelerates robot development, automates programming tasks, and helps your team win competitions.",
     "home.startChat": "Start Chatting",
     "home.browseSnippets": "Browse Snippets",
