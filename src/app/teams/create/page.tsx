@@ -72,7 +72,7 @@ function CreateTeamForm() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" className="bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-white text-xl">Yükleniyor...</div>
       </div>
     );
@@ -80,7 +80,7 @@ function CreateTeamForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center" className="bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full mx-4">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 text-center">
             <div className="flex items-center justify-center mb-6">
@@ -104,7 +104,7 @@ function CreateTeamForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" className="bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full mx-4">
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
           {/* Header */}
@@ -214,7 +214,7 @@ function CreateTeamForm() {
 export default function CreateTeam() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center" className="bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-white text-xl">Yükleniyor...</div>
       </div>
     }>

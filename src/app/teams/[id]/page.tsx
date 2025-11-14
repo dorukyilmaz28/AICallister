@@ -333,7 +333,7 @@ export default function TeamDetailPage() {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" className="bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-white text-xl">Yükleniyor...</div>
       </div>
     );
@@ -345,7 +345,7 @@ export default function TeamDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center" className="bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="text-white text-xl mb-4">{error}</div>
           <Link
@@ -361,7 +361,7 @@ export default function TeamDetailPage() {
   }
 
   return (
-    <div className="min-h-screen" className="bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="border-b border-white/20 p-3 md:p-4">
         <div className="container mx-auto">
