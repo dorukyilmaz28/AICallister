@@ -69,7 +69,7 @@ export default function SharedConversationPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" className="bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-gray-900 text-xl">Yükleniyor...</div>
       </div>
     );
@@ -77,7 +77,7 @@ export default function SharedConversationPage() {
 
   if (error || !conversation) {
     return (
-      <div className="min-h-screen flex items-center justify-center" className="bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="text-white text-xl mb-4">{error || "Konuşma bulunamadı."}</div>
           <Link
@@ -93,7 +93,7 @@ export default function SharedConversationPage() {
   }
 
   return (
-    <div className="min-h-screen" className="bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="border-b border-white/20 p-4">
         <div className="container mx-auto flex items-center justify-between">
