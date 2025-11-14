@@ -72,39 +72,58 @@ export async function getTeamInfo(teamNumber: string): Promise<BlueAllianceTeam 
 export async function searchTeamByName(teamName: string): Promise<{ teams: BlueAllianceTeam[]; error?: string }> {
   try {
     // Blue Alliance API'de takım adıyla arama için teams endpoint'ini kullanıyoruz
-    // Sayfa sayfa arama yaparak takım adına göre filtreliyoruz
-    const url = `https://www.thebluealliance.com/api/v3/teams`;
-    
-    const response = await fetch(url, {
-      headers: {
-        'X-TBA-Auth-Key': process.env.BLUE_ALLIANCE_API_KEY || '',
-        'User-Agent': 'Callister-FRC-AI/1.0'
-      }
-    });
-
-    if (response.status === 401) {
-      return { teams: [], error: 'API key gerekli' };
-    }
-
-    if (!response.ok) {
-      return { teams: [], error: 'API hatası' };
-    }
-
-    const allTeams: BlueAllianceTeam[] = await response.json();
-    
-    // Takım adını normalize et (küçük harfe çevir, boşlukları temizle)
+    // API sayfalama kullanır, ilk birkaç sayfayı kontrol ediyoruz
+    const matchingTeams: BlueAllianceTeam[] = [];
     const normalizedSearchName = teamName.toLowerCase().trim();
+    const maxPages = 5; // İlk 5 sayfayı kontrol et (her sayfa ~500 takım)
     
-    // Takım adı, nickname veya numarasına göre filtrele
-    const matchingTeams = allTeams.filter(team => {
-      const normalizedNickname = team.nickname?.toLowerCase() || '';
-      const normalizedName = team.name?.toLowerCase() || '';
-      const teamNumberStr = team.team_number?.toString() || '';
+    for (let page = 0; page < maxPages; page++) {
+      const url = `https://www.thebluealliance.com/api/v3/teams/${page}`;
       
-      return normalizedNickname.includes(normalizedSearchName) ||
-             normalizedName.includes(normalizedSearchName) ||
-             teamNumberStr.includes(normalizedSearchName);
-    });
+      const response = await fetch(url, {
+        headers: {
+          'X-TBA-Auth-Key': process.env.BLUE_ALLIANCE_API_KEY || '',
+          'User-Agent': 'Callister-FRC-AI/1.0'
+        }
+      });
+
+      if (response.status === 401) {
+        return { teams: [], error: 'API key gerekli' };
+      }
+
+      if (!response.ok) {
+        // Son sayfaya ulaştıysak veya hata varsa dur
+        if (page === 0) {
+          return { teams: [], error: 'API hatası' };
+        }
+        break;
+      }
+
+      const teams: BlueAllianceTeam[] = await response.json();
+      
+      // Eğer boş sayfa geldiyse dur
+      if (teams.length === 0) {
+        break;
+      }
+      
+      // Takım adı, nickname veya numarasına göre filtrele
+      const pageMatches = teams.filter(team => {
+        const normalizedNickname = team.nickname?.toLowerCase() || '';
+        const normalizedName = team.name?.toLowerCase() || '';
+        const teamNumberStr = team.team_number?.toString() || '';
+        
+        return normalizedNickname.includes(normalizedSearchName) ||
+               normalizedName.includes(normalizedSearchName) ||
+               teamNumberStr.includes(normalizedSearchName);
+      });
+
+      matchingTeams.push(...pageMatches);
+      
+      // Yeterli sonuç bulduysak dur
+      if (matchingTeams.length >= 20) {
+        break;
+      }
+    }
 
     // En fazla 20 sonuç döndür
     return { teams: matchingTeams.slice(0, 20) };
