@@ -34,6 +34,7 @@ interface Team {
 export default function TeamsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { language, setLanguage } = useLanguage();
   
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
