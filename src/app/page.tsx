@@ -20,7 +20,7 @@ export default function Home() {
               <img
                 src="/8f28b76859c1479d839d270409be3586.jpg"
                 alt="Callister Logo"
-                className="w-8 h-8 lg:w-10 lg:h-10 object-cover rounded-xl"
+                className="w-12 h-12 lg:w-16 lg:h-16 object-cover rounded-xl"
               />
               <h1 className="text-lg lg:text-xl font-bold text-gray-900">
                 Callister AI

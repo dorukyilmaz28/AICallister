@@ -4,8 +4,9 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash, Info, Settings2, Bell } from "lucide-react";
+import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash, Info, Settings2, Bell, Languages } from "lucide-react";
 import Loading from "@/components/Loading";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TeamMember {
   id: string;
@@ -46,6 +47,7 @@ export default function TeamDetailPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
+  const { language, setLanguage } = useLanguage();
   const teamId = params.id as string;
   
   const [team, setTeam] = useState<Team | null>(null);
@@ -381,7 +383,7 @@ export default function TeamDetailPage() {
                 <img
                   src="/8f28b76859c1479d839d270409be3586.jpg"
                   alt="Callister Logo"
-                  className="w-10 h-10 object-cover rounded-xl"
+                  className="w-12 h-12 lg:w-16 lg:h-16 object-cover rounded-xl"
                 />
                 <div>
                   <h1 className="text-lg font-bold text-gray-900">{team?.name}</h1>
@@ -394,6 +396,14 @@ export default function TeamDetailPage() {
 
             {/* Right: Actions */}
             <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
+                title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+              >
+                <Languages className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-medium">{language.toUpperCase()}</span>
+              </button>
               <Link
                 href="/chat"
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"

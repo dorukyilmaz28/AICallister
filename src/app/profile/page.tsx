@@ -4,8 +4,9 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, MessageSquare, Settings, Calendar, Bot, Users, Search, Home, Code2, ArrowRight, ChevronRight } from "lucide-react";
+import { User, LogOut, MessageSquare, Settings, Calendar, Bot, Users, Search, Home, Code2, ArrowRight, ChevronRight, Languages } from "lucide-react";
 import Loading from "@/components/Loading";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Conversation {
   id: string;
@@ -145,7 +146,7 @@ export default function Profile() {
               <img
                 src="/8f28b76859c1479d839d270409be3586.jpg"
                 alt="Callister Logo"
-                className="w-8 h-8 lg:w-10 lg:h-10 object-cover rounded-xl"
+                className="w-12 h-12 lg:w-16 lg:h-16 object-cover rounded-xl"
               />
               <h1 className="text-lg lg:text-xl font-bold text-gray-900">
                 Callister AI
@@ -153,6 +154,14 @@ export default function Profile() {
             </Link>
             
             <nav className="hidden md:flex items-center space-x-2">
+              <button
+                onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
+                title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+              >
+                <Languages className="w-4 h-4" />
+                <span className="text-sm font-medium">{language.toUpperCase()}</span>
+              </button>
               <Link href="/" className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium">
                 Ana Sayfa
               </Link>

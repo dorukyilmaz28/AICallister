@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   Code2, Plus, Search, Heart, Eye, 
-  Copy, Check, Home, ChevronRight, Sparkles
+  Copy, Check, Home, ChevronRight, Sparkles, Languages
 } from "lucide-react";
 import 'highlight.js/styles/github.css';
 import Loading from "@/components/Loading";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CodeSnippet {
   id: string;
@@ -47,6 +48,7 @@ const languages = [
 export default function CodeSnippetsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { language, setLanguage } = useLanguage();
   const [snippets, setSnippets] = useState<CodeSnippet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -134,7 +136,7 @@ export default function CodeSnippetsPage() {
               <img
                 src="/8f28b76859c1479d839d270409be3586.jpg"
                 alt="Callister Logo"
-                className="w-8 h-8 lg:w-10 lg:h-10 object-cover rounded-xl transition-transform group-hover:scale-105"
+                className="w-12 h-12 lg:w-16 lg:h-16 object-cover rounded-xl transition-transform group-hover:scale-105"
               />
               <div>
                 <h1 className="text-base lg:text-lg font-bold text-gray-900">
@@ -147,6 +149,14 @@ export default function CodeSnippetsPage() {
             </Link>
             
             <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
+                title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+              >
+                <Languages className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-medium">{language.toUpperCase()}</span>
+              </button>
               <Link
                 href="/"
                 className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
