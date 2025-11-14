@@ -901,6 +901,773 @@ public class DriveSubsystem extends SubsystemBase {
     language: "java",
     category: "other",
     tags: ["simulation", "drivetrain", "testing"]
+  },
+
+  // ADVANCED TRAJECTORY & PATH PLANNING
+  {
+    title: "PathPlanner Trajectory Following",
+    description: "Follow PathPlanner trajectories with Ramsete controller for smooth autonomous paths",
+    code: `import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import edu.wpi.first.math.controller.RamseteController;
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.wpilibj2.command.RamseteCommand;
+
+public class AutonomousTrajectory {
+    private final DifferentialDrive drive;
+    private final DifferentialDriveOdometry odometry;
+    private final DifferentialDriveKinematics kinematics;
+    private final RamseteController ramseteController;
+    
+    public AutonomousTrajectory() {
+        // Initialize kinematics (track width in meters)
+        kinematics = new DifferentialDriveKinematics(0.6);
+        
+        // Initialize Ramsete controller
+        ramseteController = new RamseteController(2.0, 0.7);
+        
+        // Load trajectory from PathPlanner
+        PathPlannerTrajectory trajectory = PathPlanner.loadPath(
+            "ExamplePath",  // Path name
+            2.0,            // Max velocity (m/s)
+            1.5             // Max acceleration (m/s²)
+        );
+        
+        // Create Ramsete command
+        RamseteCommand ramseteCommand = new RamseteCommand(
+            trajectory,
+            odometry::getPose,
+            ramseteController,
+            kinematics,
+            drive::tankDriveVolts,
+            drive
+        );
+    }
+    
+    public void followPath() {
+        // Reset odometry to starting pose
+        odometry.resetPosition(
+            trajectory.getInitialPose(),
+            gyro.getRotation2d()
+        );
+        
+        // Schedule and run command
+        ramseteCommand.schedule();
+    }
+}`,
+    language: "java",
+    category: "autonomous",
+    tags: ["pathplanner", "trajectory", "ramsete", "advanced"]
+  },
+  {
+    title: "ProfiledPIDController for Elevator",
+    description: "Advanced ProfiledPIDController for smooth elevator motion with constraints",
+    code: `import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj2.command.ProfiledPIDSubsystem;
+
+public class ElevatorSubsystem extends ProfiledPIDSubsystem {
+    private final PWMSparkMax motor = new PWMSparkMax(0);
+    private final Encoder encoder = new Encoder(0, 1);
+    
+    // Motion constraints: max velocity (m/s), max acceleration (m/s²)
+    private static final TrapezoidProfile.Constraints constraints = 
+        new TrapezoidProfile.Constraints(2.0, 1.5);
+    
+    public ElevatorSubsystem() {
+        super(
+            new ProfiledPIDController(
+                0.5,  // kP
+                0.0,  // kI
+                0.0,  // kD
+                constraints
+            ),
+            0.0  // Initial position
+        );
+        
+        encoder.setDistancePerPulse(0.01); // 1cm per pulse
+        setGoal(0.0); // Start at bottom
+    }
+    
+    @Override
+    protected void useOutput(double output, TrapezoidProfile.State setpoint) {
+        // Feedforward + PID output
+        double feedforward = 0.1; // Gravity compensation
+        motor.setVoltage(output + feedforward);
+    }
+    
+    @Override
+    protected double getMeasurement() {
+        return encoder.getDistance();
+    }
+    
+    public void setTargetHeight(double height) {
+        setGoal(height);
+    }
+    
+    public boolean atGoal() {
+        return getController().atGoal();
+    }
+}`,
+    language: "java",
+    category: "autonomous",
+    tags: ["profiled-pid", "elevator", "motion-profile", "advanced"]
+  },
+  {
+    title: "Swerve Drive Kinematics (4 Modules)",
+    description: "Complete swerve drive implementation with kinematics and odometry",
+    code: `import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.*;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+public class SwerveDriveSubsystem extends SubsystemBase {
+    // Module positions relative to robot center (in meters)
+    private static final Translation2d frontLeftLocation = 
+        new Translation2d(0.3, 0.3);
+    private static final Translation2d frontRightLocation = 
+        new Translation2d(0.3, -0.3);
+    private static final Translation2d backLeftLocation = 
+        new Translation2d(-0.3, 0.3);
+    private static final Translation2d backRightLocation = 
+        new Translation2d(-0.3, -0.3);
+    
+    private final SwerveModule frontLeft;
+    private final SwerveModule frontRight;
+    private final SwerveModule backLeft;
+    private final SwerveModule backRight;
+    
+    private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
+        frontLeftLocation, frontRightLocation,
+        backLeftLocation, backRightLocation
+    );
+    
+    private final SwerveDriveOdometry odometry;
+    private final ADXRS450_Gyro gyro = new ADXRS450_Gyro();
+    
+    public SwerveDriveSubsystem() {
+        frontLeft = new SwerveModule(0, 1, 0, 1, 0);
+        frontRight = new SwerveModule(2, 3, 2, 3, 1);
+        backLeft = new SwerveModule(4, 5, 4, 5, 2);
+        backRight = new SwerveModule(6, 7, 6, 7, 3);
+        
+        odometry = new SwerveDriveOdometry(
+            kinematics,
+            gyro.getRotation2d(),
+            getModulePositions(),
+            new Pose2d()
+        );
+    }
+    
+    public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
+        SwerveModuleState[] states = kinematics.toSwerveModuleStates(
+            fieldRelative
+                ? ChassisSpeeds.fromFieldRelativeSpeeds(
+                    xSpeed, ySpeed, rot, gyro.getRotation2d())
+                : new ChassisSpeeds(xSpeed, ySpeed, rot)
+        );
+        
+        SwerveDriveKinematics.desaturateWheelSpeeds(states, 4.0);
+        
+        frontLeft.setDesiredState(states[0]);
+        frontRight.setDesiredState(states[1]);
+        backLeft.setDesiredState(states[2]);
+        backRight.setDesiredState(states[3]);
+    }
+    
+    @Override
+    public void periodic() {
+        odometry.update(
+            gyro.getRotation2d(),
+            getModulePositions()
+        );
+    }
+    
+    public Pose2d getPose() {
+        return odometry.getPoseMeters();
+    }
+    
+    public void resetOdometry(Pose2d pose) {
+        odometry.resetPosition(gyro.getRotation2d(), getModulePositions(), pose);
+    }
+    
+    private SwerveModulePosition[] getModulePositions() {
+        return new SwerveModulePosition[] {
+            frontLeft.getPosition(),
+            frontRight.getPosition(),
+            backLeft.getPosition(),
+            backRight.getPosition()
+        };
+    }
+}`,
+    language: "java",
+    category: "motor",
+    tags: ["swerve", "kinematics", "odometry", "advanced"]
+  },
+  {
+    title: "Holonomic Drive (Mecanum/X-Drive)",
+    description: "Holonomic drive using MecanumDriveKinematics for omnidirectional movement",
+    code: `import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
+import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
+import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
+import edu.wpi.first.wpilibj.drive.MecanumDrive;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+public class MecanumDriveSubsystem extends SubsystemBase {
+    private final PWMSparkMax frontLeft = new PWMSparkMax(0);
+    private final PWMSparkMax frontRight = new PWMSparkMax(1);
+    private final PWMSparkMax rearLeft = new PWMSparkMax(2);
+    private final PWMSparkMax rearRight = new PWMSparkMax(3);
+    
+    private final MecanumDrive drive = new MecanumDrive(
+        frontLeft, frontRight, rearLeft, rearRight
+    );
+    
+    // Wheel positions relative to robot center
+    private final MecanumDriveKinematics kinematics = new MecanumDriveKinematics(
+        new Translation2d(0.3, 0.3),   // front left
+        new Translation2d(0.3, -0.3),   // front right
+        new Translation2d(-0.3, 0.3),   // rear left
+        new Translation2d(-0.3, -0.3)   // rear right
+    );
+    
+    private final MecanumDriveOdometry odometry;
+    private final ADXRS450_Gyro gyro = new ADXRS450_Gyro();
+    
+    public MecanumDriveSubsystem() {
+        drive.setSafetyEnabled(false);
+        odometry = new MecanumDriveOdometry(
+            kinematics,
+            gyro.getRotation2d()
+        );
+    }
+    
+    public void driveCartesian(double xSpeed, double ySpeed, double zRotation) {
+        drive.driveCartesian(ySpeed, xSpeed, zRotation, gyro.getRotation2d());
+    }
+    
+    public void drivePolar(double magnitude, double angle, double zRotation) {
+        drive.drivePolar(magnitude, angle, zRotation);
+    }
+    
+    @Override
+    public void periodic() {
+        odometry.update(
+            gyro.getRotation2d(),
+            new MecanumDriveWheelSpeeds(
+                frontLeft.get(),
+                frontRight.get(),
+                rearLeft.get(),
+                rearRight.get()
+            )
+        );
+    }
+    
+    public Pose2d getPose() {
+        return odometry.getPoseMeters();
+    }
+}`,
+    language: "java",
+    category: "motor",
+    tags: ["mecanum", "holonomic", "kinematics", "advanced"]
+  },
+  {
+    title: "Advanced PID with Feedforward (Arm Control)",
+    description: "Arm control with PID + Feedforward for gravity compensation and motion control",
+    code: `import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+public class ArmSubsystem extends SubsystemBase {
+    private final PWMSparkMax motor = new PWMSparkMax(0);
+    private final Encoder encoder = new Encoder(0, 1);
+    private final AnalogPotentiometer potentiometer = new AnalogPotentiometer(0);
+    
+    // PID Controller
+    private final PIDController pidController = new PIDController(0.5, 0.0, 0.0);
+    
+    // Feedforward for gravity compensation
+    // kS: Static friction, kG: Gravity, kV: Velocity, kA: Acceleration
+    private final ArmFeedforward feedforward = new ArmFeedforward(
+        0.1,  // kS (static friction)
+        0.5,  // kG (gravity compensation)
+        0.12, // kV (velocity feedforward)
+        0.01  // kA (acceleration feedforward)
+    );
+    
+    private double targetAngle = 0.0; // radians
+    private double lastVelocity = 0.0;
+    
+    public ArmSubsystem() {
+        encoder.setDistancePerPulse(Math.PI / 180.0); // Convert to radians
+        pidController.setTolerance(0.05); // 0.05 rad tolerance
+    }
+    
+    public void setTargetAngle(double angle) {
+        targetAngle = Math.max(0.0, Math.min(Math.PI, angle)); // Clamp to [0, π]
+    }
+    
+    @Override
+    public void periodic() {
+        double currentAngle = potentiometer.get(); // Already in radians
+        double currentVelocity = encoder.getRate();
+        double acceleration = (currentVelocity - lastVelocity) / 0.02; // 20ms loop
+        
+        // Calculate PID output
+        double pidOutput = pidController.calculate(currentAngle, targetAngle);
+        
+        // Calculate feedforward
+        double ffOutput = feedforward.calculate(
+            targetAngle,      // Setpoint angle
+            currentVelocity,  // Current velocity
+            acceleration      // Current acceleration
+        );
+        
+        // Combine outputs
+        double output = pidOutput + ffOutput;
+        motor.setVoltage(output);
+        
+        lastVelocity = currentVelocity;
+        
+        SmartDashboard.putNumber("Arm Angle", Math.toDegrees(currentAngle));
+        SmartDashboard.putNumber("Arm Target", Math.toDegrees(targetAngle));
+        SmartDashboard.putBoolean("Arm At Goal", pidController.atSetpoint());
+    }
+    
+    public boolean atGoal() {
+        return pidController.atSetpoint();
+    }
+}`,
+    language: "java",
+    category: "autonomous",
+    tags: ["pid", "feedforward", "arm", "gravity-compensation", "advanced"]
+  },
+  {
+    title: "PathPlanner AutoBuilder Integration",
+    description: "Complete PathPlanner AutoBuilder setup for autonomous routines",
+    code: `import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.commands.PPSwerveControllerCommand;
+import com.pathplanner.lib.auto.SwerveAutoBuilder;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+
+public class AutonomousCommands {
+    private final SwerveDriveSubsystem drive;
+    private final SwerveAutoBuilder autoBuilder;
+    
+    public AutonomousCommands(SwerveDriveSubsystem drive) {
+        this.drive = drive;
+        
+        // Create AutoBuilder
+        autoBuilder = new SwerveAutoBuilder(
+            drive::getPose,                    // Pose supplier
+            drive::resetOdometry,               // Reset pose
+            drive.getKinematics(),              // Kinematics
+            new PIDController(0.5, 0, 0),       // X controller
+            new PIDController(0.5, 0, 0),       // Y controller
+            new PIDController(0.5, 0, 0),       // Rotation controller
+            drive::setModuleStates,             // Module states consumer
+            null,                               // Path following config
+            drive                                // Requirements
+        );
+    }
+    
+    public Command getAutonomousCommand(String pathName) {
+        // Load path group
+        List<PathPlannerTrajectory> pathGroup = PathPlanner.loadPathGroup(
+            pathName,
+            2.0,  // Max velocity
+            1.5   // Max acceleration
+        );
+        
+        // Build command sequence
+        List<Command> commands = new ArrayList<>();
+        
+        for (PathPlannerTrajectory trajectory : pathGroup) {
+            commands.add(
+                new PPSwerveControllerCommand(
+                    trajectory,
+                    drive::getPose,
+                    drive.getKinematics(),
+                    new PIDController(0.5, 0, 0),  // X
+                    new PIDController(0.5, 0, 0),  // Y
+                    new PIDController(0.5, 0, 0),  // Rotation
+                    drive::setModuleStates,
+                    drive
+                )
+            );
+        }
+        
+        return new SequentialCommandGroup(
+            new InstantCommand(() -> 
+                drive.resetOdometry(pathGroup.get(0).getInitialPose())
+            ),
+            commands.toArray(new Command[0])
+        );
+    }
+}`,
+    language: "java",
+    category: "autonomous",
+    tags: ["pathplanner", "autobuilder", "swerve", "advanced"]
+  },
+  {
+    title: "Vision-Based Alignment (Limelight)",
+    description: "Align robot to target using Limelight vision processing",
+    code: `import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.math.controller.PIDController;
+
+public class VisionAlignCommand extends CommandBase {
+    private final DriveSubsystem drive;
+    private final NetworkTable limelight;
+    private final PIDController turnController;
+    
+    private static final double TARGET_X = 0.0; // Center of screen
+    private static final double TOLERANCE = 1.0; // degrees
+    
+    public VisionAlignCommand(DriveSubsystem drive) {
+        this.drive = drive;
+        this.limelight = NetworkTableInstance.getDefault().getTable("limelight");
+        
+        turnController = new PIDController(0.05, 0.0, 0.0);
+        turnController.setTolerance(TOLERANCE);
+        turnController.setSetpoint(TARGET_X);
+        
+        addRequirements(drive);
+    }
+    
+    @Override
+    public void initialize() {
+        // Turn on LED and set pipeline
+        limelight.getEntry("ledMode").setNumber(3); // Force on
+        limelight.getEntry("pipeline").setNumber(0);
+    }
+    
+    @Override
+    public void execute() {
+        boolean hasTarget = limelight.getEntry("tv").getDouble(0) == 1.0;
+        
+        if (hasTarget) {
+            double tx = limelight.getEntry("tx").getDouble(0.0);
+            double ty = limelight.getEntry("ty").getDouble(0.0);
+            double ta = limelight.getEntry("ta").getDouble(0.0);
+            
+            // Calculate turn output
+            double turnOutput = turnController.calculate(tx);
+            
+            // Drive forward while aligning (adjust speed based on distance)
+            double forwardSpeed = 0.3;
+            
+            drive.arcadeDrive(forwardSpeed, turnOutput);
+            
+            SmartDashboard.putNumber("Limelight X", tx);
+            SmartDashboard.putNumber("Limelight Y", ty);
+            SmartDashboard.putNumber("Target Area", ta);
+        } else {
+            // No target, stop
+            drive.arcadeDrive(0, 0);
+        }
+    }
+    
+    @Override
+    public boolean isFinished() {
+        boolean hasTarget = limelight.getEntry("tv").getDouble(0) == 1.0;
+        double tx = limelight.getEntry("tx").getDouble(0.0);
+        
+        return hasTarget && Math.abs(tx) < TOLERANCE;
+    }
+    
+    @Override
+    public void end(boolean interrupted) {
+        drive.arcadeDrive(0, 0);
+        limelight.getEntry("ledMode").setNumber(1); // Force off
+    }
+}`,
+    language: "java",
+    category: "vision",
+    tags: ["limelight", "vision", "alignment", "pid", "advanced"]
+  },
+  {
+    title: "Advanced State Machine (Autonomous)",
+    description: "Complex autonomous routine with state machine pattern",
+    code: `import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+
+public class ComplexAutoCommand extends CommandBase {
+    private enum AutoState {
+        INIT,
+        DRIVE_FORWARD,
+        INTAKE_CUBE,
+        TURN_TO_GOAL,
+        AIM_AT_GOAL,
+        SHOOT,
+        BACKUP,
+        DONE
+    }
+    
+    private final DriveSubsystem drive;
+    private final IntakeSubsystem intake;
+    private final ShooterSubsystem shooter;
+    private final VisionSubsystem vision;
+    
+    private AutoState currentState = AutoState.INIT;
+    private Timer stateTimer = new Timer();
+    private double startX, startY;
+    
+    public ComplexAutoCommand(DriveSubsystem drive, IntakeSubsystem intake,
+                             ShooterSubsystem shooter, VisionSubsystem vision) {
+        this.drive = drive;
+        this.intake = intake;
+        this.shooter = shooter;
+        this.vision = vision;
+        
+        addRequirements(drive, intake, shooter, vision);
+    }
+    
+    @Override
+    public void initialize() {
+        currentState = AutoState.INIT;
+        stateTimer.reset();
+        stateTimer.start();
+        
+        startX = drive.getPose().getX();
+        startY = drive.getPose().getY();
+    }
+    
+    @Override
+    public void execute() {
+        switch (currentState) {
+            case INIT:
+                drive.resetOdometry(new Pose2d());
+                transitionTo(AutoState.DRIVE_FORWARD);
+                break;
+                
+            case DRIVE_FORWARD:
+                drive.arcadeDrive(0.5, 0);
+                if (drive.getPose().getX() > 2.0) {
+                    transitionTo(AutoState.INTAKE_CUBE);
+                }
+                break;
+                
+            case INTAKE_CUBE:
+                intake.setSpeed(0.8);
+                if (intake.hasCube() || stateTimer.get() > 2.0) {
+                    intake.setSpeed(0);
+                    transitionTo(AutoState.TURN_TO_GOAL);
+                }
+                break;
+                
+            case TURN_TO_GOAL:
+                double angleToGoal = Math.atan2(
+                    vision.getGoalY() - drive.getPose().getY(),
+                    vision.getGoalX() - drive.getPose().getX()
+                );
+                double currentAngle = drive.getPose().getRotation().getRadians();
+                double error = angleToGoal - currentAngle;
+                
+                if (Math.abs(error) < 0.1) {
+                    transitionTo(AutoState.AIM_AT_GOAL);
+                } else {
+                    drive.arcadeDrive(0, Math.signum(error) * 0.5);
+                }
+                break;
+                
+            case AIM_AT_GOAL:
+                if (vision.isAligned()) {
+                    transitionTo(AutoState.SHOOT);
+                } else {
+                    vision.align();
+                }
+                break;
+                
+            case SHOOT:
+                shooter.setVelocity(3000); // RPM
+                if (shooter.atVelocity() && stateTimer.get() > 0.5) {
+                    intake.setSpeed(-0.5); // Eject
+                    if (stateTimer.get() > 1.5) {
+                        transitionTo(AutoState.BACKUP);
+                    }
+                }
+                break;
+                
+            case BACKUP:
+                drive.arcadeDrive(-0.3, 0);
+                if (drive.getPose().getX() < startX - 0.5) {
+                    transitionTo(AutoState.DONE);
+                }
+                break;
+                
+            case DONE:
+                drive.arcadeDrive(0, 0);
+                break;
+        }
+    }
+    
+    private void transitionTo(AutoState newState) {
+        currentState = newState;
+        stateTimer.reset();
+        stateTimer.start();
+    }
+    
+    @Override
+    public boolean isFinished() {
+        return currentState == AutoState.DONE;
+    }
+    
+    @Override
+    public void end(boolean interrupted) {
+        drive.arcadeDrive(0, 0);
+        intake.setSpeed(0);
+        shooter.setVelocity(0);
+    }
+}`,
+    language: "java",
+    category: "autonomous",
+    tags: ["state-machine", "autonomous", "complex", "advanced"]
+  },
+  {
+    title: "Characterization (SysId) Integration",
+    description: "Motor characterization using WPILib SysId tools",
+    code: `import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+
+public class ShooterCharacterization extends SubsystemBase {
+    private final PWMSparkMax motor = new PWMSparkMax(0);
+    private final Encoder encoder = new Encoder(0, 1);
+    
+    // SysId routine for characterization
+    private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,                    // Default ramp rate
+            null,                    // Default timeout
+            null,                    // Default log period
+            null                     // Default timeout
+        ),
+        new SysIdRoutine.Mechanism(
+            (voltage) -> motor.setVoltage(voltage),
+            (log) -> {
+                log.motor("shooter")
+                   .voltage(edu.wpi.first.units.Units.Volts.of(motor.get() * 12))
+                   .angularPosition(edu.wpi.first.units.Units.Rotations.of(encoder.getDistance()))
+                   .angularVelocity(edu.wpi.first.units.Units.RotationsPerSecond.of(encoder.getRate()));
+            },
+            this
+        )
+    );
+    
+    public Command quasistaticForward() {
+        return sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward);
+    }
+    
+    public Command quasistaticReverse() {
+        return sysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse);
+    }
+    
+    public Command dynamicForward() {
+        return sysIdRoutine.dynamic(SysIdRoutine.Direction.kForward);
+    }
+    
+    public Command dynamicReverse() {
+        return sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse);
+    }
+    
+    // After running SysId, use the calculated feedforward gains:
+    // kS: Static friction
+    // kV: Velocity feedforward
+    // kA: Acceleration feedforward
+}`,
+    language: "java",
+    category: "other",
+    tags: ["sysid", "characterization", "feedforward", "advanced"]
+  },
+  {
+    title: "Advanced Command Composition",
+    description: "Complex command groups with parallel and sequential execution",
+    code: `import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+
+public class AdvancedCommandComposition {
+    private final DriveSubsystem drive;
+    private final IntakeSubsystem intake;
+    private final ShooterSubsystem shooter;
+    private final ElevatorSubsystem elevator;
+    
+    // Parallel command: Run multiple commands simultaneously
+    public Command parallelIntakeAndDrive() {
+        return new ParallelCommandGroup(
+            new RunCommand(() -> intake.setSpeed(0.8), intake),
+            new RunCommand(() -> drive.arcadeDrive(0.5, 0), drive)
+        );
+    }
+    
+    // Sequential with deadline: Stop if timeout
+    public Command timedSequence() {
+        return new SequentialCommandGroup(
+            new InstantCommand(() -> elevator.setHeight(1.0), elevator),
+            new WaitUntilCommand(elevator::atGoal),
+            new RunCommand(() -> shooter.setVelocity(3000), shooter)
+                .withTimeout(2.0), // Deadline: 2 seconds
+            new InstantCommand(() -> intake.eject(), intake)
+        );
+    }
+    
+    // Conditional command: Choose based on condition
+    public Command conditionalAuto() {
+        return new ConditionalCommand(
+            new SequentialCommandGroup(
+                new InstantCommand(() -> drive.driveTo(3.0, 0)),
+                new InstantCommand(() -> shooter.shoot())
+            ),
+            new SequentialCommandGroup(
+                new InstantCommand(() -> drive.driveTo(1.5, 0)),
+                new InstantCommand(() -> intake.intake())
+            ),
+            () -> vision.hasTarget() // Condition
+        );
+    }
+    
+    // Race command: First to finish wins
+    public Command raceToGoal() {
+        return new RaceCommand(
+            new WaitUntilCommand(() -> drive.getPose().getX() > 5.0),
+            new RunCommand(() -> drive.arcadeDrive(0.6, 0), drive)
+        );
+    }
+    
+    // Select command: Choose from multiple options
+    public Command selectByAlliance() {
+        return new SelectCommand<>(
+            Map.of(
+                DriverStation.Alliance.Red,
+                new InstantCommand(() -> drive.driveTo(5.0, 0)),
+                DriverStation.Alliance.Blue,
+                new InstantCommand(() -> drive.driveTo(-5.0, 0))
+            ),
+            DriverStation::getAlliance
+        );
+    }
+    
+    // Trigger-based commands
+    public void setupTriggers() {
+        new Trigger(() -> intake.hasCube())
+            .onTrue(new InstantCommand(() -> shooter.prepare(), shooter));
+            
+        new Trigger(() -> shooter.atVelocity())
+            .onTrue(new InstantCommand(() -> intake.eject(), intake));
+    }
+}`,
+    language: "java",
+    category: "autonomous",
+    tags: ["command-groups", "parallel", "sequential", "advanced"]
   }
 ];
 
