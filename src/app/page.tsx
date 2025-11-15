@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings, MessageSquare, Code, Sparkles, ChevronRight, Languages } from "lucide-react";
+import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings, MessageSquare, Code, Sparkles, ChevronRight, Languages, Menu, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -9,6 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 export default function Home() {
   const { session, isAuthenticated } = useAuthGuard({ requireAuth: false });
   const { language, setLanguage, t } = useLanguage();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-white">
@@ -34,6 +36,9 @@ export default function Home() {
               <Link href="/code-snippets" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                 {t("common.snippets")}
               </Link>
+              <Link href="/teams" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                {t("common.teams")}
+              </Link>
               {session?.user.role === "admin" && (
                 <Link href="/teams/admin" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                   Admin
@@ -41,15 +46,27 @@ export default function Home() {
               )}
             </nav>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                aria-label="Menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
+              </button>
               {/* Language Switcher */}
               <button
                 onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-2 sm:px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                 title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
               >
                 <Languages className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">{language.toUpperCase()}</span>
+                <span className="hidden sm:inline text-sm font-medium text-gray-700">{language.toUpperCase()}</span>
               </button>
               {isAuthenticated ? (
                 <>
@@ -61,7 +78,7 @@ export default function Home() {
                   )}
                   <Link
                     href="/profile"
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
+                    className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
                   >
                     <User className="w-4 h-4" />
                     <span className="hidden sm:inline">{session?.user.name}</span>
@@ -71,13 +88,14 @@ export default function Home() {
                 <>
                   <Link
                     href="/auth/signin"
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                    className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
                   >
-                    {t("home.signin")}
+                    <span className="hidden sm:inline">{t("home.signin")}</span>
+                    <span className="sm:hidden">Giriş</span>
                   </Link>
                   <Link
                     href="/auth/signup"
-                    className="px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
+                    className="px-3 sm:px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
                   >
                     {t("home.getStarted")}
                   </Link>
@@ -85,6 +103,44 @@ export default function Home() {
               )}
             </div>
           </div>
+          
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-100 py-4">
+              <nav className="flex flex-col space-y-3">
+                <Link
+                  href="/chat"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  {t("common.chat")}
+                </Link>
+                <Link
+                  href="/code-snippets"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  {t("common.snippets")}
+                </Link>
+                <Link
+                  href="/teams"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  {t("common.teams")}
+                </Link>
+                {session?.user.role === "admin" && (
+                  <Link
+                    href="/teams/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    Admin
+                  </Link>
+                )}
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 

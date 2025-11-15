@@ -137,18 +137,20 @@ export default function Profile() {
                 <Languages className="w-4 h-4" />
                 <span className="text-sm font-medium">{language.toUpperCase()}</span>
               </button>
-              <Link href="/" className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium">
-                Ana Sayfa
-              </Link>
               <Link href="/chat" className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium">
-                Chat
+                Sohbet
               </Link>
               <Link href="/code-snippets" className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium">
-                Snippets
+                Kod Snippets
               </Link>
               <Link href="/teams" className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium">
                 Takımlar
               </Link>
+              {session?.user.role === "admin" && (
+                <Link href="/teams/admin" className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium">
+                  Admin
+                </Link>
+              )}
               <button
                 onClick={handleSignOut}
                 className="ml-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
@@ -159,12 +161,27 @@ export default function Profile() {
 
             {/* Mobile menu */}
             <div className="md:hidden flex items-center space-x-2">
-              <Link href="/" className="p-2 hover:bg-gray-100 rounded-lg">
+              <Link href="/chat" className="p-2 hover:bg-gray-100 rounded-lg" title="Sohbet">
+                <MessageSquare className="w-5 h-5 text-gray-600" />
+              </Link>
+              <Link href="/code-snippets" className="p-2 hover:bg-gray-100 rounded-lg" title="Kod Snippets">
+                <Code2 className="w-5 h-5 text-gray-600" />
+              </Link>
+              <Link href="/teams" className="p-2 hover:bg-gray-100 rounded-lg" title="Takımlar">
+                <Users className="w-5 h-5 text-gray-600" />
+              </Link>
+              {session?.user.role === "admin" && (
+                <Link href="/teams/admin" className="p-2 hover:bg-gray-100 rounded-lg" title="Admin">
+                  <Settings className="w-5 h-5 text-gray-600" />
+                </Link>
+              )}
+              <Link href="/" className="p-2 hover:bg-gray-100 rounded-lg" title="Ana Sayfa">
                 <Home className="w-5 h-5 text-gray-600" />
               </Link>
               <button
                 onClick={handleSignOut}
                 className="p-2 hover:bg-gray-100 rounded-lg"
+                title="Çıkış Yap"
               >
                 <LogOut className="w-5 h-5 text-gray-600" />
               </button>
