@@ -647,9 +647,21 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
         }
       } else {
         // Yeni konuşma oluştur
+        // Kullanıcının ilk mesajını başlık olarak kullan
+        const firstUserMessage = messages.find((msg: any) => msg.role === "user");
+        let conversationTitle = "Yeni Konuşma";
+        
+        if (firstUserMessage && firstUserMessage.content) {
+          // İlk kullanıcı mesajını başlık olarak kullan (max 60 karakter)
+          const userQuestion = firstUserMessage.content.trim();
+          conversationTitle = userQuestion.length > 60 
+            ? userQuestion.substring(0, 60) + "..." 
+            : userQuestion;
+        }
+        
         conversation = await conversationDb.create({
           userId: session.user.id,
-          title: finalMessages[0]?.content?.substring(0, 50) + "..." || "Yeni Konuşma",
+          title: conversationTitle,
           context
         });
         

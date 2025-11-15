@@ -447,8 +447,8 @@ export default function TeamDetailPage() {
               
               <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
                 <div className="flex items-center space-x-3 text-sm">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Users className="w-4 h-4 text-blue-600" />
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-4 h-4 text-gray-700" />
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Üyeler</p>
@@ -456,8 +456,8 @@ export default function TeamDetailPage() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-purple-600" />
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-gray-700" />
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Mesajlar</p>
@@ -476,7 +476,7 @@ export default function TeamDetailPage() {
                     key={member.id}
                     className="flex items-center space-x-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
                   >
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                       {member.user.name?.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -526,7 +526,7 @@ export default function TeamDetailPage() {
                   {(userRole === 'captain' || userRole === 'manager' || userRole === 'mentor') && (
                     <Link
                       href={`/teams/${teamId}/admin`}
-                      className="p-2 bg-purple-100 hover:bg-purple-200 rounded-lg text-purple-600 transition-colors"
+                      className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
                       title="Admin Paneli"
                     >
                       <Settings2 className="w-4 h-4" />
@@ -535,7 +535,7 @@ export default function TeamDetailPage() {
                   {/* Notification Button */}
                   <button
                     onClick={toggleNotifications}
-                    className="relative p-2 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-600 transition-colors"
+                    className="relative p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
                     title="Bildirimler"
                   >
                     <Bell className="w-4 h-4" />
@@ -578,15 +578,15 @@ export default function TeamDetailPage() {
                     )}
                     
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded-lg">
-                        <Users className="w-4 h-4 text-blue-600" />
+                      <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+                        <Users className="w-4 h-4 text-gray-700" />
                         <div>
                           <p className="text-gray-500 text-xs">Üyeler</p>
                           <p className="text-gray-900 font-semibold text-sm">{team?.members.length}</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2 p-2 bg-purple-50 rounded-lg">
-                        <MessageSquare className="w-4 h-4 text-purple-600" />
+                      <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+                        <MessageSquare className="w-4 h-4 text-gray-700" />
                         <div>
                           <p className="text-gray-500 text-xs">Mesajlar</p>
                           <p className="text-gray-900 font-semibold text-sm">{team?.chats.length}</p>
@@ -605,7 +605,7 @@ export default function TeamDetailPage() {
                           key={member.id}
                           className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg"
                         >
-                          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-xs">
                             {member.user.name?.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -664,7 +664,7 @@ export default function TeamDetailPage() {
                             className={`p-3 rounded-lg border ${
                               notification.isRead 
                                 ? 'bg-gray-50 border-gray-200' 
-                                : 'bg-blue-50 border-blue-200'
+                                : 'bg-gray-100 border-gray-300'
                             }`}
                           >
                             <div className="flex items-start justify-between">
@@ -680,7 +680,7 @@ export default function TeamDetailPage() {
                                 </div>
                               </div>
                               {!notification.isRead && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>
+                                <div className="w-2 h-2 bg-gray-700 rounded-full ml-2 mt-1"></div>
                               )}
                             </div>
                           </div>
@@ -717,7 +717,7 @@ export default function TeamDetailPage() {
                             className={`p-3 rounded-lg border ${
                               notification.isRead 
                                 ? 'bg-gray-50 border-gray-200' 
-                                : 'bg-blue-50 border-blue-200'
+                                : 'bg-gray-100 border-gray-300'
                             }`}
                           >
                             <div className="flex items-start justify-between">
@@ -733,7 +733,7 @@ export default function TeamDetailPage() {
                                 </div>
                               </div>
                               {!notification.isRead && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>
+                                <div className="w-2 h-2 bg-gray-700 rounded-full ml-2 mt-1"></div>
                               )}
                             </div>
                           </div>
@@ -765,8 +765,8 @@ export default function TeamDetailPage() {
                       >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm ${
                           message.user.id === session.user?.id 
-                            ? "bg-gradient-to-br from-purple-500 to-blue-500" 
-                            : "bg-gradient-to-br from-gray-400 to-gray-500"
+                            ? "bg-gray-900" 
+                            : "bg-gray-600"
                         }`}>
                           {message.user.name?.charAt(0).toUpperCase()}
                         </div>
@@ -777,7 +777,7 @@ export default function TeamDetailPage() {
                           <div
                             className={`px-4 py-2.5 rounded-2xl max-w-full transition-colors duration-200 group ${
                               message.user.id === session.user?.id
-                                ? "bg-gradient-to-br from-purple-500 to-blue-500 text-white rounded-br-sm"
+                                ? "bg-gray-900 text-white rounded-br-sm"
                                 : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm shadow-sm"
                             }`}
                           >
@@ -818,13 +818,13 @@ export default function TeamDetailPage() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Mesaj yazın..."
-                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm transition-all"
+                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm transition-all"
                     disabled={isSending}
                   />
                   <button
                     type="submit"
                     disabled={!newMessage.trim() || isSending}
-                    className="px-4 py-3 bg-gradient-to-br from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md hover:shadow-lg disabled:shadow-none"
+                    className="px-4 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md hover:shadow-lg disabled:shadow-none"
                   >
                     <Send className="w-5 h-5" />
                   </button>
