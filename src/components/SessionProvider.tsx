@@ -13,8 +13,8 @@ function AutoJoinEffect() {
     if (attemptedRef.current) return;
 
     const user = session?.user as any;
-    // If user has teamNumber but no teamId and not already pending/approved, auto-send join
-    if (user?.teamNumber && !user?.teamId && user?.status !== "pending" && user?.status !== "approved") {
+    // If user has a teamNumber but no bound teamId, send a join request automatically
+    if (user?.teamNumber && !user?.teamId) {
       attemptedRef.current = true;
       fetch("/api/teams/join", {
         method: "POST",
