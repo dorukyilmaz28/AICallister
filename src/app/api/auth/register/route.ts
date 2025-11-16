@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { userDb, teamDb, teamMemberDb, teamNotificationDb } from "@/lib/database";
+import { userDb, teamDb, teamMemberDb, teamNotificationDb, teamJoinRequestDb } from "@/lib/database";
 import { verifyTeamNumber } from "@/lib/blueAlliance";
 
 export async function POST(req: NextRequest) {
@@ -84,6 +84,13 @@ export async function POST(req: NextRequest) {
       // Mevcut takıma katılma isteği gönder
       await userDb.updateTeamId(user.id, team.id);
       await userDb.updateStatus(user.id, "pending");
+      // Join request kaydı oluştur (admin panelde görünsün)
+      try {
+        await teamJoinRequestDb.create(user.id, team.id, `${name} katılmak istiyor`);
+      } catch (e) {
+        // Zaten varsa sorun etme
+        console.warn("Join request create warning:", e);
+      }
 
       // Bilgilendirici bildirim: katılım isteği
       try {
