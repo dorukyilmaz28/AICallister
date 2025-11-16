@@ -234,7 +234,7 @@ export default function CodeSnippetDetailPage() {
                 <span>{copied ? 'Kopyalandı!' : 'Kodu Kopyala'}</span>
               </button>
 
-              {session?.user.id === snippet.user.id && (
+              {(snippet as any).isDeletable && session?.user.id === snippet.user.id && (
                 <>
                   <Link
                     href={`/code-snippets/${snippet.id}/edit`}

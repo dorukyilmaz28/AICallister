@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   Code2, Plus, Search, Heart, Eye, 
-  Copy, Check, Home, ChevronRight, Sparkles, Languages
+  Copy, Check, Home, ChevronRight, Sparkles, Languages, MessageSquare, Users, User
 } from "lucide-react";
 import 'highlight.js/styles/github.css';
 import Loading from "@/components/Loading";
@@ -158,6 +158,30 @@ export default function CodeSnippetsPage() {
                 <span className="hidden sm:inline text-sm font-medium">{language.toUpperCase()}</span>
               </button>
               <Link
+                href="/chat"
+                className="px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium hidden md:inline-flex items-center space-x-1"
+                title="Chat"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Chat</span>
+              </Link>
+              <Link
+                href="/teams"
+                className="px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium hidden md:inline-flex items-center space-x-1"
+                title="Teams"
+              >
+                <Users className="w-4 h-4" />
+                <span>Teams</span>
+              </Link>
+              <Link
+                href="/profile"
+                className="px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium hidden md:inline-flex items-center space-x-1"
+                title="Profile"
+              >
+                <User className="w-4 h-4" />
+                <span>Profile</span>
+              </Link>
+              <Link
                 href="/"
                 className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
               >
@@ -168,7 +192,7 @@ export default function CodeSnippetsPage() {
                 className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Yeni Snippet</span>
+                <span className="hidden sm:inline">{language === "tr" ? "Yeni Snippet" : "New Snippet"}</span>
               </Link>
             </div>
           </div>
@@ -178,16 +202,16 @@ export default function CodeSnippetsPage() {
       {/* Hero Section */}
       <section className="py-12 lg:py-16 bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
+            <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white rounded-full mb-6 shadow-sm">
               <Sparkles className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium text-gray-700">WPILib Code Library</span>
+                <span className="text-sm font-medium text-gray-700">{language === "tr" ? "WPILib Kod Kütüphanesi" : "WPILib Code Library"}</span>
             </div>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Kod Snippet Kütüphanesi
+              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                {language === "tr" ? "Kod Snippet Kütüphanesi" : "Code Snippet Library"}
             </h2>
-            <p className="text-xl text-gray-600 mb-8">
-              FRC robotlarınız için hazır kod örnekleri
+              <p className="text-xl text-gray-600 mb-8">
+                {language === "tr" ? "FRC robotlarınız için hazır kod örnekleri" : "Ready-to-use code examples for your FRC robots"}
             </p>
 
             {/* Search Bar */}
@@ -197,7 +221,7 @@ export default function CodeSnippetsPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Snippet ara..."
+                placeholder={language === "tr" ? "Snippet ara..." : "Search snippets..."}
                 className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all"
               />
             </div>

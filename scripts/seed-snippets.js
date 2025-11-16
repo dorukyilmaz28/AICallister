@@ -1669,6 +1669,122 @@ public class AdvancedCommandComposition {
     category: "autonomous",
     tags: ["command-groups", "parallel", "sequential", "advanced"]
   }
+  ,
+  // JAVA - Addressable LED (RGB Strip)
+  {
+    title: "Addressable LED (RGB Strip)",
+    description: "Control WPILib Addressable LED strip with color patterns",
+    code: `import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+
+public class LedSubsystem extends SubsystemBase {
+    private final AddressableLED led = new AddressableLED(0); // PWM 0
+    private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(60); // 60 LEDs
+    private int hue = 0;
+
+    public LedSubsystem() {
+        led.setLength(buffer.getLength());
+        led.setData(buffer);
+        led.start();
+    }
+
+    @Override
+    public void periodic() {
+        // Rainbow animation
+        for (int i = 0; i < buffer.getLength(); i++) {
+            int currentHue = (hue + (i * 180 / buffer.getLength())) % 180;
+            buffer.setHSV(i, currentHue, 255, 64);
+        }
+        hue += 3;
+        hue %= 180;
+        led.setData(buffer);
+    }
+}`,
+    language: "java",
+    category: "other",
+    tags: ["led", "addressable", "animation"]
+  },
+  // JAVA - REV SparkMax with Built-in PID
+  {
+    title: "REV SparkMax with Built-in PID",
+    description: "Use SparkMax encoder and PIDController for position control",
+    code: `import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxPIDController;
+
+public class ArmSubsystem extends SubsystemBase {
+    private final CANSparkMax motor = new CANSparkMax(1, MotorType.kBrushless);
+    private final RelativeEncoder encoder = motor.getEncoder();
+    private final SparkMaxPIDController pid = motor.getPIDController();
+
+    public ArmSubsystem() {
+        pid.setP(0.1);
+        pid.setI(0.0);
+        pid.setD(0.0);
+        pid.setOutputRange(-0.8, 0.8);
+
+        encoder.setPosition(0.0);
+    }
+
+    public void setPosition(double rotations) {
+        pid.setReference(rotations, CANSparkMax.ControlType.kPosition);
+    }
+}`,
+    language: "java",
+    category: "motor",
+    tags: ["sparkmax", "pid", "encoder"]
+  },
+  // PYTHON - Timed Autonomous
+  {
+    title: "Timed Autonomous (Python)",
+    description: "Simple time-based auto that drives and turns",
+    code: `import wpilib
+
+class MyRobot(wpilib.TimedRobot):
+    def robotInit(self):
+        self.left = wpilib.PWMSparkMax(0)
+        self.right = wpilib.PWMSparkMax(1)
+        self.drive = wpilib.drive.DifferentialDrive(self.left, self.right)
+        self.timer = wpilib.Timer()
+
+    def autonomousInit(self):
+        self.timer.reset()
+        self.timer.start()
+
+    def autonomousPeriodic(self):
+        t = self.timer.get()
+        if t < 2.0:
+            self.drive.arcadeDrive(0.5, 0.0)  # forward
+        elif t < 3.0:
+            self.drive.arcadeDrive(0.0, 0.5)  # turn
+        else:
+            self.drive.arcadeDrive(0.0, 0.0)  # stop`,
+    language: "python",
+    category: "autonomous",
+    tags: ["timer", "python", "auto"]
+  },
+  // C++ - Single Solenoid Example
+  {
+    title: "Single Solenoid (C++)",
+    description: "Control a single solenoid cylinder in C++",
+    code: `#include <frc/Solenoid.h>
+#include <frc/PneumaticsModuleType.h>
+
+class Intake {
+ public:
+  Intake() : m_solenoid(frc::PneumaticsModuleType::CTREPCM, 0) {}
+  void Extend() { m_solenoid.Set(true); }
+  void Retract() { m_solenoid.Set(false); }
+  bool IsExtended() const { return m_solenoid.Get(); }
+
+ private:
+  frc::Solenoid m_solenoid;
+};`,
+    language: "cpp",
+    category: "pneumatics",
+    tags: ["solenoid", "cpp", "pneumatics"]
+  }
 ];
 
 async function main() {

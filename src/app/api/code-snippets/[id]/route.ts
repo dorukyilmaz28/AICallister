@@ -20,7 +20,8 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            role: true
           }
         },
         favorites: session?.user?.id ? {
@@ -65,7 +66,11 @@ export async function GET(
       snippet: {
         ...snippet,
         favoriteCount: snippet._count.favorites,
-        isFavorite: snippet.favorites && snippet.favorites.length > 0
+        isFavorite: snippet.favorites && snippet.favorites.length > 0,
+        // Seed edilmiş (admin tarafından oluşturulmuş) snippet'lerde silme izni verme
+        isDeletable: !!session?.user?.id 
+          && snippet.userId === session.user.id 
+          && snippet.user.role !== "admin"
       }
     });
 
