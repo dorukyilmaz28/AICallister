@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings, MessageSquare, Code, Sparkles, ChevronRight, Languages, Menu, X } from "lucide-react";
+import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings, MessageSquare, Code, Sparkles, ChevronRight, Languages, Menu, X, BookOpen } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -32,6 +32,9 @@ export default function Home() {
             <nav className="hidden md:flex items-center space-x-8">
               <Link href="/chat" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                 {t("common.chat")}
+              </Link>
+              <Link href="/academy" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                Academy
               </Link>
               <Link href="/code-snippets" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                 {t("common.snippets")}
@@ -114,6 +117,13 @@ export default function Home() {
                   className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   {t("common.chat")}
+                </Link>
+                <Link
+                  href="/academy"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  Academy
                 </Link>
                 <Link
                   href="/code-snippets"
