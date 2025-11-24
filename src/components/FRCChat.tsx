@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages, Image as ImageIcon, XCircle, FileText, Search, Type } from "lucide-react";
+import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages, Image as ImageIcon, XCircle, FileText, Search, Type, Sparkles } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -62,6 +62,8 @@ export function FRCChat() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]); // Base64 image URIs
   const [uploadedPDFs, setUploadedPDFs] = useState<{name: string, data: string}[]>([]); // Base64 PDF URIs
+  const [showImageGenerator, setShowImageGenerator] = useState(false);
+  const [imagePrompt, setImagePrompt] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -126,6 +128,46 @@ export function FRCChat() {
 
   const removePDF = (index: number) => {
     setUploadedPDFs(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleGenerateImage = async () => {
+    if (!imagePrompt.trim() || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/image/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: imagePrompt.trim(),
+          model: 'gemini-2.5-flash-image',
+          aspectRatio: '1:1',
+          imageSize: '1K'
+        })
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      // Üretilen resmi mesaj olarak göster
+      const generatedMessage: Message = {
+        role: "assistant",
+        content: `**Oluşturulan Görsel:**\n\nPrompt: "${imagePrompt.trim()}"`,
+        images: [data.image]
+      };
+
+      setMessages(prev => [...prev, generatedMessage]);
+      setImagePrompt("");
+      setShowImageGenerator(false);
+    } catch (error: any) {
+      console.error("Image generation error:", error);
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Görsel oluşturulurken hata oluştu: " + error.message
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const sendMessage = async () => {
@@ -649,6 +691,50 @@ export function FRCChat() {
             </div>
           )}
           
+          {/* Resim Üretme Modal/Form */}
+          {showImageGenerator && (
+            <div className="mb-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-800 flex items-center space-x-2">
+                  <Sparkles className="w-4 h-4 text-purple-600" />
+                  <span>Görsel Oluştur</span>
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowImageGenerator(false);
+                    setImagePrompt("");
+                  }}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={imagePrompt}
+                  onChange={(e) => setImagePrompt(e.target.value)}
+                  placeholder="Örn: Bir robot resmi, güneş doğumu, kedi..."
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleGenerateImage();
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleGenerateImage}
+                  disabled={!imagePrompt.trim() || isLoading}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center space-x-2 shadow-md"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Üret</span>
+                </button>
+              </div>
+            </div>
+          )}
+          
           <div className="flex space-x-3">
             {/* Resim yükleme butonu */}
             <input
@@ -685,6 +771,19 @@ export function FRCChat() {
             >
               <FileText className="w-5 h-5 text-red-500" />
             </label>
+            
+            {/* Resim üretme butonu */}
+            <button
+              onClick={() => setShowImageGenerator(!showImageGenerator)}
+              className={`px-4 py-3 rounded-xl border transition-colors flex items-center space-x-2 flex-shrink-0 ${
+                showImageGenerator 
+                  ? 'bg-purple-100 border-purple-300' 
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}
+              title="Görsel oluştur"
+            >
+              <Sparkles className="w-5 h-5 text-purple-600" />
+            </button>
             
             <textarea
               value={inputMessage}
