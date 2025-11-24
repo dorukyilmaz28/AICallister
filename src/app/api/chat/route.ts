@@ -328,8 +328,8 @@ export async function POST(req: NextRequest) {
     console.log("Environment:", process.env.NODE_ENV);
     console.log("Vercel URL:", process.env.VERCEL_URL);
     
-    const { messages, context, conversationId, mode, language = "tr" } = await req.json();
-    console.log("Request data:", { messagesCount: messages?.length, context, conversationId, mode, language });
+    const { messages, context, conversationId, mode, language = "tr", pdfs } = await req.json();
+    console.log("Request data:", { messagesCount: messages?.length, context, conversationId, mode, language, pdfCount: pdfs?.length || 0 });
     
     // Kullanıcı oturumu kontrolü
     const session = await getServerSession(authOptions);
@@ -507,96 +507,197 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
       }
     }
 
-    // Free sürüm için optimize edilmiş mesaj dizisi
-    const optimizedMessages = [
-      { role: "system", content: systemPrompt + ragContext }, // RAG context eklendi!
-      ...messages.slice(-2) // Son 2 mesaj
-    ];
-
-    // API key'i environment variable'dan al
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    // Google Gemini API Configuration
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyDgRdsqEgC6xu4wjliAc5fYP7QTbSL7tj4";
+    const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     
-    console.log("=== DEBUG INFO ===");
-    console.log("All env vars:", Object.keys(process.env).filter(key => key.includes('OPENROUTER')));
-    console.log("NODE_ENV:", process.env.NODE_ENV);
-    console.log("Current working directory:", process.cwd());
-    console.log("API Key check:", {
-      exists: !!apiKey,
-      length: apiKey?.length || 0,
-      startsWith: apiKey?.substring(0, 10) || "N/A",
-      source: process.env.OPENROUTER_API_KEY ? "env" : "hardcoded"
-    });
+    console.log("=== GEMINI API DEBUG INFO ===");
+    console.log("Model:", GEMINI_MODEL);
+    console.log("API Key exists:", !!GEMINI_API_KEY);
     console.log("=== END DEBUG ===");
     
-    if (!apiKey) {
-      console.log("API key bulunamadı, mock response döndürülüyor");
-      
-      // Mock response - API key olmadığında geçici çözüm
-      const mockResponses = {
-        frc: {
-          general: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Robot tasarımı, WPILib programlama, mekanik sistemler, yarışma stratejileri ve takım yönetimi konularında size yardımcı olabilirim. The Blue Alliance ve WPILib Documentation'ı baz alarak doğru bilgiler veriyorum. FRC ile ilgili sorularınızı sorabilirsiniz!",
-          strategy: "FRC strateji uzmanınızım. Oyun analizi, alliance stratejileri, scouting, robot tasarım kararlarının stratejik etkileri konularında yardımcı olabilirim. The Blue Alliance verilerini kullanarak gerçek performans analizleri yapabilirim. FRC stratejileri hakkında sorularınızı sorabilirsiniz!",
-          mechanical: "FRC mekanik tasarım uzmanınızım. Sürüş sistemleri (swerve, mecanum, tank drive), motor seçimi (NEO, Falcon 500), güç aktarımı, pneumatik sistemler ve FRC kurallarına uygun tasarım konularında yardımcı olabilirim. WPILib Hardware Documentation'ı referans alıyorum. FRC mekaniği hakkında sorularınızı sorabilirsiniz!",
-          simulation: "FRC simülasyon uzmanınızım. WPILib Robot Simulation, sensor modellemesi, autonomous testing, PathPlanner ve telemetri sistemleri konularında yardımcı olabilirim. WPILib Simulation Documentation'ı takip ediyorum. FRC simülasyonu hakkında sorularınızı sorabilirsiniz!"
-        },
-        general: "Merhaba! FRC (FIRST Robotics Competition) AI asistanınızım. Sadece FRC konularında uzmanım. Robot programlama, mekanik tasarım, elektronik sistemler, strateji ve yarışma kuralları hakkında sorularınıza cevap verebilirim. FRC ile ilgili sorularınız için buradayım!"
-      } as const;
-      
-      const mockResponse = mode === "general"
-        ? mockResponses.general
-        : (mockResponses.frc[context as keyof typeof mockResponses.frc] || mockResponses.frc.general);
-      
-      return NextResponse.json({
-        messages: [...messages, { role: "assistant", content: mockResponse }],
-        context,
-        timestamp: new Date().toISOString(),
-        model: "mock-response",
-        note: "Bu geçici bir yanıttır. Gerçek AI yanıtları için OPENROUTER_API_KEY ayarlayın."
-      });
+    if (!GEMINI_API_KEY) {
+      return NextResponse.json(
+        { 
+          error: "GEMINI_API_KEY bulunamadı. Lütfen environment variable'ı ayarlayın.",
+        }, 
+        { status: 500 }
+      );
     }
-    
-    console.log("Messages count:", optimizedMessages.length);
 
-    // OpenRouter API çağrısı
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    // Gemini için mesaj formatını hazırla
+    // Gemini API için system instruction ve conversation history'yi birleştir
+    const systemInstruction = systemPrompt + ragContext;
+    
+    // Son mesajları Gemini formatına dönüştür
+    // Gemini API için contents array formatı kullanılıyor
+    const contents: any[] = [];
+    
+    // System instruction varsa config'e ekle
+    // Son kullanıcı mesajını al
+    const lastMessages = messages.slice(-6); // Son 6 mesajı al (3 tur konuşma)
+    
+    // Gemini için mesaj formatı: role ve parts içeriyor
+    // Resim desteği: eğer mesajda image varsa, parts array'ine ekle
+    for (const msg of lastMessages) {
+      if (msg.role === "system") continue; // System mesajlarını atla (config'de olacak)
+      
+      const parts: any[] = [];
+      
+      // Text içeriği varsa ekle
+      if (msg.content && typeof msg.content === 'string') {
+        parts.push({ text: msg.content });
+      }
+      
+      // Resim desteği: eğer mesajda images array'i varsa
+      if ((msg as any).images && Array.isArray((msg as any).images)) {
+        // Async image processing için Promise.all kullan
+        const imageParts = await Promise.all(
+          (msg as any).images.map(async (img: string) => {
+            // Base64 image veya URL
+            if (img.startsWith('data:')) {
+              // Base64 data URI formatından mime type ve data'yı çıkar
+              const matches = img.match(/data:([^;]+);base64,(.+)/);
+              if (matches) {
+                return {
+                  inlineData: {
+                    mimeType: matches[1],
+                    data: matches[2]
+                  }
+                };
+              }
+            } else if (typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://'))) {
+              // URL'den resim indir ve base64'e çevir
+              try {
+                const imageResponse = await fetch(img);
+                if (imageResponse.ok) {
+                  const imageBuffer = await imageResponse.arrayBuffer();
+                  const base64Image = Buffer.from(imageBuffer).toString('base64');
+                  const mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
+                  
+                  return {
+                    inlineData: {
+                      mimeType: mimeType,
+                      data: base64Image
+                    }
+                  };
+                }
+              } catch (e) {
+                console.error("Image fetch error:", e);
+              }
+            }
+            return null;
+          })
+        );
+        
+        // Null olmayan image parts'ları ekle
+        for (const imgPart of imageParts) {
+          if (imgPart) {
+            parts.push(imgPart);
+          }
+        }
+      }
+      
+      if (parts.length > 0) {
+        contents.push({
+          role: msg.role === "assistant" ? "model" : "user",
+          parts: parts
+        });
+      }
+    }
+
+    // PDF desteği: eğer request'te PDF'ler varsa, son user mesajına ekle
+    if (pdfs && Array.isArray(pdfs) && pdfs.length > 0) {
+      // Son user mesajını bul veya yeni bir tane oluştur
+      let lastUserContent = contents[contents.length - 1];
+      if (!lastUserContent || lastUserContent.role !== "user") {
+        // Yeni bir user content oluştur
+        lastUserContent = {
+          role: "user",
+          parts: []
+        };
+        contents.push(lastUserContent);
+      }
+
+      // PDF'leri ekle
+      for (const pdf of pdfs) {
+        if (pdf.data && typeof pdf.data === 'string') {
+          // Base64 PDF data URI formatından mime type ve data'yı çıkar
+          if (pdf.data.startsWith('data:')) {
+            const matches = pdf.data.match(/data:([^;]+);base64,(.+)/);
+            if (matches) {
+              lastUserContent.parts.push({
+                inlineData: {
+                  mimeType: matches[1] || 'application/pdf',
+                  data: matches[2]
+                }
+              });
+            }
+          } else {
+            // Direkt base64 data
+            lastUserContent.parts.push({
+              inlineData: {
+                mimeType: 'application/pdf',
+                data: pdf.data
+              }
+            });
+          }
+        }
+      }
+    }
+
+    console.log("Messages count:", contents.length);
+    console.log("System instruction length:", systemInstruction.length);
+
+    // Google Gemini API çağrısı
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+    
+    const requestBody: any = {
+      contents: contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2000,
+      }
+    };
+
+    // System instruction varsa ekle
+    if (systemInstruction.trim()) {
+      requestBody.systemInstruction = {
+        parts: [{ text: systemInstruction }]
+      };
+    }
+
+    const res = await fetch(`${endpoint}?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://callisterai.com",
-        "X-Title": "Callister FRC AI Assistant",
       },
-      body: JSON.stringify({
-        model: "z-ai/glm-4.5-air:free",
-        messages: optimizedMessages,
-        max_tokens: 2000, // Rahat limit - prompt kuralları kısa tutar
-        temperature: 0.7, // Normal AI davranışı
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     console.log("HTTP Status:", res.status);
-    
-    // Raw response'u al
-    const rawText = await res.text();
-    console.log("Raw response length:", rawText.length);
+    console.log("Endpoint:", endpoint);
 
     if (!res.ok) {
-      console.error("OpenRouter Error:", rawText);
-      let errorMessage = "OpenRouter API hatası";
+      const rawText = await res.text();
+      console.error("Gemini API Error:", rawText);
+      let errorMessage = "Gemini API hatası";
       
-      if (res.status === 401) {
-        errorMessage = "API key geçersiz veya süresi dolmuş. Lütfen Vercel dashboard'da OPENROUTER_API_KEY'i kontrol edin.";
+      if (res.status === 400) {
+        errorMessage = "Geçersiz istek. Lütfen mesajları kontrol edin.";
+      } else if (res.status === 401 || res.status === 403) {
+        errorMessage = "Gemini API key geçersiz veya yetkisiz. Lütfen GEMINI_API_KEY'i kontrol edin.";
       } else if (res.status === 429) {
         errorMessage = "API rate limit aşıldı. Lütfen birkaç dakika bekleyin.";
-      } else if (res.status === 402) {
-        errorMessage = "API kredisi yetersiz. Lütfen OpenRouter hesabınızı kontrol edin.";
+      } else if (res.status === 500 || res.status === 503) {
+        errorMessage = "Gemini servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.";
       }
       
       return NextResponse.json(
         { 
           error: errorMessage, 
           status: res.status,
-          details: rawText.substring(0, 200) // İlk 200 karakter
+          details: rawText.substring(0, 200)
         }, 
         { status: 500 }
       );
@@ -605,28 +706,60 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
     // JSON parse et
     let completion;
     try {
-      completion = JSON.parse(rawText);
+      completion = await res.json();
     } catch (parseError) {
       console.error("JSON Parse Error:", parseError);
       return NextResponse.json(
-        { error: "API yanıtı parse edilemedi", raw: rawText.substring(0, 200) },
+        { error: "API yanıtı parse edilemedi" },
         { status: 500 }
       );
     }
 
-    let aiResponse = completion.choices?.[0]?.message?.content || "Üzgünüm, bir yanıt oluşturamadım.";
+    // Gemini response formatı: candidates[0].content.parts - hem text hem image olabilir
+    let aiResponse = "";
+    const aiImages: string[] = [];
     
-    // AI yanıtındaki istenmeyen token'ları temizle
-    aiResponse = aiResponse
-      .replace(/REDACTED_SPECIAL_TOKEN/g, '')
-      .replace(/REDACTED.*?TOKEN/g, '')
-      .replace(/\[REDACTED.*?\]/g, '')
-      .replace(/<\| begin_of_sentence \|>/g, '')
-      .replace(/<\| end_of_sentence \|>/g, '')
-      .replace(/<\|.*?\|>/g, '')
-      .trim();
+    if (completion.candidates && completion.candidates.length > 0) {
+      const candidate = completion.candidates[0];
+      
+      // Safety filter kontrolü
+      if (candidate.finishReason === "SAFETY") {
+        aiResponse = "Üzgünüm, güvenlik filtresi nedeniyle bu mesaja yanıt veremiyorum. Lütfen mesajınızı yeniden formüle edin.";
+      } else if (candidate.finishReason === "RECITATION") {
+        aiResponse = "Üzgünüm, telif hakkı koruması nedeniyle bu içeriği oluşturamıyorum.";
+      } else if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+        // Hem text hem image parts'ları işle
+        for (const part of candidate.content.parts) {
+          if (part.text) {
+            aiResponse += (aiResponse ? "\n\n" : "") + part.text;
+          } else if (part.inlineData && part.inlineData.data) {
+            // Resim varsa base64 data URI formatında ekle
+            const imageDataUri = `data:${part.inlineData.mimeType || "image/png"};base64,${part.inlineData.data}`;
+            aiImages.push(imageDataUri);
+          }
+        }
+      }
+    }
 
-    const finalMessages = [...messages, { role: "assistant", content: aiResponse }];
+    if (!aiResponse && aiImages.length === 0) {
+      // Eğer hiç yanıt yoksa, safety blocked olabilir
+      if (completion.promptFeedback?.blockReason) {
+        aiResponse = `Üzgünüm, mesajınız güvenlik nedeniyle engellendi: ${completion.promptFeedback.blockReason}. Lütfen mesajınızı yeniden formüle edin.`;
+      } else {
+        aiResponse = "Üzgünüm, bir yanıt oluşturamadım.";
+      }
+    }
+
+    // Assistant mesajı - text ve images destekli
+    const assistantMessage: any = { 
+      role: "assistant", 
+      content: aiResponse || "Resim üretildi." 
+    };
+    if (aiImages.length > 0) {
+      assistantMessage.images = aiImages;
+    }
+
+    const finalMessages = [...messages, assistantMessage];
 
     // Konuşmayı veritabanına kaydet
     try {
@@ -679,7 +812,7 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
         context,
         conversationId: conversation?.id,
         timestamp: new Date().toISOString(),
-        model: "z-ai/glm-4.5-air:free",
+        model: GEMINI_MODEL,
       });
       
     } catch (dbError) {
@@ -689,18 +822,19 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
         messages: finalMessages,
         context,
         timestamp: new Date().toISOString(),
-        model: "z-ai/glm-4.5-air:free",
+        model: GEMINI_MODEL,
       });
     }
 
   } catch (error: any) {
     console.error("Route Error:", error);
+    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     return NextResponse.json(
       {
         error: "AI servisine erişilemiyor.",
         details: error.message,
         timestamp: new Date().toISOString(),
-        model: "fallback",
+        model: model,
       },
       { status: 500 }
     );

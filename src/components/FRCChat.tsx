@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages } from "lucide-react";
+import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages, Image as ImageIcon, XCircle, FileText, Search, Type } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface Message {
   role: "user" | "assistant";
   content: string;
+  images?: string[]; // Base64 data URIs veya URLs
 }
 
 type Context = "general" | "strategy" | "mechanical" | "simulation";
@@ -59,6 +60,10 @@ export function FRCChat() {
   const [selectedContext, setSelectedContext] = useState<Context>("general");
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]); // Base64 image URIs
+  const [uploadedPDFs, setUploadedPDFs] = useState<{name: string, data: string}[]>([]); // Base64 PDF URIs
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -69,18 +74,88 @@ export function FRCChat() {
     scrollToBottom();
   }, [messages]);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          if (result) {
+            setUploadedImages(prev => [...prev, result]);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handlePDFUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.type === 'application/pdf') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          if (result) {
+            setUploadedPDFs(prev => [...prev, { name: file.name, data: result }]);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Reset input
+    if (pdfInputRef.current) {
+      pdfInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removePDF = (index: number) => {
+    setUploadedPDFs(prev => prev.filter((_, i) => i !== index));
+  };
+
   const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    if ((!inputMessage.trim() && uploadedImages.length === 0 && uploadedPDFs.length === 0) || isLoading) return;
 
     const userMessage: Message = {
       role: "user",
-      content: inputMessage.trim()
+      content: inputMessage.trim() || (uploadedImages.length > 0 ? "Bu resimleri analiz et" : uploadedPDFs.length > 0 ? "Bu PDF'i analiz et" : ""),
+      images: uploadedImages.length > 0 ? [...uploadedImages] : undefined
     };
 
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInputMessage("");
+    setUploadedImages([]); // Clear uploaded images
+    setUploadedPDFs([]); // Clear uploaded PDFs
     setIsLoading(true);
+    
+    // PDF'leri de message'a ekle (chat API'de handle edilecek)
+    const messageData: any = {
+      messages: newMessages,
+      context: selectedContext,
+      mode: selectedMode,
+      conversationId: conversationId,
+      language: language,
+    };
+    
+    if (uploadedPDFs.length > 0) {
+      messageData.pdfs = uploadedPDFs.map(pdf => ({ name: pdf.name, data: pdf.data }));
+    }
 
     try {
       const response = await fetch('/api/chat', {
@@ -88,13 +163,7 @@ export function FRCChat() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          messages: newMessages,
-          context: selectedContext,
-          mode: selectedMode,
-          conversationId: conversationId,
-          language: language,
-        }),
+        body: JSON.stringify(messageData),
       });
 
       if (!response.ok) {
@@ -109,8 +178,9 @@ export function FRCChat() {
 
       const assistantMessage = data.messages[data.messages.length - 1];
       const assistantText = assistantMessage?.content || "";
+      const assistantImages = assistantMessage?.images || [];
 
-      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "", images: assistantImages }]);
 
       let index = 0;
       const typingIntervalMs = 15;
@@ -124,7 +194,8 @@ export function FRCChat() {
             if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
               updated[lastIdx] = {
                 role: "assistant",
-                content: assistantText.slice(0, index)
+                content: assistantText.slice(0, index),
+                images: assistantImages
               };
             }
             return updated;
@@ -311,39 +382,58 @@ export function FRCChat() {
                         : "bg-white border border-gray-200 text-gray-900"
                     }`}
                   >
-                    <div className={`prose prose-sm max-w-none ${message.role === "user" ? "prose-invert" : ""}`}>
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeHighlight]}
-                        components={{
-                          code: ({node, inline, className, children, ...props}: any) => {
-                            return inline ? (
-                              <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm" {...props}>
+                    {/* Resimleri göster */}
+                    {message.images && message.images.length > 0 && (
+                      <div className="mb-3 space-y-2">
+                        {message.images.map((img, imgIndex) => (
+                          <div key={imgIndex} className="relative inline-block">
+                            <img 
+                              src={img} 
+                              alt={`Uploaded image ${imgIndex + 1}`}
+                              className="max-w-xs rounded-lg border border-gray-200"
+                              style={{ maxHeight: "300px" }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Mesaj içeriği */}
+                    {message.content && (
+                      <div className={`prose prose-sm max-w-none ${message.role === "user" ? "prose-invert" : ""}`}>
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeHighlight]}
+                          components={{
+                            code: ({node, inline, className, children, ...props}: any) => {
+                              return inline ? (
+                                <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm" {...props}>
+                                  {children}
+                                </code>
+                              ) : (
+                                <code className={className} {...props}>
+                                  {children}
+                                </code>
+                              );
+                            },
+                            a: ({node, children, ...props}: any) => (
+                              <a className="text-blue-600 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer" {...props}>
                                 {children}
-                              </code>
-                            ) : (
-                              <code className={className} {...props}>
-                                {children}
-                              </code>
-                            );
-                          },
-                          a: ({node, children, ...props}: any) => (
-                            <a className="text-blue-600 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer" {...props}>
-                              {children}
-                            </a>
-                          ),
-                        }}
-                      >
-                        {message.content
-                          .replace(/<\| begin_of_sentence \|>/g, '')
-                          .replace(/<\| end_of_sentence \|>/g, '')
-                          .replace(/<\|.*?\|>/g, '')
-                          .replace(/REDACTED_SPECIAL_TOKEN/g, '')
-                          .replace(/REDACTED.*?TOKEN/g, '')
-                          .replace(/\[REDACTED.*?\]/g, '')
-                        }
-                      </ReactMarkdown>
-                    </div>
+                              </a>
+                            ),
+                          }}
+                        >
+                          {message.content
+                            .replace(/<\| begin_of_sentence \|>/g, '')
+                            .replace(/<\| end_of_sentence \|>/g, '')
+                            .replace(/<\|.*?\|>/g, '')
+                            .replace(/REDACTED_SPECIAL_TOKEN/g, '')
+                            .replace(/REDACTED.*?TOKEN/g, '')
+                            .replace(/\[REDACTED.*?\]/g, '')
+                          }
+                        </ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -374,7 +464,228 @@ export function FRCChat() {
       {/* Input */}
       <div className="sticky bottom-0 bg-white border-t border-gray-200 py-4">
         <div className="container mx-auto px-4 max-w-4xl">
+          {/* Yüklenen dosyalar önizlemesi */}
+          {(uploadedImages.length > 0 || uploadedPDFs.length > 0) && (
+            <div className="mb-3 space-y-3 bg-gray-50 rounded-xl p-3 border border-gray-200">
+              {/* Resim önizlemeleri */}
+              {uploadedImages.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Yüklenen Resimler ({uploadedImages.length})</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {uploadedImages.map((img, index) => (
+                      <div key={index} className="relative inline-block group">
+                        <img 
+                          src={img} 
+                          alt={`Preview ${index + 1}`}
+                          className="w-24 h-24 object-cover rounded-lg border-2 border-gray-300 hover:border-blue-500 transition-colors"
+                        />
+                        <button
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                          title="Resmi kaldır"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Resim analizi hızlı butonları */}
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                    <button
+                      onClick={async () => {
+                        if (uploadedImages.length === 0) return;
+                        setIsLoading(true);
+                        try {
+                          const response = await fetch('/api/image/analyze', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              image: uploadedImages[0],
+                              task: 'analyze'
+                            })
+                          });
+                          const data = await response.json();
+                          if (data.error) throw new Error(data.error);
+                          
+                          const analysisMessage: Message = {
+                            role: "assistant",
+                            content: data.result,
+                            images: uploadedImages
+                          };
+                          setMessages(prev => [...prev, analysisMessage]);
+                        } catch (error: any) {
+                          console.error("Analysis error:", error);
+                          setMessages(prev => [...prev, {
+                            role: "assistant",
+                            content: "Resim analizi sırasında hata oluştu: " + error.message
+                          }]);
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      disabled={isLoading || uploadedImages.length === 0}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 shadow-sm"
+                      title="Resmi analiz et"
+                    >
+                      <Search className="w-4 h-4" />
+                      <span>Analiz Et</span>
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        if (uploadedImages.length === 0) return;
+                        setIsLoading(true);
+                        try {
+                          const response = await fetch('/api/image/analyze', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              image: uploadedImages[0],
+                              task: 'ocr'
+                            })
+                          });
+                          const data = await response.json();
+                          if (data.error) throw new Error(data.error);
+                          
+                          const ocrMessage: Message = {
+                            role: "assistant",
+                            content: `**Resimdeki Metin:**\n\n${data.result}`,
+                            images: uploadedImages
+                          };
+                          setMessages(prev => [...prev, ocrMessage]);
+                        } catch (error: any) {
+                          console.error("OCR error:", error);
+                          setMessages(prev => [...prev, {
+                            role: "assistant",
+                            content: "Metin okuma sırasında hata oluştu: " + error.message
+                          }]);
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      disabled={isLoading || uploadedImages.length === 0}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-green-500 hover:bg-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 shadow-sm"
+                      title="Resimdeki metni oku"
+                    >
+                      <Type className="w-4 h-4" />
+                      <span>Metni Oku</span>
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        if (uploadedImages.length === 0) return;
+                        setIsLoading(true);
+                        try {
+                          const response = await fetch('/api/image/detect', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              image: uploadedImages[0]
+                            })
+                          });
+                          const data = await response.json();
+                          if (data.error) throw new Error(data.error);
+                          
+                          const detections = Array.isArray(data.detections) ? data.detections : [data.detections];
+                          const detectionText = detections.map((det: any, idx: number) => 
+                            `${idx + 1}. **${det.label || 'Nesne'}**: Box [${det.box_2d?.join(', ') || 'N/A'}]`
+                          ).join('\n');
+                          
+                          const detectionMessage: Message = {
+                            role: "assistant",
+                            content: `**Tespit Edilen Nesneler:**\n\n${detectionText}`,
+                            images: uploadedImages
+                          };
+                          setMessages(prev => [...prev, detectionMessage]);
+                        } catch (error: any) {
+                          console.error("Detection error:", error);
+                          setMessages(prev => [...prev, {
+                            role: "assistant",
+                            content: "Nesne tespiti sırasında hata oluştu: " + error.message
+                          }]);
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      disabled={isLoading || uploadedImages.length === 0}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-purple-500 hover:bg-purple-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 shadow-sm"
+                      title="Nesneleri tespit et"
+                    >
+                      <Search className="w-4 h-4" />
+                      <span>Nesne Tespiti</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {/* PDF önizlemeleri */}
+              {uploadedPDFs.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Yüklenen PDF'ler ({uploadedPDFs.length})</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {uploadedPDFs.map((pdf, index) => (
+                      <div key={index} className="relative inline-flex items-center space-x-2 px-3 py-2 bg-white rounded-lg border-2 border-gray-300 hover:border-blue-500 transition-colors group">
+                        <FileText className="w-5 h-5 text-red-500" />
+                        <span className="text-sm text-gray-700 truncate max-w-[200px]" title={pdf.name}>
+                          {pdf.name}
+                        </span>
+                        <button
+                          onClick={() => removePDF(index)}
+                          className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                          title="PDF'i kaldır"
+                        >
+                          <XCircle className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
           <div className="flex space-x-3">
+            {/* Resim yükleme butonu */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              className="hidden"
+              id="image-upload"
+            />
+            <label
+              htmlFor="image-upload"
+              className="px-4 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors flex items-center space-x-2 flex-shrink-0"
+              title="Resim yükle"
+            >
+              <ImageIcon className="w-5 h-5 text-gray-600" />
+            </label>
+            
+            {/* PDF yükleme butonu */}
+            <input
+              ref={pdfInputRef}
+              type="file"
+              accept="application/pdf"
+              multiple
+              onChange={handlePDFUpload}
+              className="hidden"
+              id="pdf-upload"
+            />
+            <label
+              htmlFor="pdf-upload"
+              className="px-4 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors flex items-center space-x-2 flex-shrink-0"
+              title="PDF yükle"
+            >
+              <FileText className="w-5 h-5 text-red-500" />
+            </label>
+            
             <textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
@@ -387,8 +698,8 @@ export function FRCChat() {
             
             <button
               onClick={sendMessage}
-              disabled={!inputMessage.trim() || isLoading}
-              className="px-6 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              disabled={(!inputMessage.trim() && uploadedImages.length === 0 && uploadedPDFs.length === 0) || isLoading}
+              className="px-6 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 flex-shrink-0"
             >
               <Send className="w-4 h-4" />
               <span className="hidden sm:inline">{t("chat.send")}</span>
