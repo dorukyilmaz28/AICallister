@@ -42,6 +42,11 @@ export default function Home() {
               <Link href="/teams" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                 {t("common.teams")}
               </Link>
+              {isAuthenticated && (
+                <Link href="/dashboard" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                  Dashboard
+                </Link>
+              )}
               {session?.user.role === "admin" && (
                 <Link href="/teams/admin" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                   Admin
@@ -139,6 +144,15 @@ export default function Home() {
                 >
                   {t("common.teams")}
                 </Link>
+                {isAuthenticated && (
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                )}
                 {session?.user.role === "admin" && (
                   <Link
                     href="/teams/admin"
