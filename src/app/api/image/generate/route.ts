@@ -13,7 +13,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { prompt, model = "gemini-2.5-flash-image", aspectRatio = "1:1", imageSize = "1K" } = await req.json();
+    const { prompt, model, aspectRatio = "1:1", imageSize = "1K" } = await req.json();
+    
+    // Free tier'da image generation çalışmıyor, alternatif model kullan
+    // gemini-3-pro-image-preview veya billing account gerekiyor
+    const imageModel = model || "gemini-2.5-flash-preview-image";
 
     if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json(
@@ -32,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Gemini Image Generation API
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${imageModel}:generateContent`;
     
     const requestBody: any = {
       contents: [{
@@ -58,8 +62,29 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       const errorText = await res.text();
       console.error("Gemini Image API Error:", errorText);
+      
+      let errorMessage = "Resim üretilemedi.";
+      let userFriendlyError = "Görsel oluşturma şu anda kullanılamıyor.";
+      
+      // Quota/Rate limit hatalarını kontrol et
+      if (res.status === 429) {
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.error?.code === 429) {
+            userFriendlyError = "Günlük görsel oluşturma limitine ulaşıldı. Lütfen daha sonra tekrar deneyin.\n\nNot: Görsel oluşturma özelliği için Google Cloud billing account gereklidir.";
+          }
+        } catch (e) {
+          // JSON parse hatası, genel mesaj kullan
+        }
+        userFriendlyError = "Görsel oluşturma limiti aşıldı. Lütfen daha sonra tekrar deneyin.\n\nGörsel oluşturma özelliği için Google Cloud billing account gereklidir.";
+      }
+      
       return NextResponse.json(
-        { error: "Resim üretilemedi.", details: errorText.substring(0, 200) },
+        { 
+          error: userFriendlyError, 
+          details: errorText.substring(0, 300),
+          requiresBilling: res.status === 429
+        },
         { status: res.status }
       );
     }

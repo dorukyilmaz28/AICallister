@@ -147,7 +147,13 @@ export function FRCChat() {
       });
 
       const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (data.error) {
+        // Quota hatası için özel mesaj göster
+        if (data.requiresBilling) {
+          throw new Error(data.error + "\n\n💡 Çözüm: Google Cloud Console'da billing account ekleyin veya daha sonra tekrar deneyin.");
+        }
+        throw new Error(data.error);
+      }
 
       // Üretilen resmi mesaj olarak göster
       const generatedMessage: Message = {
@@ -161,9 +167,10 @@ export function FRCChat() {
       setShowImageGenerator(false);
     } catch (error: any) {
       console.error("Image generation error:", error);
+      const errorMessage = error.message || "Görsel oluşturulurken hata oluştu.";
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "Görsel oluşturulurken hata oluştu: " + error.message
+        content: `**Görsel Oluşturma Hatası**\n\n${errorMessage}\n\n**Not:** Görsel oluşturma özelliği Google Cloud billing account gerektirir. Detaylar için [Gemini API dokümantasyonunu](https://ai.google.dev/gemini-api/docs/image-generation) kontrol edin.`
       }]);
     } finally {
       setIsLoading(false);
