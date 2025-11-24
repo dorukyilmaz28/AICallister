@@ -1,65 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle, XCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 export default function SignIn() {
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [resending, setResending] = useState(false);
-  
-  useEffect(() => {
-    const verified = searchParams.get("verified");
-    const verifiedEmail = searchParams.get("email");
-    const errorParam = searchParams.get("error");
-    
-    if (verified === "true" && verifiedEmail) {
-      setSuccess(`Email adresiniz başarıyla doğrulandı! Giriş yapabilirsiniz.`);
-      setEmail(decodeURIComponent(verifiedEmail));
-    }
-    
-    if (errorParam) {
-      setError(decodeURIComponent(errorParam));
-    }
-  }, [searchParams]);
-  
-  const handleResendVerification = async () => {
-    if (!email) {
-      setError("Lütfen email adresinizi girin.");
-      return;
-    }
-    
-    setResending(true);
-    setError("");
-    
-    try {
-      const response = await fetch('/api/auth/resend-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        setSuccess(data.message);
-      } else {
-        setError(data.error || "Email gönderilemedi.");
-      }
-    } catch (error) {
-      setError("Bir hata oluştu. Lütfen tekrar deneyin.");
-    } finally {
-      setResending(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,11 +25,7 @@ export default function SignIn() {
       });
 
       if (result?.error) {
-        if (result.error === "CredentialsSignin" || result.error.includes("EMAIL_NOT_VERIFIED")) {
-          setError("Email adresiniz doğrulanmamış. Lütfen email kutunuzu kontrol edin veya doğrulama email'ini tekrar gönderin.");
-        } else {
-          setError("Email veya şifre hatalı!");
-        }
+        setError("Email veya şifre hatalı!");
       } else if (result?.ok) {
         window.location.href = "/teams";
       } else {
@@ -114,32 +61,10 @@ export default function SignIn() {
 
         {/* Form Card */}
         <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-          {/* Success Message */}
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm flex items-center space-x-2">
-              <CheckCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{success}</span>
-            </div>
-          )}
-          
           {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-              <div className="flex items-start space-x-2">
-                <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p>{error}</p>
-                  {error.includes("doğrulanmamış") && (
-                    <button
-                      onClick={handleResendVerification}
-                      disabled={resending}
-                      className="mt-2 text-red-600 hover:text-red-800 underline text-xs font-medium disabled:opacity-50"
-                    >
-                      {resending ? "Gönderiliyor..." : "Doğrulama email'ini tekrar gönder"}
-                    </button>
-                  )}
-                </div>
-              </div>
+              {error}
             </div>
           )}
 
