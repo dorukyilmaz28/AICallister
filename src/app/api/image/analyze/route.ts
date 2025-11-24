@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyDgRdsqEgC6xu4wjliAc5fYP7QTbSL7tj4";
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     
     if (!GEMINI_API_KEY) {
