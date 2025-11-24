@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   MessageSquare,
   Code,
@@ -16,8 +17,11 @@ import {
   Activity,
   BarChart3,
   Calendar,
+  ArrowLeft,
+  ExternalLink,
 } from "lucide-react";
 import Loading from "@/components/Loading";
+import { redirectToAcademy } from "@/lib/academy-api";
 
 interface DashboardStats {
   totalConversations: number;
@@ -40,6 +44,7 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { session, isAuthenticated } = useAuthGuard({ requireAuth: true });
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -84,6 +89,24 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Geri Dön</span>
+            </Link>
+            <a
+              href={redirectToAcademy("/html/main.html")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors text-sm"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>FRC Academy</span>
+            </a>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Dashboard
           </h1>
@@ -161,21 +184,24 @@ export default function DashboardPage() {
           </Link>
 
           {/* Academy Card */}
-          <Link
-            href="/academy"
+          <a
+            href={redirectToAcademy("/html/main.html")}
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-orange-100 rounded-lg">
                 <BookOpen className="h-6 w-6 text-orange-600" />
               </div>
+              <ExternalLink className="h-4 w-4 text-gray-400" />
             </div>
             <h3 className="text-sm font-medium text-gray-600 mb-1">
               Academy
             </h3>
-            <p className="text-2xl font-bold text-gray-900">-</p>
-            <p className="text-xs text-gray-500 mt-2">Kurslara göz at</p>
-          </Link>
+            <p className="text-2xl font-bold text-gray-900">FRC</p>
+            <p className="text-xs text-gray-500 mt-2">Yeni sekmede aç</p>
+          </a>
         </div>
 
         {/* Charts Section */}
@@ -306,15 +332,17 @@ export default function DashboardPage() {
                 Takımlar
               </span>
             </Link>
-            <Link
-              href="/academy"
+            <a
+              href={redirectToAcademy("/html/main.html")}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex flex-col items-center justify-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
             >
               <BookOpen className="h-6 w-6 text-orange-600 mb-2" />
               <span className="text-sm font-medium text-gray-900">
                 Academy
               </span>
-            </Link>
+            </a>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings, MessageSquare, Code, Sparkles, ChevronRight, Languages, Menu, X, BookOpen } from "lucide-react";
+import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings, MessageSquare, Code, Sparkles, ChevronRight, Languages, Menu, X, BookOpen, ExternalLink } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -33,9 +33,15 @@ export default function Home() {
               <Link href="/chat" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                 {t("common.chat")}
               </Link>
-              <Link href="/academy" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+              <a
+                href="https://frcacademy.com/html/main.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors inline-flex items-center gap-1"
+              >
                 Academy
-              </Link>
+                <ExternalLink className="h-3 w-3" />
+              </a>
               <Link href="/code-snippets" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                 {t("common.snippets")}
               </Link>
@@ -123,13 +129,16 @@ export default function Home() {
                 >
                   {t("common.chat")}
                 </Link>
-                <Link
-                  href="/academy"
+                <a
+                  href="https://frcacademy.com/html/main.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors inline-flex items-center gap-1"
                 >
                   Academy
-                </Link>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
                 <Link
                   href="/code-snippets"
                   onClick={() => setMobileMenuOpen(false)}
