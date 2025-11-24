@@ -292,13 +292,21 @@ export const conversationDb = {
 
   async addMessage(conversationId: string, messageData: { role: string; content: string }) {
     const conversation = await prisma.conversation.findUnique({
-      where: { id: conversationId }
+      where: { id: conversationId },
+      include: {
+        messages: {
+          orderBy: {
+            createdAt: 'asc'
+          }
+        }
+      }
     });
     
     if (!conversation) {
       throw new Error('Konuşma bulunamadı.');
     }
 
+    // Yeni mesajı ekle
     const message = await prisma.message.create({
       data: {
         conversationId: conversationId,
@@ -306,6 +314,18 @@ export const conversationDb = {
         content: messageData.content,
       }
     });
+
+    // Mesaj sayısı 3'ü aştıysa, en eski mesajları sil (sliding window)
+    // Her zaman en son 3 mesaj tutulacak
+    const allMessages = [...conversation.messages, message];
+    if (allMessages.length > 3) {
+      const messagesToDelete = allMessages.slice(0, allMessages.length - 3);
+      for (const msgToDelete of messagesToDelete) {
+        await prisma.message.delete({
+          where: { id: msgToDelete.id }
+        });
+      }
+    }
 
     // Conversation'ı güncelle
     await prisma.conversation.update({
