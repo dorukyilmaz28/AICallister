@@ -8,28 +8,31 @@ datasource db {
 }
 
 model User {
-  id                String                @id @default(cuid())
-  email             String                @unique
-  name              String?
-  password          String
-  teamNumber        String?
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  role              String                @default("member")
-  status            String                @default("pending")
-  teamId            String?
-  conversations     Conversation[]
-  teamChats         TeamChat[]
-  teamJoinRequests  TeamJoinRequest[]
-  teamMemberships   TeamMember[]
-  teamNotifications TeamNotification[]
-  adminTeams        Team[]                @relation("TeamAdmin")
-  team              Team?                 @relation(fields: [teamId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  codeSnippets      CodeSnippet[]
-  favoriteSnippets  UserFavoriteSnippet[]
-  courseProgress    UserCourseProgress[]
-  lessonProgress    UserLessonProgress[]
-  certificates      Certificate[]
+  id                      String                @id @default(cuid())
+  email                   String                @unique
+  name                    String?
+  password                String
+  teamNumber              String?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  role                    String                @default("member")
+  status                  String                @default("pending")
+  teamId                  String?
+  emailVerified           Boolean               @default(false)
+  emailVerificationToken  String?               @unique
+  emailVerificationExpires DateTime?
+  conversations           Conversation[]
+  teamChats               TeamChat[]
+  teamJoinRequests        TeamJoinRequest[]
+  teamMemberships         TeamMember[]
+  teamNotifications       TeamNotification[]
+  adminTeams              Team[]                @relation("TeamAdmin")
+  team                    Team?                 @relation(fields: [teamId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  codeSnippets            CodeSnippet[]
+  favoriteSnippets        UserFavoriteSnippet[]
+  courseProgress          UserCourseProgress[]
+  lessonProgress          UserLessonProgress[]
+  certificates            Certificate[]
 
   @@map("users")
 }

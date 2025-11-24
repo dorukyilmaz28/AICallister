@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { userDb, teamDb, teamMemberDb, teamNotificationDb, teamJoinRequestDb } from "@/lib/database";
 import { verifyTeamNumber } from "@/lib/blueAlliance";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,6 +40,16 @@ export async function POST(req: NextRequest) {
       password,
       teamNumber
     });
+
+    // Email doğrulama email'i gönder
+    try {
+      if (user.emailVerificationToken) {
+        await sendVerificationEmail(user.email, user.emailVerificationToken, user.name || email);
+      }
+    } catch (emailError) {
+      console.error("Email sending error:", emailError);
+      // Email gönderilemese bile kullanıcı oluşturuldu, sadece logla
+    }
 
     // Find or create team
     let team = await teamDb.findByTeamNumber(teamNumber);
@@ -109,18 +120,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { 
         message: team.adminId === user.id 
-          ? "Takım başarıyla oluşturuldu ve siz takım yöneticisisiniz." 
-          : "Takıma katılma isteğiniz gönderildi. Takım yöneticisinin onayını bekliyorsunuz.",
+          ? "Takım başarıyla oluşturuldu. Email adresinizi doğrulamak için email kutunuzu kontrol edin." 
+          : "Takıma katılma isteğiniz gönderildi. Email adresinizi doğrulamak için email kutunuzu kontrol edin.",
         user: {
           id: user.id,
           name: user.name,
           email: user.email,
+          emailVerified: user.emailVerified
         },
         team: {
           id: team.id,
           name: team.name,
           teamNumber: team.teamNumber
-        }
+        },
+        requiresEmailVerification: true
       },
       { status: 201 }
     );

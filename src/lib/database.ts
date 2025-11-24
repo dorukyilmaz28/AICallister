@@ -19,6 +19,11 @@ export const userDb = {
 
     const hashedPassword = await bcrypt.hash(userData.password, 12);
     
+    // Email verification token oluştur
+    const crypto = require('crypto');
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 saat
+    
     return await prisma.user.create({
       data: {
         name: userData.name,
@@ -26,7 +31,64 @@ export const userDb = {
         password: hashedPassword,
         teamNumber: userData.teamNumber,
         role: "member",
-        status: "pending"
+        status: "pending",
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: verificationExpires,
+        emailVerified: false
+      }
+    });
+  },
+  
+  async verifyEmail(token: string) {
+    const user = await prisma.user.findUnique({
+      where: { emailVerificationToken: token }
+    });
+    
+    if (!user) {
+      throw new Error('Geçersiz veya süresi dolmuş doğrulama linki.');
+    }
+    
+    if (user.emailVerificationExpires && user.emailVerificationExpires < new Date()) {
+      throw new Error('Doğrulama linkinin süresi dolmuş.');
+    }
+    
+    if (user.emailVerified) {
+      throw new Error('Bu email adresi zaten doğrulanmış.');
+    }
+    
+    // Email'i doğrula ve token'ı temizle
+    return await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpires: null
+      }
+    });
+  },
+  
+  async regenerateVerificationToken(email: string) {
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+    
+    if (!user) {
+      throw new Error('Kullanıcı bulunamadı.');
+    }
+    
+    if (user.emailVerified) {
+      throw new Error('Email adresi zaten doğrulanmış.');
+    }
+    
+    const crypto = require('crypto');
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    
+    return await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: verificationExpires
       }
     });
   },

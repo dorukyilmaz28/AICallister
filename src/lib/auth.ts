@@ -34,6 +34,13 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
+          // Email doğrulama kontrolü
+          if (!user.emailVerified) {
+            console.log("Email not verified for user:", credentials.email)
+            // Email doğrulanmamış kullanıcılar için özel hata döndür
+            throw new Error("EMAIL_NOT_VERIFIED")
+          }
+
           console.log("User authenticated successfully:", user.email)
           return {
             id: user.id,
@@ -42,10 +49,15 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
             status: user.status,
             teamId: user.teamId || undefined,
-            teamNumber: user.teamNumber || undefined
+            teamNumber: user.teamNumber || undefined,
+            emailVerified: user.emailVerified
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Authorization error:", error)
+          // Email doğrulanmamış hatası için özel handling
+          if (error.message === "EMAIL_NOT_VERIFIED") {
+            throw error;
+          }
           return null
         }
       }
@@ -73,6 +85,7 @@ export const authOptions: NextAuthOptions = {
           if (freshUser) {
             token.status = freshUser.status
             token.role = freshUser.role
+            token.emailVerified = freshUser.emailVerified
             // null değerlerini undefined'a çevir (TypeScript uyumu için)
             token.teamId = freshUser.teamId ?? undefined
             token.teamNumber = freshUser.teamNumber ?? undefined
@@ -92,6 +105,7 @@ export const authOptions: NextAuthOptions = {
         session.user.status = token.status as string
         session.user.teamId = token.teamId as string
         session.user.teamNumber = token.teamNumber as string
+        session.user.emailVerified = token.emailVerified as boolean
       }
       return session
     }

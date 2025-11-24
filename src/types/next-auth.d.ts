@@ -11,6 +11,7 @@ declare module "next-auth" {
       status?: string
       teamId?: string
       teamNumber?: string
+      emailVerified?: boolean
     }
   }
 
@@ -23,6 +24,7 @@ declare module "next-auth" {
     status?: string
     teamId?: string
     teamNumber?: string
+    emailVerified?: boolean
   }
 }
 
@@ -33,5 +35,6 @@ declare module "next-auth/jwt" {
     status?: string
     teamId?: string
     teamNumber?: string
+    emailVerified?: boolean
   }
 }
