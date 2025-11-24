@@ -534,8 +534,9 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
     const contents: any[] = [];
     
     // System instruction varsa config'e ekle
-    // Son kullanıcı mesajını al
-    const lastMessages = messages.slice(-6); // Son 6 mesajı al (3 tur konuşma)
+    // Son mesajları al: En son 3 mesaj tutulacak (sliding window)
+    // Her yeni mesaj geldiğinde en eski mesaj silinir
+    const lastMessages = messages.slice(-3); // Son 3 mesajı al
     
     // Gemini için mesaj formatı: role ve parts içeriyor
     // Resim desteği: eğer mesajda image varsa, parts array'ine ekle
@@ -798,8 +799,9 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
           context
         });
         
-        // Mesajları ekle
-        for (const msg of finalMessages) {
+        // Mesajları ekle (sadece son 3 mesaj kaydet)
+        const messagesToSave = finalMessages.slice(-3);
+        for (const msg of messagesToSave) {
           await conversationDb.addMessage(conversation.id, {
             role: msg.role,
             content: msg.content
