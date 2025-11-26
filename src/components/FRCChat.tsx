@@ -70,9 +70,18 @@ export function FRCChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Sadece ilk yüklemede ve yeni mesaj eklendiğinde scroll yap
+  // Typing sırasında scroll yapma
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Sadece mesaj sayısı değiştiğinde ve typing yapılmıyorsa scroll yap
+    if (messages.length > 0 && !isLoading) {
+      // Kısa bir gecikme ile scroll yap (DOM güncellemesi için)
+      const timeoutId = setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [messages.length]); // Sadece mesaj sayısı değiştiğinde tetikle
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -101,16 +110,38 @@ export function FRCChat() {
     const files = e.target.files;
     if (!files) return;
 
+    const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20MB
+
     Array.from(files).forEach((file) => {
       if (file.type === 'application/pdf') {
+        // Dosya boyutu kontrolü
+        if (file.size > MAX_PDF_SIZE) {
+          alert(`PDF dosyası çok büyük: ${(file.size / 1024 / 1024).toFixed(2)}MB\nMaksimum boyut: 20MB`);
+          return;
+        }
+
         const reader = new FileReader();
+        
+        reader.onerror = () => {
+          console.error("PDF okuma hatası");
+          alert(`PDF dosyası okunamadı: ${file.name}`);
+        };
+
         reader.onload = (e) => {
-          const result = e.target?.result as string;
-          if (result) {
-            setUploadedPDFs(prev => [...prev, { name: file.name, data: result }]);
+          try {
+            const result = e.target?.result as string;
+            if (result) {
+              setUploadedPDFs(prev => [...prev, { name: file.name, data: result }]);
+            }
+          } catch (error) {
+            console.error("PDF işleme hatası:", error);
+            alert(`PDF dosyası işlenirken hata oluştu: ${file.name}`);
           }
         };
+        
         reader.readAsDataURL(file);
+      } else {
+        alert(`Geçersiz dosya tipi: ${file.name}\nLütfen PDF dosyası yükleyin.`);
       }
     });
 
@@ -144,6 +175,11 @@ export function FRCChat() {
     setUploadedPDFs([]); // Clear uploaded PDFs
     setIsLoading(true);
     
+    // Kullanıcı mesajı gönderildiğinde bir kere scroll yap
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    
     // PDF'leri de message'a ekle (chat API'de handle edilecek)
     const messageData: any = {
       messages: newMessages,
@@ -154,7 +190,13 @@ export function FRCChat() {
     };
     
     if (uploadedPDFs.length > 0) {
-      messageData.pdfs = uploadedPDFs.map(pdf => ({ name: pdf.name, data: pdf.data }));
+      // Sadece geçerli PDF'leri gönder
+      const validPDFs = uploadedPDFs.filter(pdf => pdf.data && pdf.data.length > 0);
+      if (validPDFs.length > 0) {
+        messageData.pdfs = validPDFs.map(pdf => ({ name: pdf.name, data: pdf.data }));
+      } else {
+        console.warn("Yüklenen PDF'ler geçersiz, gönderilmiyor");
+      }
     }
 
     try {
@@ -167,7 +209,9 @@ export function FRCChat() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || `HTTP hatası! Durum: ${response.status}`;
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
@@ -183,7 +227,7 @@ export function FRCChat() {
       setMessages(prev => [...prev, { role: "assistant", content: "", images: assistantImages }]);
 
       let index = 0;
-      const typingIntervalMs = 15;
+      const typingIntervalMs = 8; // Daha hızlı yazma efekti
 
       await new Promise<void>((resolve) => {
         const intervalId = setInterval(() => {
@@ -202,6 +246,10 @@ export function FRCChat() {
           });
           if (index >= assistantText.length) {
             clearInterval(intervalId);
+            // Mesaj tamamlandığında bir kere scroll yap
+            setTimeout(() => {
+              scrollToBottom();
+            }, 100);
             resolve();
           }
         }, typingIntervalMs);
@@ -210,12 +258,30 @@ export function FRCChat() {
       if (data.conversationId) {
         setConversationId(data.conversationId);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chat error:", error);
+      let errorMessage = "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.";
+      
+      // Daha spesifik hata mesajları
+      if (error.message) {
+        if (error.message.includes("çok büyük") || error.message.includes("too large")) {
+          errorMessage = `PDF hatası: ${error.message}\n\nLütfen daha küçük bir PDF dosyası yükleyin (maksimum 20MB).`;
+        } else if (error.message.includes("işlenemedi") || error.message.includes("processing")) {
+          errorMessage = `PDF hatası: ${error.message}\n\nLütfen geçerli bir PDF dosyası yüklediğinizden emin olun.`;
+        } else if (error.message.includes("API") || error.message.includes("Gemini")) {
+          errorMessage = `AI servisi hatası: ${error.message}\n\nLütfen birkaç dakika sonra tekrar deneyin.`;
+        }
+      }
+      
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin."
+        content: errorMessage
       }]);
+      
+      // Hata mesajı eklendiğinde bir kere scroll yap
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     } finally {
       setIsLoading(false);
     }

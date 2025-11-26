@@ -609,41 +609,96 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
 
     // PDF desteği: eğer request'te PDF'ler varsa, son user mesajına ekle
     if (pdfs && Array.isArray(pdfs) && pdfs.length > 0) {
-      // Son user mesajını bul veya yeni bir tane oluştur
-      let lastUserContent = contents[contents.length - 1];
-      if (!lastUserContent || lastUserContent.role !== "user") {
-        // Yeni bir user content oluştur
-        lastUserContent = {
-          role: "user",
-          parts: []
-        };
-        contents.push(lastUserContent);
-      }
+      try {
+        // Son user mesajını bul veya yeni bir tane oluştur
+        let lastUserContent = contents[contents.length - 1];
+        if (!lastUserContent || lastUserContent.role !== "user") {
+          // Yeni bir user content oluştur
+          lastUserContent = {
+            role: "user",
+            parts: []
+          };
+          contents.push(lastUserContent);
+        }
 
-      // PDF'leri ekle
-      for (const pdf of pdfs) {
-        if (pdf.data && typeof pdf.data === 'string') {
-          // Base64 PDF data URI formatından mime type ve data'yı çıkar
-          if (pdf.data.startsWith('data:')) {
-            const matches = pdf.data.match(/data:([^;]+);base64,(.+)/);
-            if (matches) {
-              lastUserContent.parts.push({
-                inlineData: {
-                  mimeType: matches[1] || 'application/pdf',
-                  data: matches[2]
-                }
-              });
+        // PDF'leri ekle (maksimum 20MB per PDF - Gemini limit)
+        const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20MB in bytes
+        const processedPDFs: string[] = [];
+        
+        for (const pdf of pdfs) {
+          try {
+            if (!pdf.data || typeof pdf.data !== 'string') {
+              console.warn(`PDF ${pdf.name || 'unknown'} has invalid data format`);
+              continue;
             }
-          } else {
-            // Direkt base64 data
+
+            let pdfData: string;
+            let mimeType = 'application/pdf';
+
+            // Base64 PDF data URI formatından mime type ve data'yı çıkar
+            if (pdf.data.startsWith('data:')) {
+              const matches = pdf.data.match(/data:([^;]+);base64,(.+)/);
+              if (!matches || !matches[2]) {
+                console.warn(`PDF ${pdf.name || 'unknown'} has invalid data URI format`);
+                continue;
+              }
+              mimeType = matches[1] || 'application/pdf';
+              pdfData = matches[2];
+            } else {
+              // Direkt base64 data
+              pdfData = pdf.data;
+            }
+
+            // Base64 decode ederek gerçek boyutu kontrol et
+            try {
+              const decodedSize = Buffer.from(pdfData, 'base64').length;
+              if (decodedSize > MAX_PDF_SIZE) {
+                console.warn(`PDF ${pdf.name || 'unknown'} is too large: ${(decodedSize / 1024 / 1024).toFixed(2)}MB (max: 20MB)`);
+                throw new Error(`PDF dosyası çok büyük (${(decodedSize / 1024 / 1024).toFixed(2)}MB). Maksimum boyut: 20MB.`);
+              }
+            } catch (sizeError: any) {
+              if (sizeError.message.includes('çok büyük')) {
+                throw sizeError;
+              }
+              // Base64 decode hatası - geçersiz base64 olabilir
+              console.warn(`PDF ${pdf.name || 'unknown'} has invalid base64 data`);
+              continue;
+            }
+
+            // PDF verisini ekle
             lastUserContent.parts.push({
               inlineData: {
-                mimeType: 'application/pdf',
-                data: pdf.data
+                mimeType: mimeType,
+                data: pdfData
               }
             });
+            
+            processedPDFs.push(pdf.name || 'unknown');
+            console.log(`PDF ${pdf.name || 'unknown'} başarıyla işlendi (${(Buffer.from(pdfData, 'base64').length / 1024 / 1024).toFixed(2)}MB)`);
+          } catch (pdfError: any) {
+            console.error(`PDF ${pdf.name || 'unknown'} işlenirken hata:`, pdfError);
+            // PDF işleme hatası - devam et ama kullanıcıya bilgi ver
+            if (pdfError.message && pdfError.message.includes('çok büyük')) {
+              throw pdfError; // Boyut hatası için yukarı fırlat
+            }
+            // Diğer hatalar için devam et
           }
         }
+
+        if (processedPDFs.length === 0 && pdfs.length > 0) {
+          throw new Error("PDF dosyaları işlenemedi. Lütfen geçerli PDF dosyaları yükleyin.");
+        }
+
+        console.log(`${processedPDFs.length}/${pdfs.length} PDF başarıyla işlendi`);
+      } catch (pdfProcessingError: any) {
+        console.error("PDF işleme hatası:", pdfProcessingError);
+        return NextResponse.json(
+          { 
+            error: pdfProcessingError.message || "PDF dosyaları işlenirken bir hata oluştu. Lütfen tekrar deneyin.",
+            details: "PDF processing failed"
+          }, 
+          { status: 400 }
+        );
       }
     }
 
