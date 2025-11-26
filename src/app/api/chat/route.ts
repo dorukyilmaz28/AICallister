@@ -712,7 +712,7 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
       contents: contents,
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 2000,
+        maxOutputTokens: 4000, // Yaklaşık 3000 kelime için yeterli
       }
     };
 
