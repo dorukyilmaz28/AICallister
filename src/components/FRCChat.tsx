@@ -14,6 +14,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   images?: string[]; // Base64 data URIs veya URLs
+  pdfs?: { name: string; data: string }[]; // PDF dosyaları
 }
 
 type Context = "general" | "strategy" | "mechanical" | "simulation";
@@ -165,7 +166,8 @@ export function FRCChat() {
     const userMessage: Message = {
       role: "user",
       content: inputMessage.trim() || (uploadedImages.length > 0 ? "Bu resimleri analiz et" : uploadedPDFs.length > 0 ? "Bu PDF'i analiz et" : ""),
-      images: uploadedImages.length > 0 ? [...uploadedImages] : undefined
+      images: uploadedImages.length > 0 ? [...uploadedImages] : undefined,
+      pdfs: uploadedPDFs.length > 0 ? [...uploadedPDFs] : undefined
     };
 
     const newMessages = [...messages, userMessage];
@@ -448,6 +450,28 @@ export function FRCChat() {
                         : "bg-white border border-gray-200 text-gray-900"
                     }`}
                   >
+                    {/* PDF'leri göster */}
+                    {message.pdfs && message.pdfs.length > 0 && (
+                      <div className="mb-3 space-y-2">
+                        {message.pdfs.map((pdf, pdfIndex) => (
+                          <div key={pdfIndex} className={`inline-flex items-center space-x-2 px-3 py-2 rounded-lg border ${
+                            message.role === "user" 
+                              ? "bg-gray-800 border-gray-700" 
+                              : "bg-gray-100 border-gray-300"
+                          }`}>
+                            <FileText className={`w-5 h-5 flex-shrink-0 ${
+                              message.role === "user" ? "text-red-400" : "text-red-500"
+                            }`} />
+                            <span className={`text-sm font-medium ${
+                              message.role === "user" ? "text-gray-100" : "text-gray-700"
+                            } truncate max-w-[250px]`} title={pdf.name}>
+                              {pdf.name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
                     {/* Resimleri göster */}
                     {message.images && message.images.length > 0 && (
                       <div className="mb-3 space-y-2">
