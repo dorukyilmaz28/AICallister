@@ -2,7 +2,7 @@
 
 ## Environment Variables Required
 
-Create a `.env.local` file in your project root with the following variables:
+Create a `.env` file in your project root with the following variables:
 
 ```env
 # Database (PostgreSQL)
