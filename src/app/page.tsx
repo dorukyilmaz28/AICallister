@@ -307,28 +307,28 @@ export default function Home() {
           </div>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 border border-blue-200">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/20 rounded-2xl p-8 border border-blue-200 dark:border-blue-700">
               <Bot className="w-10 h-10 text-blue-600 mb-4" />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t("home.expertise.general.title")}</h3>
               <p className="text-gray-700 dark:text-gray-300">{t("home.expertise.general.desc")}</p>
             </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 border border-green-200">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/20 rounded-2xl p-8 border border-green-200 dark:border-green-700">
               <Target className="w-10 h-10 text-green-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{t("home.expertise.strategy.title")}</h3>
-              <p className="text-gray-700">{t("home.expertise.strategy.desc")}</p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t("home.expertise.strategy.title")}</h3>
+              <p className="text-gray-700 dark:text-gray-300">{t("home.expertise.strategy.desc")}</p>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 border border-orange-200">
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-900/20 rounded-2xl p-8 border border-orange-200 dark:border-orange-700">
               <Wrench className="w-10 h-10 text-orange-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{t("home.expertise.mechanical.title")}</h3>
-              <p className="text-gray-700">{t("home.expertise.mechanical.desc")}</p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t("home.expertise.mechanical.title")}</h3>
+              <p className="text-gray-700 dark:text-gray-300">{t("home.expertise.mechanical.desc")}</p>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-8 border border-purple-200">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-900/20 rounded-2xl p-8 border border-purple-200 dark:border-purple-700">
               <Cpu className="w-10 h-10 text-purple-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{t("home.expertise.programming.title")}</h3>
-              <p className="text-gray-700">{t("home.expertise.programming.desc")}</p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t("home.expertise.programming.title")}</h3>
+              <p className="text-gray-700 dark:text-gray-300">{t("home.expertise.programming.desc")}</p>
             </div>
           </div>
         </div>
