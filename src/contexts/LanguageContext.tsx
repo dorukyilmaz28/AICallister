@@ -126,6 +126,35 @@ const translations = {
     "auth.signup.submit": "Kayıt Ol",
     "auth.signup.hasAccount": "Zaten hesabınız var mı?",
     "auth.signup.signinLink": "Giriş yapın",
+    
+    // Admin
+    "admin.panel": "Admin Paneli",
+    "admin.teamManagement": "Takım Yönetimi",
+    "admin.dashboard": "Admin Dashboard",
+    "admin.approvedMembers": "Onaylı Üye",
+    "admin.pending": "Bekleyen",
+    "admin.pendingApproval": "Onay Bekleyenler",
+    "admin.users": "kullanıcı",
+    "admin.approve": "Onayla",
+    "admin.reject": "Reddet",
+    "admin.removeMember": "Üyeyi Çıkar",
+    "admin.activeMembers": "aktif üye",
+    "admin.teamNotFound": "Takım bilgileri bulunamadı.",
+    "admin.backToTeam": "Takıma Dön",
+    "admin.pendingRequests": "Bekleyen İstekler",
+    "admin.approved": "Onaylanan",
+    "admin.rejected": "Reddedilen",
+    "admin.notifications": "Bildirimler",
+    "admin.joinRequests": "Katılım İstekleri",
+    "admin.noJoinNotifications": "Henüz katılım bildirimi yok",
+    "admin.newMembersWillAppear": "Yeni üyeler kayıt olduğunda burada görünecek",
+    "admin.noJoinRequests": "Henüz katılım isteği yok",
+    "admin.requestsWillAppear": "Takım üyeleri katılım isteği gönderdiğinde burada görünecek",
+    "admin.unknown": "Bilinmiyor",
+    "admin.errorFetchingTeam": "Takım bilgileri alınırken bir hata oluştu.",
+    "admin.errorProcessing": "İşlem sırasında bir hata oluştu.",
+    "admin.errorFetchingRequests": "İstekler getirilirken hata oluştu.",
+    "admin.errorFetchingNotifications": "Bildirimler getirilirken hata oluştu.",
   },
   en: {
     // Common
@@ -240,6 +269,35 @@ const translations = {
     "auth.signup.submit": "Sign Up",
     "auth.signup.hasAccount": "Already have an account?",
     "auth.signup.signinLink": "Sign in",
+    
+    // Admin
+    "admin.panel": "Admin Panel",
+    "admin.teamManagement": "Team Management",
+    "admin.dashboard": "Admin Dashboard",
+    "admin.approvedMembers": "Approved Member",
+    "admin.pending": "Pending",
+    "admin.pendingApproval": "Pending Approval",
+    "admin.users": "users",
+    "admin.approve": "Approve",
+    "admin.reject": "Reject",
+    "admin.removeMember": "Remove Member",
+    "admin.activeMembers": "active members",
+    "admin.teamNotFound": "Team information not found.",
+    "admin.backToTeam": "Back to Team",
+    "admin.pendingRequests": "Pending Requests",
+    "admin.approved": "Approved",
+    "admin.rejected": "Rejected",
+    "admin.notifications": "Notifications",
+    "admin.joinRequests": "Join Requests",
+    "admin.noJoinNotifications": "No join notifications yet",
+    "admin.newMembersWillAppear": "New members will appear here when they register",
+    "admin.noJoinRequests": "No join requests yet",
+    "admin.requestsWillAppear": "Join requests will appear here when team members send them",
+    "admin.unknown": "Unknown",
+    "admin.errorFetchingTeam": "An error occurred while fetching team information.",
+    "admin.errorProcessing": "An error occurred during processing.",
+    "admin.errorFetchingRequests": "An error occurred while fetching requests.",
+    "admin.errorFetchingNotifications": "An error occurred while fetching notifications.",
   }
 };
 
@@ -260,7 +318,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations.tr] || key;
+    const langTranslations = translations[language] as Record<string, string>;
+    return langTranslations[key] || key;
   };
 
   return (

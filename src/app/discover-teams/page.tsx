@@ -63,8 +63,13 @@ export default function DiscoverTeamsPage() {
       const response = await fetch("/api/teams/discover");
       if (response.ok) {
         const data = await response.json();
-        setTeams(data.teams || []);
-        setFilteredTeams(data.teams || []);
+        // Sadece 9024 ve 9523 numaralı takımları göster
+        const allowedTeamNumbers = ["9024", "9523"];
+        const filtered = (data.teams || []).filter((team: Team) => 
+          team.teamNumber && allowedTeamNumbers.includes(team.teamNumber)
+        );
+        setTeams(filtered);
+        setFilteredTeams(filtered);
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Takımlar yüklenirken hata oluştu.");
