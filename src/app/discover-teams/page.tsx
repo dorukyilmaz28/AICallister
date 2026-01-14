@@ -22,7 +22,7 @@ interface Team {
 export default function DiscoverTeamsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   
   const [teams, setTeams] = useState<Team[]>([]);
   const [filteredTeams, setFilteredTeams] = useState<Team[]>([]);
@@ -57,6 +57,8 @@ export default function DiscoverTeamsPage() {
     }
   }, [searchQuery, teams]);
 
+  const { t } = useLanguage();
+  
   const fetchTeams = async () => {
     try {
       setError("");
@@ -72,11 +74,11 @@ export default function DiscoverTeamsPage() {
         setFilteredTeams(filtered);
       } else {
         const errorData = await response.json();
-        setError(errorData.error || "Takımlar yüklenirken hata oluştu.");
+        setError(errorData.error || t("discover.errorLoading"));
       }
     } catch (error) {
       console.error("Error fetching teams:", error);
-      setError("Takımlar yüklenirken hata oluştu.");
+      setError(t("discover.errorLoading"));
     } finally {
       setIsLoading(false);
     }
@@ -93,32 +95,34 @@ export default function DiscoverTeamsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        alert(data.message || "Katılma isteğiniz gönderildi!");
+        alert(data.message || t("discover.joinSuccess"));
         await fetchTeams();
       } else {
         const errorData = await response.json();
-        setError(errorData.error || "İstek gönderilirken hata oluştu.");
+        setError(errorData.error || t("discover.errorSending"));
       }
     } catch (error) {
       console.error("Error sending join request:", error);
-      setError("İstek gönderilirken hata oluştu.");
+      setError(t("discover.errorSending"));
     } finally {
       setSendingRequest(null);
     }
   };
 
+  const { t } = useLanguage();
+
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <Loading />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-3">
@@ -128,11 +132,11 @@ export default function DiscoverTeamsPage() {
                 className="w-12 h-12 lg:w-16 lg:h-16 object-cover rounded-xl"
               />
               <div>
-                <h1 className="text-base lg:text-lg font-bold text-gray-900">
-                  Takım Keşfet
+                <h1 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white">
+                  {t("discover.title")}
                 </h1>
-                <p className="text-xs text-gray-500 hidden sm:block">
-                  FRC Takımları
+                <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
+                  {t("discover.subtitle")}
                 </p>
               </div>
             </Link>
@@ -140,7 +144,7 @@ export default function DiscoverTeamsPage() {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-300 transition-colors"
                 title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
               >
                 <Languages className="w-4 h-4" />
@@ -148,15 +152,15 @@ export default function DiscoverTeamsPage() {
               </button>
               <Link
                 href="/profile"
-                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium"
               >
-                Profil
+                {t("common.profile")}
               </Link>
               <Link
                 href="/teams"
-                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-semibold transition-colors"
+                className="px-4 py-2 bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 rounded-lg text-white text-sm font-semibold transition-colors"
               >
-                Takımlarım
+                {t("common.teams")}
               </Link>
             </div>
           </div>
@@ -164,29 +168,29 @@ export default function DiscoverTeamsPage() {
       </header>
 
       {/* Hero */}
-      <section className="py-12 lg:py-16 bg-gradient-to-br from-gray-50 to-gray-100">
+      <section className="py-12 lg:py-16 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white rounded-full mb-6 shadow-sm">
-              <Sparkles className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-gray-700">FRC Community</span>
+            <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-full mb-6 shadow-sm">
+              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">FRC Community</span>
             </div>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Takım Keşfet
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              {t("discover.hero.title")}
             </h2>
-            <p className="text-xl text-gray-600 mb-8">
-              FRC takımlarına katılın ve birlikte çalışın
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
+              {t("discover.hero.subtitle")}
             </p>
 
             {/* Search Bar */}
             <div className="relative max-w-2xl mx-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Takım ara (isim, numara veya açıklama)..."
-                className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all"
+                placeholder={t("discover.search.placeholder")}
+                className="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all"
               />
             </div>
           </div>
@@ -197,25 +201,25 @@ export default function DiscoverTeamsPage() {
       <section className="py-12 lg:py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm max-w-4xl mx-auto">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm max-w-4xl mx-auto">
               {error}
             </div>
           )}
 
           {filteredTeams.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Users className="w-10 h-10 text-gray-400" />
+              <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Users className="w-10 h-10 text-gray-400 dark:text-gray-500" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Takım bulunamadı</h3>
-              <p className="text-gray-600 mb-8">Arama kriterlerinizi değiştirmeyi deneyin</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t("discover.noTeams")}</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-8">{t("discover.noTeamsDesc")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
               {filteredTeams.map((team, index) => (
                 <div
                   key={team.id}
-                  className="group bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  className="group bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                   style={{ 
                     animation: `fadeIn 0.5s ease-out ${index * 0.1}s both`
                   }}
@@ -225,48 +229,48 @@ export default function DiscoverTeamsPage() {
                       <Users className="w-6 h-6 text-white" />
                     </div>
                     {team.teamNumber && (
-                      <span className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-xs font-bold">
+                      <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-700 dark:text-blue-400 text-xs font-bold">
                         #{team.teamNumber}
                       </span>
                     )}
                   </div>
 
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                     {team.name}
                   </h3>
                   
                   {team.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
                       {team.description}
                     </p>
                   )}
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <span className="text-sm text-gray-600">
-                      {team.memberCount} üye
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {team.memberCount} {team.memberCount === 1 ? t("discover.member") : t("discover.members")}
                     </span>
 
                     {team.isMember ? (
                       <Link
                         href={`/teams/${team.id}`}
-                        className="inline-flex items-center space-x-1 text-green-600 text-sm font-semibold"
+                        className="inline-flex items-center space-x-1 text-green-600 dark:text-green-400 text-sm font-semibold"
                       >
                         <CheckCircle className="w-4 h-4" />
-                        <span>Üyesin</span>
+                        <span>{t("discover.isMember")}</span>
                       </Link>
                     ) : team.hasPendingRequest ? (
-                      <span className="inline-flex items-center space-x-1 text-yellow-600 text-sm font-semibold">
+                      <span className="inline-flex items-center space-x-1 text-yellow-600 dark:text-yellow-400 text-sm font-semibold">
                         <Clock className="w-4 h-4" />
-                        <span>Beklemede</span>
+                        <span>{t("discover.pending")}</span>
                       </span>
                     ) : (
                       <button
                         onClick={() => handleJoinRequest(team.id)}
                         disabled={sendingRequest === team.id}
-                        className="inline-flex items-center space-x-1 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-semibold transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                        className="inline-flex items-center space-x-1 px-4 py-2 bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 rounded-lg text-white text-sm font-semibold transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
                       >
                         <UserPlus className="w-4 h-4" />
-                        <span>{sendingRequest === team.id ? "Gönderiliyor..." : "Katıl"}</span>
+                        <span>{sendingRequest === team.id ? t("discover.sending") : t("discover.join")}</span>
                       </button>
                     )}
                   </div>

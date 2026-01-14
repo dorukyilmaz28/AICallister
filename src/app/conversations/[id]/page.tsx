@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { User, MessageSquare, Settings, Calendar, Bot, ArrowLeft, Trash2, Home } from "lucide-react";
 import Loading from "@/components/Loading";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Message {
   role: "user" | "assistant";
@@ -31,6 +32,7 @@ export default function ConversationDetail() {
   const router = useRouter();
   const params = useParams();
   const conversationId = params.id as string;
+  const { t } = useLanguage();
   
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -57,11 +59,11 @@ export default function ConversationDetail() {
         setConversation(data.conversation);
         setMessages(data.messages);
       } else {
-        setError("Konuşma bulunamadı.");
+        setError(t("conversation.errorNotFound"));
       }
     } catch (error) {
       console.error("Error fetching conversation:", error);
-      setError("Konuşma yüklenirken hata oluştu.");
+      setError(t("conversation.errorLoading"));
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +72,7 @@ export default function ConversationDetail() {
   const handleDeleteConversation = async () => {
     if (!conversationId) return;
     
-    const confirmed = window.confirm("Bu konuşmayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.");
+    const confirmed = window.confirm(t("conversation.deleteConfirm"));
     if (!confirmed) return;
 
     setIsDeleting(true);
@@ -83,11 +85,11 @@ export default function ConversationDetail() {
         router.push("/profile");
       } else {
         const errorData = await response.json();
-        setError(errorData.error || "Konuşma silinirken hata oluştu.");
+        setError(errorData.error || t("conversation.errorDeleting"));
       }
     } catch (error) {
       console.error("Error deleting conversation:", error);
-      setError("Konuşma silinirken hata oluştu.");
+      setError(t("conversation.errorDeleting"));
     } finally {
       setIsDeleting(false);
     }
@@ -104,18 +106,18 @@ export default function ConversationDetail() {
   };
 
   const getContextLabel = (context: string) => {
-    const labels = {
-      general: "Genel FRC",
-      strategy: "Strateji",
-      mechanical: "Mekanik",
-      simulation: "Simülasyon",
+    const labels: Record<string, string> = {
+      general: t("conversation.context.general"),
+      strategy: t("conversation.context.strategy"),
+      mechanical: t("conversation.context.mechanical"),
+      simulation: t("conversation.context.simulation"),
     };
-    return labels[context as keyof typeof labels] || context;
+    return labels[context] || context;
   };
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <Loading />
       </div>
     );
@@ -127,15 +129,15 @@ export default function ConversationDetail() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="text-center">
-          <div className="text-gray-900 text-xl mb-4">{error}</div>
+          <div className="text-gray-900 dark:text-white text-xl mb-4">{error}</div>
           <Link
             href="/profile"
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white transition-colors"
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 rounded-lg text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Profile Dön</span>
+            <span>{t("conversation.backToProfile")}</span>
           </Link>
         </div>
       </div>
@@ -143,44 +145,44 @@ export default function ConversationDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Link
                 href="/profile"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm font-medium hidden sm:inline">Profil</span>
+                <span className="text-sm font-medium hidden sm:inline">{t("conversation.backToProfile")}</span>
               </Link>
-              <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+              <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block"></div>
               <img
                 src="/8f28b76859c1479d839d270409be3586.jpg"
                 alt="Callister Logo"
                 className="w-8 h-8 object-cover rounded-xl"
               />
-              <h1 className="text-base lg:text-lg font-bold text-gray-900">
-                Konuşma Detayı
+              <h1 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white">
+                {t("conversation.title")}
               </h1>
             </div>
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleDeleteConversation}
                 disabled={isDeleting}
-                className="p-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-red-600 transition-colors disabled:opacity-50"
-                title={isDeleting ? "Siliniyor..." : "Konuşmayı Sil"}
+                className="p-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 transition-colors disabled:opacity-50"
+                title={isDeleting ? t("conversation.deleting") : t("conversation.delete")}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
               <Link
                 href="/chat"
-                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
-                title="Yeni Sohbet"
+                className="px-4 py-2 bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 rounded-lg text-white text-sm font-medium transition-colors"
+                title={t("conversation.newChat")}
               >
-                Yeni Sohbet
+                {t("conversation.newChat")}
               </Link>
             </div>
           </div>
@@ -191,18 +193,18 @@ export default function ConversationDetail() {
         <div className="max-w-4xl mx-auto">
           {/* Conversation Info */}
           {conversation && (
-            <div className="bg-white rounded-2xl p-6 lg:p-8 mb-8 border border-gray-200 shadow-sm">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 mb-8 border border-gray-200 dark:border-gray-800 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">{conversation.title}</h2>
-                <div className="flex items-center space-x-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg">
-                  <Settings className="w-4 h-4 text-blue-600" />
-                  <span className="text-blue-700 text-sm font-medium">{getContextLabel(conversation.context)}</span>
+                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">{conversation.title}</h2>
+                <div className="flex items-center space-x-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <Settings className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-blue-700 dark:text-blue-400 text-sm font-medium">{getContextLabel(conversation.context)}</span>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                 <span className="flex items-center space-x-1">
                   <MessageSquare className="w-4 h-4" />
-                  <span>{conversation.messageCount} mesaj</span>
+                  <span>{conversation.messageCount} {t("conversation.messageCount")}</span>
                 </span>
                 <span className="flex items-center space-x-1">
                   <Calendar className="w-4 h-4" />
@@ -217,13 +219,13 @@ export default function ConversationDetail() {
           )}
 
           {/* Messages */}
-          <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-200 shadow-sm">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Mesajlar</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border border-gray-200 dark:border-gray-800 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t("conversation.messages")}</h3>
             
             {messages.length === 0 ? (
               <div className="text-center py-12">
-                <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600 text-lg">Bu konuşmada mesaj bulunmuyor</p>
+                <MessageSquare className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400 text-lg">{t("conversation.noMessages")}</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -243,7 +245,7 @@ export default function ConversationDetail() {
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                           message.role === "user"
-                            ? "bg-gray-900"
+                            ? "bg-gray-900 dark:bg-gray-800"
                             : "bg-gradient-to-br from-blue-500 to-purple-600"
                         }`}
                       >
@@ -256,8 +258,8 @@ export default function ConversationDetail() {
                       <div
                         className={`px-5 py-4 rounded-2xl max-w-full ${
                           message.role === "user"
-                            ? "bg-gray-900 text-white"
-                            : "bg-gray-50 border border-gray-200 text-gray-900"
+                            ? "bg-gray-900 dark:bg-gray-800 text-white"
+                            : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white"
                         }`}
                       >
                         <div 
@@ -269,7 +271,7 @@ export default function ConversationDetail() {
                               .replace(/\n/g, '<br>')
                           }}
                         />
-                        <div className={`text-xs mt-2 ${message.role === "user" ? "text-gray-300" : "text-gray-500"}`}>
+                        <div className={`text-xs mt-2 ${message.role === "user" ? "text-gray-300 dark:text-gray-400" : "text-gray-500 dark:text-gray-400"}`}>
                           {formatDate(message.createdAt)}
                         </div>
                       </div>

@@ -3,12 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages, Image as ImageIcon, XCircle, FileText, Search, Type } from "lucide-react";
+import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages, Image as ImageIcon, XCircle, FileText, Search, Type, Moon, Sun } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github.css';
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "next-themes";
 
 interface Message {
   role: "user" | "assistant";
@@ -42,6 +43,7 @@ const contextConfig = {
 export function FRCChat() {
   const { data: session } = useSession();
   const { language, setLanguage, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const [selectedMode, setSelectedMode] = useState<Mode>("frc");
   
   const getWelcomeMessage = () => {
@@ -342,8 +344,20 @@ export function FRCChat() {
                 className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
               >
-                <Languages className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">{language.toUpperCase()}</span>
+                <Languages className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{language.toUpperCase()}</span>
+              </button>
+              
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                title={theme === "dark" ? "Light mode" : "Dark mode"}
+              >
+                {theme === "dark" ? (
+                  <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                ) : (
+                  <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                )}
               </button>
               
               <Link
@@ -364,7 +378,7 @@ export function FRCChat() {
               
               <button
                 onClick={clearChat}
-                className="flex items-center space-x-2 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
                 <span className="text-sm font-medium">{t("common.clear")}</span>
@@ -383,13 +397,38 @@ export function FRCChat() {
           {/* Mobile menu */}
           {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-2 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+              <button
+                onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
+                className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                <Languages className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{language.toUpperCase()}</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  setTheme(theme === "dark" ? "light" : "dark");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                {theme === "dark" ? (
+                  <Sun className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                ) : (
+                  <Moon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                )}
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                </span>
+              </button>
+              
               <Link
                 href="/"
                 className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <Home className="w-4 h-4" />
-                <span className="text-sm font-medium">Ana Sayfa</span>
+                <span className="text-sm font-medium">{t("common.home")}</span>
               </Link>
               
               <Link
@@ -398,7 +437,7 @@ export function FRCChat() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <UserCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">Profil</span>
+                <span className="text-sm font-medium">{t("common.profile")}</span>
               </Link>
               
               <button
@@ -406,10 +445,10 @@ export function FRCChat() {
                   clearChat();
                   setMobileMenuOpen(false);
                 }}
-                className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
-                <span className="text-sm font-medium">Temizle</span>
+                <span className="text-sm font-medium">{t("common.clear")}</span>
               </button>
             </div>
           )}
@@ -793,7 +832,7 @@ export function FRCChat() {
             <button
               onClick={sendMessage}
               disabled={(!inputMessage.trim() && uploadedImages.length === 0 && uploadedPDFs.length === 0) || isLoading}
-              className="px-6 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 flex-shrink-0"
+              className="px-6 py-3 rounded-xl bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 flex-shrink-0 shadow-md"
             >
               <Send className="w-4 h-4" />
               <span className="hidden sm:inline">{t("chat.send")}</span>

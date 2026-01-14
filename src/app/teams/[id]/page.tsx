@@ -824,7 +824,7 @@ export default function TeamDetailPage() {
                   <button
                     type="submit"
                     disabled={!newMessage.trim() || isSending}
-                    className="px-4 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md hover:shadow-lg disabled:shadow-none"
+                    className="px-4 py-3 bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 text-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md hover:shadow-lg disabled:shadow-none"
                   >
                     <Send className="w-5 h-5" />
                   </button>
