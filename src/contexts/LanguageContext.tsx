@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
 
 type Language = "tr" | "en";
 
@@ -31,6 +32,9 @@ const translations = {
     "common.edit": "Düzenle",
     "common.search": "Ara",
     "common.clear": "Temizle",
+    "common.dashboard": "Dashboard",
+    "common.academy": "Academy",
+    "common.admin": "Admin",
     
     // Home page
     "home.title": "Callister AI",
@@ -73,7 +77,7 @@ const translations = {
     "home.cta.subtitle": "Daha iyi robotlar inşa etmek, daha temiz kod yazmak ve daha fazla maç kazanmak için Callister AI kullanan takımlara katılın.",
     "home.cta.button": "Hemen Başla",
     "home.footer.copyright": "© 2025 Callister FRC AI. Tüm hakları saklıdır.",
-    "home.footer.powered": "OpenAI, The Blue Alliance ve WPILib tarafından desteklenmektedir",
+    "home.footer.powered": "The Blue Alliance ve WPILib tarafından desteklenmektedir",
     "home.badge": "Gelişmiş AI ile Güçlendirildi",
     "home.signin": "Giriş Yap",
     "home.getStarted": "Başla",
@@ -211,6 +215,9 @@ const translations = {
     "common.edit": "Edit",
     "common.search": "Search",
     "common.clear": "Clear",
+    "common.dashboard": "Dashboard",
+    "common.academy": "Academy",
+    "common.admin": "Admin",
     
     // Home page
     "home.title": "Callister AI",
@@ -253,7 +260,7 @@ const translations = {
     "home.cta.subtitle": "Join teams using Callister AI to build better robots, write cleaner code, and win more matches.",
     "home.cta.button": "Get Started Now",
     "home.footer.copyright": "© 2025 Callister FRC AI. All rights reserved.",
-    "home.footer.powered": "Powered by OpenAI, The Blue Alliance & WPILib",
+    "home.footer.powered": "Powered by The Blue Alliance & WPILib",
     "home.badge": "Powered by Advanced AI",
     "home.signin": "Sign In",
     "home.getStarted": "Get Started",
@@ -375,7 +382,7 @@ const translations = {
   }
 };
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
+export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("tr");
 
   useEffect(() => {
@@ -392,6 +399,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   const t = (key: string): string => {
+    // @ts-expect-error - Dynamic key access is safe here
     const langTranslations = translations[language] as Record<string, string>;
     return langTranslations[key] || key;
   };

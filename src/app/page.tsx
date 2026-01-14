@@ -40,7 +40,7 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors inline-flex items-center gap-1"
               >
-                Academy
+                {t("common.academy")}
                 <ExternalLink className="h-3 w-3" />
               </a>
               <Link href="/code-snippets" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
@@ -51,12 +51,12 @@ export default function Home() {
               </Link>
               {isAuthenticated && (
                 <Link href="/dashboard" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
-                  Dashboard
+                  {t("common.dashboard")}
                 </Link>
               )}
               {session?.user.role === "admin" && (
                 <Link href="/teams/admin" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
-                  Admin
+                  {t("common.admin")}
                 </Link>
               )}
             </nav>
@@ -139,7 +139,7 @@ export default function Home() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors inline-flex items-center gap-1"
                 >
-                  Academy
+                  {t("common.academy")}
                   <ExternalLink className="h-3 w-3" />
                 </a>
                 <Link
@@ -162,7 +162,7 @@ export default function Home() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
                   >
-                    Dashboard
+                    {t("common.dashboard")}
                   </Link>
                 )}
                 {session?.user.role === "admin" && (
@@ -171,7 +171,7 @@ export default function Home() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
                   >
-                    Admin
+                    {t("common.admin")}
                   </Link>
                 )}
               </nav>
@@ -346,15 +346,7 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
-              <div className="w-16 h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Bot className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{t("home.technology.openai.title")}</h3>
-              <p className="text-gray-600 dark:text-gray-300">{t("home.technology.openai.desc")}</p>
-            </div>
-            
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Trophy className="w-8 h-8 text-white" />
