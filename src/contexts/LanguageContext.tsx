@@ -399,7 +399,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   };
 
   const t = (key: string): string => {
-    // @ts-expect-error - Dynamic key access is safe here
     const langTranslations = translations[language] as Record<string, string>;
     return langTranslations[key] || key;
   };
