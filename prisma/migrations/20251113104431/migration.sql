@@ -1,0 +1,64 @@
+-- CreateTable
+CREATE TABLE "code_snippets" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "code" TEXT NOT NULL,
+    "language" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "isPublic" BOOLEAN NOT NULL DEFAULT false,
+    "shareToken" TEXT,
+    "viewCount" INTEGER NOT NULL DEFAULT 0,
+    "favoriteCount" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "code_snippets_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_favorite_snippets" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "snippetId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "user_favorite_snippets_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "conversation_shares" (
+    "id" TEXT NOT NULL,
+    "conversationId" TEXT NOT NULL,
+    "shareToken" TEXT NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "expiresAt" TIMESTAMP(3),
+    "viewCount" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "conversation_shares_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "code_snippets_shareToken_key" ON "code_snippets"("shareToken");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_favorite_snippets_userId_snippetId_key" ON "user_favorite_snippets"("userId", "snippetId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "conversation_shares_shareToken_key" ON "conversation_shares"("shareToken");
+
+-- AddForeignKey
+ALTER TABLE "code_snippets" ADD CONSTRAINT "code_snippets_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_favorite_snippets" ADD CONSTRAINT "user_favorite_snippets_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_favorite_snippets" ADD CONSTRAINT "user_favorite_snippets_snippetId_fkey" FOREIGN KEY ("snippetId") REFERENCES "code_snippets"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "conversation_shares" ADD CONSTRAINT "conversation_shares_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "conversations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
