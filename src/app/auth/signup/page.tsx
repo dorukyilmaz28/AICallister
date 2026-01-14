@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Mail, Lock, Eye, EyeOff, User, Users, ArrowRight, CheckCircle, XCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, Users, ArrowRight, CheckCircle, XCircle, Languages } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SignUp() {
+  const { language, setLanguage, t } = useLanguage();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,13 +65,13 @@ export default function SignUp() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Şifreler eşleşmiyor!");
+      setError(t("auth.signup.passwordMismatch"));
       setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError("Şifre en az 6 karakter olmalıdır!");
+      setError(t("auth.signup.passwordMinLength"));
       setIsLoading(false);
       return;
     }
@@ -91,12 +93,12 @@ export default function SignUp() {
       const data = await response.json();
 
       if (response.ok) {
-        window.location.href = "/auth/signin?message=Kayıt başarılı! Giriş yapabilirsiniz.";
+        window.location.href = `/auth/signin?message=${t("auth.signup.successMessage")}`;
       } else {
-        setError(data.error || "Kayıt sırasında bir hata oluştu.");
+        setError(data.error || t("auth.signup.registerError"));
       }
     } catch (error) {
-      setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+      setError(t("auth.signup.genericError"));
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +107,18 @@ export default function SignUp() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 py-12 transition-colors">
       <div className="w-full max-w-md px-4">
+        {/* Language Toggle */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
+            className="flex items-center space-x-2 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+          >
+            <Languages className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{language.toUpperCase()}</span>
+          </button>
+        </div>
+
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center space-x-3 mb-8 group">
@@ -116,10 +130,10 @@ export default function SignUp() {
             <span className="text-2xl font-bold text-gray-900 dark:text-white">Callister AI</span>
           </Link>
           <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3">
-            Hesap Oluşturun
+            {t("auth.signup.title")}
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300">
-            FRC AI asistanına katılın
+            {t("auth.signup.subtitle")}
           </p>
         </div>
 
@@ -137,7 +151,7 @@ export default function SignUp() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="name" className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Ad Soyad
+                {t("auth.signup.name")}
               </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -148,14 +162,14 @@ export default function SignUp() {
                   onChange={(e) => setName(e.target.value)}
                   required
                   className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Adınız Soyadınız"
+                  placeholder={t("auth.namePlaceholder")}
                 />
               </div>
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Email
+                {t("auth.signin.email")}
               </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -166,14 +180,14 @@ export default function SignUp() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="ornek@email.com"
+                  placeholder={t("auth.emailPlaceholder")}
                 />
               </div>
             </div>
 
             <div>
               <label htmlFor="teamNumber" className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                FRC Takım Numarası
+                {t("auth.signup.teamNumber")}
               </label>
               <div className="relative">
                 <Users className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -225,7 +239,7 @@ export default function SignUp() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Şifre
+                {t("auth.signin.password")}
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -236,7 +250,7 @@ export default function SignUp() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full pl-12 pr-12 py-3 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="••••••••"
+                  placeholder={t("auth.passwordPlaceholder")}
                 />
                 <button
                   type="button"
@@ -250,7 +264,7 @@ export default function SignUp() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Şifre Tekrar
+                {t("auth.signup.passwordConfirm")}
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -261,7 +275,7 @@ export default function SignUp() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   className="w-full pl-12 pr-12 py-3 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="••••••••"
+                  placeholder={t("auth.passwordPlaceholder")}
                 />
                 <button
                   type="button"
@@ -278,7 +292,7 @@ export default function SignUp() {
               disabled={isLoading}
               className="w-full py-3.5 px-4 bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 rounded-xl text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
             >
-              <span>{isLoading ? "Kayıt oluşturuluyor..." : "Kayıt Ol"}</span>
+              <span>{isLoading ? t("auth.signup.loading") : t("auth.signup.submit")}</span>
               {!isLoading && <ArrowRight className="w-5 h-5" />}
             </button>
           </form>
@@ -286,12 +300,12 @@ export default function SignUp() {
           {/* Footer */}
           <div className="mt-8 text-center">
             <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Zaten hesabınız var mı?{" "}
+              {t("auth.signup.hasAccount")}{" "}
               <Link
                 href="/auth/signin"
                 className="text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 font-semibold transition-colors"
               >
-                Giriş yapın
+                {t("auth.signup.signinLink")}
               </Link>
             </p>
           </div>
@@ -303,7 +317,7 @@ export default function SignUp() {
             href="/"
             className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
-            ← Ana sayfaya dön
+            ← {t("auth.backToHome")}
           </Link>
         </div>
       </div>

@@ -108,7 +108,7 @@ export default function Home() {
                     className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
                   >
                     <span className="hidden sm:inline">{t("home.signin")}</span>
-                    <span className="sm:hidden">Giriş</span>
+                    <span className="sm:hidden">{t("home.signin")}</span>
                   </Link>
                   <Link
                     href="/auth/signup"
