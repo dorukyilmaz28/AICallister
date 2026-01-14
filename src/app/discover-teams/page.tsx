@@ -57,8 +57,6 @@ export default function DiscoverTeamsPage() {
     }
   }, [searchQuery, teams]);
 
-  const { t } = useLanguage();
-  
   const fetchTeams = async () => {
     try {
       setError("");
@@ -108,8 +106,6 @@ export default function DiscoverTeamsPage() {
       setSendingRequest(null);
     }
   };
-
-  const { t } = useLanguage();
 
   if (status === "loading" || isLoading) {
     return (
