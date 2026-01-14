@@ -248,6 +248,21 @@ const translations = {
     "teamChat.errorRemovingMember": "Üye çıkarılırken hata oluştu.",
     "teamChat.messages": "Mesajlar",
     "teamChat.teamInfoTitle": "Takım bilgileri",
+    
+    // Teams Page
+    "teams.myTeams": "Takımlarım",
+    "teams.noTeams": "Henüz hiç takımınız yok",
+    "teams.member": "üye",
+    "teams.members": "üye",
+    "teams.created": "Oluşturuldu:",
+    "teams.goToTeam": "Takıma Git",
+    "teams.sendJoinRequest": "Katılım İsteği Gönder",
+    "teams.joinRequestPlaceholder": "Neden bu takıma katılmak istediğinizi açıklayın...",
+    "teams.send": "Gönder",
+    "teams.cancel": "İptal",
+    "teams.joinRequestSuccess": "Katılım isteğiniz gönderildi!",
+    "teams.joinRequestError": "Lütfen katılım mesajınızı yazın.",
+    "teams.errorLoading": "Takımlar yüklenirken hata oluştu.",
   },
   en: {
     // Common
@@ -483,6 +498,21 @@ const translations = {
     "teamChat.errorRemovingMember": "An error occurred while removing member.",
     "teamChat.messages": "Messages",
     "teamChat.teamInfoTitle": "Team information",
+    
+    // Teams Page
+    "teams.myTeams": "My Teams",
+    "teams.noTeams": "You don't have any teams yet",
+    "teams.member": "member",
+    "teams.members": "members",
+    "teams.created": "Created:",
+    "teams.goToTeam": "Go to Team",
+    "teams.sendJoinRequest": "Send Join Request",
+    "teams.joinRequestPlaceholder": "Explain why you want to join this team...",
+    "teams.send": "Send",
+    "teams.cancel": "Cancel",
+    "teams.joinRequestSuccess": "Your join request has been sent!",
+    "teams.joinRequestError": "Please write your join message.",
+    "teams.errorLoading": "An error occurred while loading teams.",
   }
 };
 

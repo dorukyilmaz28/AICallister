@@ -34,7 +34,7 @@ interface Team {
 export default function TeamsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,11 +60,11 @@ export default function TeamsPage() {
         const data = await response.json();
         setTeams(data.teams);
       } else {
-        setError("Takımlar yüklenirken hata oluştu.");
+        setError(t("teams.errorLoading"));
       }
     } catch (error) {
       console.error("Error fetching teams:", error);
-      setError("Takımlar yüklenirken hata oluştu.");
+      setError(t("teams.errorLoading"));
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +76,7 @@ export default function TeamsPage() {
 
   const handleJoinRequest = async (teamId: string) => {
     if (!joinRequestMessage.trim()) {
-      setError("Lütfen katılım mesajınızı yazın.");
+      setError(t("teams.joinRequestError"));
       return;
     }
 
@@ -95,7 +95,7 @@ export default function TeamsPage() {
         setJoinRequestMessage("");
         setShowJoinForm(null);
         setError("");
-        alert("Katılım isteğiniz gönderildi!");
+        alert(t("teams.joinRequestSuccess"));
       } else {
         const errorData = await response.json();
         setError(errorData.error || "İstek gönderilirken hata oluştu.");
@@ -138,7 +138,7 @@ export default function TeamsPage() {
                 className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
-                <span className="hidden sm:inline text-sm font-medium">Profil</span>
+                <span className="hidden sm:inline text-sm font-medium">{t("common.profile")}</span>
               </Link>
               <div className="h-6 w-px bg-gray-200"></div>
               <div className="flex items-center space-x-3">
@@ -148,7 +148,7 @@ export default function TeamsPage() {
                   className="w-12 h-12 lg:w-16 lg:h-16 object-cover rounded-xl"
                 />
                 <h1 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
-                  Takımlarım
+                  {t("teams.myTeams")}
                 </h1>
               </div>
             </div>
@@ -164,34 +164,34 @@ export default function TeamsPage() {
               <Link
                 href="/"
                 className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
-                title="Ana Sayfa"
+                title={t("common.home")}
               >
                 <Home className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">Ana Sayfa</span>
+                <span className="hidden sm:inline text-sm font-medium">{t("common.home")}</span>
               </Link>
               <Link
                 href="/chat"
                 className="flex items-center space-x-2 px-3 py-2 bg-blue-100 dark:bg-blue-900/40 hover:bg-blue-200 dark:hover:bg-blue-900/60 rounded-lg text-blue-600 dark:text-blue-300 transition-colors"
-                title="AI Asistan"
+                title={t("common.chat")}
               >
                 <Bot className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">AI Asistan</span>
+                <span className="hidden sm:inline text-sm font-medium">{t("common.chat")}</span>
               </Link>
               <Link
                 href="/discover-teams"
                 className="flex items-center space-x-2 px-3 py-2 bg-green-100 dark:bg-green-900/40 hover:bg-green-200 dark:hover:bg-green-900/60 rounded-lg text-green-600 dark:text-green-300 transition-colors"
-                title="Takım Keşfet"
+                title={t("common.discover")}
               >
                 <Search className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">Takım Keşfet</span>
+                <span className="hidden sm:inline text-sm font-medium">{t("common.discover")}</span>
               </Link>
               <button
                 onClick={handleSignOut}
                 className="flex items-center space-x-2 px-3 py-2 bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 rounded-lg text-red-600 dark:text-red-300 transition-colors"
-                title="Çıkış Yap"
+                title={t("common.signout")}
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">Çıkış Yap</span>
+                <span className="hidden sm:inline text-sm font-medium">{t("common.signout")}</span>
               </button>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function TeamsPage() {
               <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Users className="w-10 h-10 text-gray-400" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Henüz hiç takımınız yok</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t("teams.noTeams")}</h3>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -247,18 +247,18 @@ export default function TeamsPage() {
                       <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
                         <Users className="w-3 h-3 text-blue-600" />
                       </div>
-                      <span className="text-gray-600 dark:text-gray-300">{team._count.members} üye</span>
+                      <span className="text-gray-600 dark:text-gray-300">{team._count.members} {t("teams.member")}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
                         <MessageSquare className="w-3 h-3 text-purple-600" />
                       </div>
-                      <span className="text-gray-600 dark:text-gray-300">{team._count.chats} mesaj</span>
+                      <span className="text-gray-600 dark:text-gray-300">{team._count.chats} {t("teamChat.message")}</span>
                     </div>
                   </div>
                   
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                    Oluşturuldu: {formatDate(team.createdAt)}
+                    {t("teams.created")} {formatDate(team.createdAt)}
                   </div>
                   
                   <div className="space-y-2">
@@ -266,7 +266,7 @@ export default function TeamsPage() {
                       href={`/teams/${team.id}`}
                       className="block w-full px-4 py-2.5 bg-gray-900 hover:bg-gray-800 rounded-xl text-white text-center font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
                     >
-                      Takıma Git
+                      {t("teams.goToTeam")}
                     </Link>
                     
                     {/* Katılım İsteği Butonu */}
@@ -274,7 +274,7 @@ export default function TeamsPage() {
                       onClick={() => setShowJoinForm(team.id)}
                       className="w-full px-4 py-2.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-700 rounded-xl text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-200 transition-colors duration-200 text-sm font-semibold"
                     >
-                      Katılım İsteği Gönder
+                      {t("teams.sendJoinRequest")}
                     </button>
                     
                     {/* Katılım İsteği Formu */}
@@ -283,7 +283,7 @@ export default function TeamsPage() {
                         <textarea
                           value={joinRequestMessage}
                           onChange={(e) => setJoinRequestMessage(e.target.value)}
-                          placeholder="Neden bu takıma katılmak istediğinizi açıklayın..."
+                          placeholder={t("teams.joinRequestPlaceholder")}
                           className="w-full px-3 py-2 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm mb-3 resize-none"
                           rows={3}
                         />
@@ -292,7 +292,7 @@ export default function TeamsPage() {
                             onClick={() => handleJoinRequest(team.id)}
                             className="flex-1 px-3 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white transition-colors duration-200 text-sm font-semibold"
                           >
-                            Gönder
+                            {t("teams.send")}
                           </button>
                           <button
                             onClick={() => {
@@ -301,7 +301,7 @@ export default function TeamsPage() {
                             }}
                             className="flex-1 px-3 py-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors duration-200 text-sm font-semibold"
                           >
-                            İptal
+                            {t("teams.cancel")}
                           </button>
                         </div>
                       </div>
