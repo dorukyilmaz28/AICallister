@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Plus, Bot, ArrowLeft, Settings, MessageSquare, Search, Home, Languages } from "lucide-react";
+import { User, LogOut, Users, Bot, ArrowLeft, Settings, MessageSquare, Search, Home, Languages } from "lucide-react";
 import Loading from "@/components/Loading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -39,15 +39,8 @@ export default function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
   const [joinRequestMessage, setJoinRequestMessage] = useState("");
   const [showJoinForm, setShowJoinForm] = useState<string | null>(null);
-
-  // Form state
-  const [teamName, setTeamName] = useState("");
-  const [teamDescription, setTeamDescription] = useState("");
-  const [teamNumber, setTeamNumber] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -74,48 +67,6 @@ export default function TeamsPage() {
       setError("Takımlar yüklenirken hata oluştu.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleCreateTeam = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!teamName.trim()) {
-      setError("Takım adı gereklidir.");
-      return;
-    }
-
-    setIsCreating(true);
-    try {
-      const response = await fetch("/api/teams", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: teamName.trim(),
-          description: teamDescription.trim() || undefined,
-          teamNumber: teamNumber.trim() || undefined,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setTeams([data.team, ...teams]);
-        setTeamName("");
-        setTeamDescription("");
-        setTeamNumber("");
-        setShowCreateForm(false);
-        setError("");
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Takım oluşturulurken hata oluştu.");
-      }
-    } catch (error) {
-      console.error("Error creating team:", error);
-      setError("Takım oluşturulurken hata oluştu.");
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -226,14 +177,6 @@ export default function TeamsPage() {
                 <Bot className="w-4 h-4" />
                 <span className="hidden sm:inline text-sm font-medium">AI Asistan</span>
               </Link>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-purple-100 dark:bg-purple-900/40 hover:bg-purple-200 dark:hover:bg-purple-900/60 rounded-lg text-purple-600 dark:text-purple-300 transition-colors"
-                title="Takım Oluştur"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">Takım Oluştur</span>
-              </button>
               <Link
                 href="/discover-teams"
                 className="flex items-center space-x-2 px-3 py-2 bg-green-100 dark:bg-green-900/40 hover:bg-green-200 dark:hover:bg-green-900/60 rounded-lg text-green-600 dark:text-green-300 transition-colors"
@@ -264,76 +207,6 @@ export default function TeamsPage() {
             </div>
           )}
 
-          {/* Create Team Form */}
-          {showCreateForm && (
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 md:p-8 mb-8 border border-gray-200 dark:border-gray-800 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Yeni Takım Oluştur</h2>
-                <button
-                  onClick={() => setShowCreateForm(false)}
-                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                >
-                  ×
-                </button>
-              </div>
-              <form onSubmit={handleCreateTeam} className="space-y-5">
-                <div>
-                  <label className="block text-gray-900 dark:text-gray-100 text-sm font-semibold mb-2">
-                    Takım Adı *
-                  </label>
-                  <input
-                    type="text"
-                    value={teamName}
-                    onChange={(e) => setTeamName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                    placeholder="Örn: Callister Robotics"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-900 dark:text-gray-100 text-sm font-semibold mb-2">
-                    Takım Numarası
-                  </label>
-                  <input
-                    type="text"
-                    value={teamNumber}
-                    onChange={(e) => setTeamNumber(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                    placeholder="Örn: 9024"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-900 dark:text-gray-100 text-sm font-semibold mb-2">
-                    Açıklama
-                  </label>
-                  <textarea
-                    value={teamDescription}
-                    onChange={(e) => setTeamDescription(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
-                    placeholder="Takımınız hakkında kısa bir açıklama..."
-                    rows={3}
-                  />
-                </div>
-                <div className="flex items-center space-x-3 pt-2">
-                  <button
-                    type="submit"
-                    disabled={isCreating}
-                    className="px-6 py-3 bg-gradient-to-br from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                  >
-                    {isCreating ? "Oluşturuluyor..." : "Takım Oluştur"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateForm(false)}
-                    className="px-6 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-200 font-semibold transition-colors"
-                  >
-                    İptal
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
           {/* Teams List */}
           {teams.length === 0 ? (
             <div className="text-center py-16">
@@ -341,13 +214,6 @@ export default function TeamsPage() {
                 <Users className="w-10 h-10 text-gray-400" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Henüz hiç takımınız yok</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-6">İlk takımınızı oluşturarak başlayın</p>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="px-6 py-3 bg-gradient-to-br from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                İlk Takımınızı Oluşturun
-              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

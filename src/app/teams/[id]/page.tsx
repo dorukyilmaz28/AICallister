@@ -47,7 +47,7 @@ export default function TeamDetailPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const teamId = params.id as string;
   
   const [team, setTeam] = useState<Team | null>(null);
@@ -217,7 +217,7 @@ export default function TeamDetailPage() {
   };
 
   const handleDeleteMessage = async (messageId: string) => {
-    if (!confirm("Bu mesajı silmek istediğinizden emin misiniz?")) {
+    if (!confirm(t("teamChat.deleteConfirm"))) {
       return;
     }
 
@@ -246,7 +246,7 @@ export default function TeamDetailPage() {
   };
 
   const handleClearAllMessages = async () => {
-    if (!confirm("TÜM MESAJLARI silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz!")) {
+    if (!confirm(t("teamChat.deleteAllConfirm"))) {
       return;
     }
 
@@ -266,16 +266,16 @@ export default function TeamDetailPage() {
         setMessages([]);
       } else {
         const errorData = await response.json();
-        setError(errorData.error || "Mesajlar silinirken hata oluştu.");
+        setError(errorData.error || t("teamChat.errorDeletingMessages"));
       }
     } catch (error) {
       console.error("Error clearing all messages:", error);
-      setError("Mesajlar silinirken hata oluştu.");
+      setError(t("teamChat.errorDeletingMessages"));
     }
   };
 
   const handleRemoveMember = async (userId: string, userName: string) => {
-    if (!confirm(`${userName} kullanıcısını takımdan çıkarmak istediğinizden emin misiniz?`)) {
+    if (!confirm(`${userName} ${t("teamChat.removeMemberConfirm")}`)) {
       return;
     }
 
@@ -287,16 +287,16 @@ export default function TeamDetailPage() {
       if (response.ok) {
         const data = await response.json();
         // Başarı mesajı göster
-        alert(data.message || "Üye başarıyla çıkarıldı.");
+        alert(data.message || t("teamChat.memberRemoved"));
         // Takım bilgilerini yeniden yükle
         fetchTeam();
       } else {
         const errorData = await response.json();
-        setError(errorData.error || "Üye çıkarılırken hata oluştu.");
+        setError(errorData.error || t("teamChat.errorRemovingMember"));
       }
     } catch (error) {
       console.error("Error removing member:", error);
-      setError("Üye çıkarılırken hata oluştu.");
+      setError(t("teamChat.errorRemovingMember"));
     }
   };
 
@@ -326,11 +326,11 @@ export default function TeamDetailPage() {
     switch (role) {
       case "captain":
       case "manager":
-        return "Yönetici";
+        return t("teamChat.role.admin");
       case "mentor":
-        return "Mentor";
+        return t("teamChat.role.mentor");
       default:
-        return "Üye";
+        return t("teamChat.role.member");
     }
   };
 
@@ -409,14 +409,14 @@ export default function TeamDetailPage() {
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
               >
                 <Bot className="w-4 h-4" />
-                <span className="hidden sm:inline">AI Sohbet</span>
+                <span className="hidden sm:inline">{t("teamChat.aiChat")}</span>
               </Link>
               <button
                 onClick={handleSignOut}
                 className="flex items-center space-x-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 text-sm font-medium transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Çıkış Yap</span>
+                <span className="hidden sm:inline">{t("teamChat.signOut")}</span>
               </button>
             </div>
           </div>
@@ -427,7 +427,7 @@ export default function TeamDetailPage() {
           <div className="bg-yellow-50 border-b border-yellow-200 px-4 sm:px-6 lg:px-8 py-2">
             <div className="container mx-auto">
               <p className="text-yellow-800 text-sm font-medium">
-                Katılım isteğiniz gönderildi. Yönetici onayı bekleniyor.
+                {t("teamChat.pendingRequest")}
               </p>
             </div>
           </div>
@@ -439,7 +439,7 @@ export default function TeamDetailPage() {
           {/* Team Info Sidebar - Modern Design */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm sticky top-24">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Takım Bilgileri</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t("teamChat.teamInfo")}</h2>
               
               {team?.description && (
                 <p className="text-gray-600 dark:text-gray-300 text-sm mb-6 leading-relaxed">{team.description}</p>
@@ -451,8 +451,8 @@ export default function TeamDetailPage() {
                     <Users className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                   </div>
                   <div>
-                    <p className="text-gray-500 dark:text-gray-400 text-xs">Üyeler</p>
-                    <p className="text-gray-900 dark:text-white font-semibold">{team?.members.length} kişi</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">{t("teamChat.members")}</p>
+                    <p className="text-gray-900 dark:text-white font-semibold">{team?.members.length} {t("teamChat.person")}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
@@ -460,16 +460,16 @@ export default function TeamDetailPage() {
                     <MessageSquare className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                   </div>
                   <div>
-                    <p className="text-gray-500 dark:text-gray-400 text-xs">Mesajlar</p>
-                    <p className="text-gray-900 dark:text-white font-semibold">{team?.chats.length} mesaj</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">{t("teamChat.messages")}</p>
+                    <p className="text-gray-900 dark:text-white font-semibold">{team?.chats.length} {t("teamChat.message")}</p>
                   </div>
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 pt-2">
-                  Oluşturuldu: {team && formatDate(team.createdAt)}
+                  {t("teamChat.created")} {team && formatDate(team.createdAt)}
                 </div>
               </div>
 
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Takım Üyeleri</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t("teamChat.teamMembers")}</h3>
               <div className="space-y-2">
                 {team?.members.map((member) => (
                   <div
@@ -496,7 +496,7 @@ export default function TeamDetailPage() {
                       <button
                         onClick={() => handleRemoveMember(member.user.id, member.user.name)}
                         className="opacity-0 group-hover:opacity-100 p-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 hover:text-red-700 transition-all duration-200"
-                        title={`${member.user.name} kullanıcısını çıkar`}
+                        title={`${member.user.name} ${t("teamChat.removeUser")}`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -513,12 +513,12 @@ export default function TeamDetailPage() {
               {/* Chat Header */}
               <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-t-2xl">
                 <div className="flex items-center space-x-3">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">Takım Sohbeti</h3>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t("teamChat.title")}</h3>
                   {/* Mobile Team Info Button */}
                   <button
                     onClick={() => setShowTeamInfo(!showTeamInfo)}
                     className="lg:hidden p-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
-                    title="Takım bilgileri"
+                    title={t("teamChat.teamInfoTitle")}
                   >
                     <Info className="w-4 h-4" />
                   </button>
@@ -527,7 +527,7 @@ export default function TeamDetailPage() {
                     <Link
                       href={`/teams/${teamId}/admin`}
                       className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
-                      title="Admin Paneli"
+                      title={t("teamChat.adminPanel")}
                     >
                       <Settings2 className="w-4 h-4" />
                     </Link>
@@ -536,7 +536,7 @@ export default function TeamDetailPage() {
                   <button
                     onClick={toggleNotifications}
                     className="relative p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
-                    title="Bildirimler"
+                    title={t("teamChat.notifications")}
                   >
                     <Bell className="w-4 h-4" />
                     {unreadCount > 0 && (
@@ -550,11 +550,11 @@ export default function TeamDetailPage() {
                   <button
                     onClick={handleClearAllMessages}
                     className="flex items-center space-x-2 px-3 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 hover:text-red-700 transition-colors text-sm font-medium"
-                    title="Tüm mesajları sil"
+                    title={t("teamChat.deleteAllMessages")}
                   >
                     <Trash className="w-4 h-4" />
-                    <span className="hidden sm:inline">Tümünü Sil</span>
-                    <span className="sm:hidden">Sil</span>
+                    <span className="hidden sm:inline">{t("teamChat.deleteAll")}</span>
+                    <span className="sm:hidden">{t("teamChat.delete")}</span>
                   </button>
                 )}
               </div>
@@ -564,7 +564,7 @@ export default function TeamDetailPage() {
                 <div className="lg:hidden border-t border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-base font-bold text-gray-900 dark:text-white">Takım Bilgileri</h4>
+                      <h4 className="text-base font-bold text-gray-900 dark:text-white">{t("teamChat.teamInfo")}</h4>
                       <button
                         onClick={() => setShowTeamInfo(false)}
                         className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -581,25 +581,25 @@ export default function TeamDetailPage() {
                       <div className="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <Users className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                         <div>
-                          <p className="text-gray-500 dark:text-gray-400 text-xs">Üyeler</p>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">{t("teamChat.members")}</p>
                           <p className="text-gray-900 dark:text-white font-semibold text-sm">{team?.members.length}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <MessageSquare className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                         <div>
-                          <p className="text-gray-500 dark:text-gray-400 text-xs">Mesajlar</p>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">{t("teamChat.messages")}</p>
                           <p className="text-gray-900 dark:text-white font-semibold text-sm">{team?.chats.length}</p>
                         </div>
                       </div>
                     </div>
                     
                     <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-800">
-                      Oluşturuldu: {team && formatDate(team.createdAt)}
+                      {t("teamChat.created")} {team && formatDate(team.createdAt)}
                     </div>
                     
                     <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-800">
-                      <h5 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Takım Üyeleri</h5>
+                      <h5 className="text-sm font-bold text-gray-900 dark:text-white mb-3">{t("teamChat.teamMembers")}</h5>
                       {team?.members.map((member) => (
                         <div
                           key={member.id}
@@ -625,7 +625,7 @@ export default function TeamDetailPage() {
                             <button
                               onClick={() => handleRemoveMember(member.user.id, member.user.name)}
                               className="p-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 hover:text-red-700 transition-colors"
-                              title={`${member.user.name} kullanıcısını çıkar`}
+                              title={`${member.user.name} ${t("teamChat.removeUser")}`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -642,7 +642,7 @@ export default function TeamDetailPage() {
                 <div className="lg:hidden border-t border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-base font-bold text-gray-900 dark:text-white">Bildirimler</h4>
+                      <h4 className="text-base font-bold text-gray-900 dark:text-white">{t("teamChat.notifications")}</h4>
                       <button
                         onClick={() => setShowNotifications(false)}
                         className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -654,7 +654,7 @@ export default function TeamDetailPage() {
                     {notifications.length === 0 ? (
                       <div className="text-center py-8">
                         <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                        <p className="text-gray-600 dark:text-gray-300 text-sm">Henüz bildirim yok</p>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">{t("teamChat.noNotifications")}</p>
                       </div>
                     ) : (
                       <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -696,7 +696,7 @@ export default function TeamDetailPage() {
                 <div className="hidden lg:block relative">
                   <div className="absolute z-20 right-4 top-2 w-96 max-h-96 overflow-y-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-base font-bold text-gray-900 dark:text-white">Bildirimler</h4>
+                      <h4 className="text-base font-bold text-gray-900 dark:text-white">{t("teamChat.notifications")}</h4>
                       <button
                         onClick={() => setShowNotifications(false)}
                         className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -707,7 +707,7 @@ export default function TeamDetailPage() {
                     {notifications.length === 0 ? (
                       <div className="text-center py-8">
                         <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                        <p className="text-gray-600 dark:text-gray-300 text-sm">Henüz bildirim yok</p>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">{t("teamChat.noNotifications")}</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -749,8 +749,8 @@ export default function TeamDetailPage() {
                 {messages.length === 0 ? (
                   <div className="text-center py-12">
                     <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">Henüz mesaj yok</p>
-                    <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">İlk mesajı siz gönderin!</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">{t("teamChat.noMessages")}</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">{t("teamChat.sendFirstMessage")}</p>
                   </div>
                 ) : (
                   messages.map((message) => (
@@ -795,7 +795,7 @@ export default function TeamDetailPage() {
                                 <button
                                   onClick={() => handleDeleteMessage(message.id)}
                                   className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-white/20 rounded-full ml-2"
-                                  title="Mesajı sil"
+                                  title={t("teamChat.deleteMessage")}
                                 >
                                   <Trash2 className="w-3 h-3" />
                                 </button>
@@ -817,7 +817,7 @@ export default function TeamDetailPage() {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Mesaj yazın..."
+                    placeholder={t("teamChat.writeMessage")}
                     className="flex-1 px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm transition-all"
                     disabled={isSending}
                   />
