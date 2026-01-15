@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/ThemeProvider'
 import Link from 'next/link'
 import { Home } from 'lucide-react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -56,6 +57,7 @@ export default function RootLayout({
           </SessionProvider>
         </ThemeProvider>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   )
