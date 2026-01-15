@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages, Image as ImageIcon, XCircle, FileText, Search, Type, Moon, Sun } from "lucide-react";
+import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages, Moon, Sun } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -14,8 +14,6 @@ import { useTheme } from "next-themes";
 interface Message {
   role: "user" | "assistant";
   content: string;
-  images?: string[]; // Base64 data URIs veya URLs
-  pdfs?: { name: string; data: string }[]; // PDF dosyaları
 }
 
 type Context = "general" | "strategy" | "mechanical" | "simulation";
@@ -63,10 +61,6 @@ export function FRCChat() {
   const [selectedContext, setSelectedContext] = useState<Context>("general");
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]); // Base64 image URIs
-  const [uploadedPDFs, setUploadedPDFs] = useState<{name: string, data: string}[]>([]); // Base64 PDF URIs
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -86,97 +80,17 @@ export function FRCChat() {
     }
   }, [messages.length]); // Sadece mesaj sayısı değiştiğinde tetikle
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    Array.from(files).forEach((file) => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          if (result) {
-            setUploadedImages(prev => [...prev, result]);
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handlePDFUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20MB
-
-    Array.from(files).forEach((file) => {
-      if (file.type === 'application/pdf') {
-        // Dosya boyutu kontrolü
-        if (file.size > MAX_PDF_SIZE) {
-          alert(`PDF dosyası çok büyük: ${(file.size / 1024 / 1024).toFixed(2)}MB\nMaksimum boyut: 20MB`);
-          return;
-        }
-
-        const reader = new FileReader();
-        
-        reader.onerror = () => {
-          console.error("PDF okuma hatası");
-          alert(`PDF dosyası okunamadı: ${file.name}`);
-        };
-
-        reader.onload = (e) => {
-          try {
-            const result = e.target?.result as string;
-            if (result) {
-              setUploadedPDFs(prev => [...prev, { name: file.name, data: result }]);
-            }
-          } catch (error) {
-            console.error("PDF işleme hatası:", error);
-            alert(`PDF dosyası işlenirken hata oluştu: ${file.name}`);
-          }
-        };
-        
-        reader.readAsDataURL(file);
-      } else {
-        alert(`Geçersiz dosya tipi: ${file.name}\nLütfen PDF dosyası yükleyin.`);
-      }
-    });
-
-    // Reset input
-    if (pdfInputRef.current) {
-      pdfInputRef.current.value = '';
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setUploadedImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const removePDF = (index: number) => {
-    setUploadedPDFs(prev => prev.filter((_, i) => i !== index));
-  };
-
   const sendMessage = async () => {
-    if ((!inputMessage.trim() && uploadedImages.length === 0 && uploadedPDFs.length === 0) || isLoading) return;
+    if (!inputMessage.trim() || isLoading) return;
 
     const userMessage: Message = {
       role: "user",
-      content: inputMessage.trim() || (uploadedImages.length > 0 ? "Bu resimleri analiz et" : uploadedPDFs.length > 0 ? "Bu PDF'i analiz et" : ""),
-      images: uploadedImages.length > 0 ? [...uploadedImages] : undefined,
-      pdfs: uploadedPDFs.length > 0 ? [...uploadedPDFs] : undefined
+      content: inputMessage.trim()
     };
 
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInputMessage("");
-    setUploadedImages([]); // Clear uploaded images
-    setUploadedPDFs([]); // Clear uploaded PDFs
     setIsLoading(true);
     
     // Kullanıcı mesajı gönderildiğinde bir kere scroll yap
@@ -184,7 +98,6 @@ export function FRCChat() {
       scrollToBottom();
     }, 100);
     
-    // PDF'leri de message'a ekle (chat API'de handle edilecek)
     const messageData: any = {
       messages: newMessages,
       context: selectedContext,
@@ -192,16 +105,6 @@ export function FRCChat() {
       conversationId: conversationId,
       language: language,
     };
-    
-    if (uploadedPDFs.length > 0) {
-      // Sadece geçerli PDF'leri gönder
-      const validPDFs = uploadedPDFs.filter(pdf => pdf.data && pdf.data.length > 0);
-      if (validPDFs.length > 0) {
-        messageData.pdfs = validPDFs.map(pdf => ({ name: pdf.name, data: pdf.data }));
-      } else {
-        console.warn("Yüklenen PDF'ler geçersiz, gönderilmiyor");
-      }
-    }
 
     try {
       const response = await fetch('/api/chat', {
@@ -226,9 +129,8 @@ export function FRCChat() {
 
       const assistantMessage = data.messages[data.messages.length - 1];
       const assistantText = assistantMessage?.content || "";
-      const assistantImages = assistantMessage?.images || [];
 
-      setMessages(prev => [...prev, { role: "assistant", content: "", images: assistantImages }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
 
       let index = 0;
       const typingIntervalMs = 8; // Daha hızlı yazma efekti
@@ -242,8 +144,7 @@ export function FRCChat() {
             if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
               updated[lastIdx] = {
                 role: "assistant",
-                content: assistantText.slice(0, index),
-                images: assistantImages
+                content: assistantText.slice(0, index)
               };
             }
             return updated;
@@ -268,11 +169,7 @@ export function FRCChat() {
       
       // Daha spesifik hata mesajları
       if (error.message) {
-        if (error.message.includes("çok büyük") || error.message.includes("too large")) {
-          errorMessage = `PDF hatası: ${error.message}\n\nLütfen daha küçük bir PDF dosyası yükleyin (maksimum 20MB).`;
-        } else if (error.message.includes("işlenemedi") || error.message.includes("processing")) {
-          errorMessage = `PDF hatası: ${error.message}\n\nLütfen geçerli bir PDF dosyası yüklediğinizden emin olun.`;
-        } else if (error.message.includes("API") || error.message.includes("Gemini")) {
+        if (error.message.includes("API") || error.message.includes("Gemini")) {
           errorMessage = `AI servisi hatası: ${error.message}\n\nLütfen birkaç dakika sonra tekrar deneyin.`;
         }
       }
@@ -489,44 +386,6 @@ export function FRCChat() {
                         : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
                     }`}
                   >
-                    {/* PDF'leri göster */}
-                    {message.pdfs && message.pdfs.length > 0 && (
-                      <div className="mb-3 space-y-2">
-                        {message.pdfs.map((pdf, pdfIndex) => (
-                          <div key={pdfIndex} className={`inline-flex items-center space-x-2 px-3 py-2 rounded-lg border ${
-                            message.role === "user" 
-                              ? "bg-gray-800 border-gray-700" 
-                              : "bg-gray-100 border-gray-300"
-                          }`}>
-                            <FileText className={`w-5 h-5 flex-shrink-0 ${
-                              message.role === "user" ? "text-red-400" : "text-red-500"
-                            }`} />
-                            <span className={`text-sm font-medium ${
-                              message.role === "user" ? "text-gray-100" : "text-gray-700"
-                            } truncate max-w-[250px]`} title={pdf.name}>
-                              {pdf.name}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Resimleri göster */}
-                    {message.images && message.images.length > 0 && (
-                      <div className="mb-3 space-y-2">
-                        {message.images.map((img, imgIndex) => (
-                          <div key={imgIndex} className="relative inline-block">
-                            <img 
-                              src={img} 
-                              alt={`Uploaded image ${imgIndex + 1}`}
-                              className="max-w-xs rounded-lg border border-gray-200 dark:border-gray-700"
-                              style={{ maxHeight: "300px" }}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
                     {/* Mesaj içeriği */}
                     {message.content && (
                       <div className={`prose prose-sm max-w-none ${
@@ -597,228 +456,7 @@ export function FRCChat() {
       {/* Input */}
       <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-4 transition-colors">
         <div className="container mx-auto px-4 max-w-4xl">
-          {/* Yüklenen dosyalar önizlemesi */}
-            {(uploadedImages.length > 0 || uploadedPDFs.length > 0) && (
-            <div className="mb-3 space-y-3 bg-gray-50 dark:bg-gray-900 rounded-xl p-3 border border-gray-200 dark:border-gray-700">
-              {/* Resim önizlemeleri */}
-              {uploadedImages.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Yüklenen Resimler ({uploadedImages.length})</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                        {uploadedImages.map((img, index) => (
-                        <div key={index} className="relative inline-block group">
-                        <img 
-                          src={img} 
-                          alt={`Preview ${index + 1}`}
-                          className="w-24 h-24 object-cover rounded-lg border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 transition-colors"
-                        />
-                        <button
-                          onClick={() => removeImage(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                          title="Resmi kaldır"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Resim analizi hızlı butonları */}
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
-                    <button
-                      onClick={async () => {
-                        if (uploadedImages.length === 0) return;
-                        setIsLoading(true);
-                        try {
-                          const response = await fetch('/api/image/analyze', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              image: uploadedImages[0],
-                              task: 'analyze'
-                            })
-                          });
-                          const data = await response.json();
-                          if (data.error) throw new Error(data.error);
-                          
-                          const analysisMessage: Message = {
-                            role: "assistant",
-                            content: data.result,
-                            images: uploadedImages
-                          };
-                          setMessages(prev => [...prev, analysisMessage]);
-                        } catch (error: any) {
-                          console.error("Analysis error:", error);
-                          setMessages(prev => [...prev, {
-                            role: "assistant",
-                            content: "Resim analizi sırasında hata oluştu: " + error.message
-                          }]);
-                        } finally {
-                          setIsLoading(false);
-                        }
-                      }}
-                      disabled={isLoading || uploadedImages.length === 0}
-                      className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 shadow-sm"
-                      title="Resmi analiz et"
-                    >
-                      <Search className="w-4 h-4" />
-                      <span>Analiz Et</span>
-                    </button>
-                    
-                    <button
-                      onClick={async () => {
-                        if (uploadedImages.length === 0) return;
-                        setIsLoading(true);
-                        try {
-                          const response = await fetch('/api/image/analyze', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              image: uploadedImages[0],
-                              task: 'ocr'
-                            })
-                          });
-                          const data = await response.json();
-                          if (data.error) throw new Error(data.error);
-                          
-                          const ocrMessage: Message = {
-                            role: "assistant",
-                            content: `**Resimdeki Metin:**\n\n${data.result}`,
-                            images: uploadedImages
-                          };
-                          setMessages(prev => [...prev, ocrMessage]);
-                        } catch (error: any) {
-                          console.error("OCR error:", error);
-                          setMessages(prev => [...prev, {
-                            role: "assistant",
-                            content: "Metin okuma sırasında hata oluştu: " + error.message
-                          }]);
-                        } finally {
-                          setIsLoading(false);
-                        }
-                      }}
-                      disabled={isLoading || uploadedImages.length === 0}
-                      className="px-4 py-2 text-sm font-medium rounded-lg bg-green-500 hover:bg-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 shadow-sm"
-                      title="Resimdeki metni oku"
-                    >
-                      <Type className="w-4 h-4" />
-                      <span>Metni Oku</span>
-                    </button>
-                    
-                    <button
-                      onClick={async () => {
-                        if (uploadedImages.length === 0) return;
-                        setIsLoading(true);
-                        try {
-                          const response = await fetch('/api/image/detect', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              image: uploadedImages[0]
-                            })
-                          });
-                          const data = await response.json();
-                          if (data.error) throw new Error(data.error);
-                          
-                          const detections = Array.isArray(data.detections) ? data.detections : [data.detections];
-                          const detectionText = detections.map((det: any, idx: number) => 
-                            `${idx + 1}. **${det.label || 'Nesne'}**: Box [${det.box_2d?.join(', ') || 'N/A'}]`
-                          ).join('\n');
-                          
-                          const detectionMessage: Message = {
-                            role: "assistant",
-                            content: `**Tespit Edilen Nesneler:**\n\n${detectionText}`,
-                            images: uploadedImages
-                          };
-                          setMessages(prev => [...prev, detectionMessage]);
-                        } catch (error: any) {
-                          console.error("Detection error:", error);
-                          setMessages(prev => [...prev, {
-                            role: "assistant",
-                            content: "Nesne tespiti sırasında hata oluştu: " + error.message
-                          }]);
-                        } finally {
-                          setIsLoading(false);
-                        }
-                      }}
-                      disabled={isLoading || uploadedImages.length === 0}
-                      className="px-4 py-2 text-sm font-medium rounded-lg bg-purple-500 hover:bg-purple-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 shadow-sm"
-                      title="Nesneleri tespit et"
-                    >
-                      <Search className="w-4 h-4" />
-                      <span>Nesne Tespiti</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {/* PDF önizlemeleri */}
-              {uploadedPDFs.length > 0 && (
-                <div className="space-y-2 pt-2 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Yüklenen PDF'ler ({uploadedPDFs.length})</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {uploadedPDFs.map((pdf, index) => (
-                    <div key={index} className="relative inline-flex items-center space-x-2 px-3 py-2 bg-white dark:bg-gray-900 rounded-lg border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 transition-colors group">
-                        <FileText className="w-5 h-5 text-red-500" />
-                        <span className="text-sm text-gray-700 dark:text-gray-200 truncate max-w-[200px]" title={pdf.name}>
-                          {pdf.name}
-                        </span>
-                        <button
-                          onClick={() => removePDF(index)}
-                          className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                          title="PDF'i kaldır"
-                        >
-                          <XCircle className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          
           <div className="flex space-x-3">
-            {/* Resim yükleme butonu */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageUpload}
-              className="hidden"
-              id="image-upload"
-            />
-            <label
-              htmlFor="image-upload"
-              className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center space-x-2 flex-shrink-0"
-              title="Resim yükle"
-            >
-              <ImageIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            </label>
-            
-            {/* PDF yükleme butonu */}
-            <input
-              ref={pdfInputRef}
-              type="file"
-              accept="application/pdf"
-              multiple
-              onChange={handlePDFUpload}
-              className="hidden"
-              id="pdf-upload"
-            />
-            <label
-              htmlFor="pdf-upload"
-              className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center space-x-2 flex-shrink-0"
-              title="PDF yükle"
-            >
-              <FileText className="w-5 h-5 text-red-500" />
-            </label>
-            
             <textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
@@ -831,7 +469,7 @@ export function FRCChat() {
             
             <button
               onClick={sendMessage}
-              disabled={(!inputMessage.trim() && uploadedImages.length === 0 && uploadedPDFs.length === 0) || isLoading}
+              disabled={!inputMessage.trim() || isLoading}
               className="px-6 py-3 rounded-xl bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 flex-shrink-0 shadow-md"
             >
               <Send className="w-4 h-4" />

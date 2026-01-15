@@ -328,8 +328,8 @@ export async function POST(req: NextRequest) {
     console.log("Environment:", process.env.NODE_ENV);
     console.log("Vercel URL:", process.env.VERCEL_URL);
     
-    const { messages, context, conversationId, mode, language = "tr", pdfs } = await req.json();
-    console.log("Request data:", { messagesCount: messages?.length, context, conversationId, mode, language, pdfCount: pdfs?.length || 0 });
+    const { messages, context, conversationId, mode, language = "tr" } = await req.json();
+    console.log("Request data:", { messagesCount: messages?.length, context, conversationId, mode, language });
     
     // Kullanıcı oturumu kontrolü
     const session = await getServerSession(authOptions);
@@ -539,7 +539,6 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
     const lastMessages = messages.slice(-3); // Son 3 mesajı al
     
     // Gemini için mesaj formatı: role ve parts içeriyor
-    // Resim desteği: eğer mesajda image varsa, parts array'ine ekle
     for (const msg of lastMessages) {
       if (msg.role === "system") continue; // System mesajlarını atla (config'de olacak)
       
@@ -550,155 +549,11 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
         parts.push({ text: msg.content });
       }
       
-      // Resim desteği: eğer mesajda images array'i varsa
-      if ((msg as any).images && Array.isArray((msg as any).images)) {
-        // Async image processing için Promise.all kullan
-        const imageParts = await Promise.all(
-          (msg as any).images.map(async (img: string) => {
-            // Base64 image veya URL
-            if (img.startsWith('data:')) {
-              // Base64 data URI formatından mime type ve data'yı çıkar
-              const matches = img.match(/data:([^;]+);base64,(.+)/);
-              if (matches) {
-                return {
-                  inlineData: {
-                    mimeType: matches[1],
-                    data: matches[2]
-                  }
-                };
-              }
-            } else if (typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://'))) {
-              // URL'den resim indir ve base64'e çevir
-              try {
-                const imageResponse = await fetch(img);
-                if (imageResponse.ok) {
-                  const imageBuffer = await imageResponse.arrayBuffer();
-                  const base64Image = Buffer.from(imageBuffer).toString('base64');
-                  const mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
-                  
-                  return {
-                    inlineData: {
-                      mimeType: mimeType,
-                      data: base64Image
-                    }
-                  };
-                }
-              } catch (e) {
-                console.error("Image fetch error:", e);
-              }
-            }
-            return null;
-          })
-        );
-        
-        // Null olmayan image parts'ları ekle
-        for (const imgPart of imageParts) {
-          if (imgPart) {
-            parts.push(imgPart);
-          }
-        }
-      }
-      
       if (parts.length > 0) {
         contents.push({
           role: msg.role === "assistant" ? "model" : "user",
           parts: parts
         });
-      }
-    }
-
-    // PDF desteği: eğer request'te PDF'ler varsa, son user mesajına ekle
-    if (pdfs && Array.isArray(pdfs) && pdfs.length > 0) {
-      try {
-        // Son user mesajını bul veya yeni bir tane oluştur
-        let lastUserContent = contents[contents.length - 1];
-        if (!lastUserContent || lastUserContent.role !== "user") {
-          // Yeni bir user content oluştur
-          lastUserContent = {
-            role: "user",
-            parts: []
-          };
-          contents.push(lastUserContent);
-        }
-
-        // PDF'leri ekle (maksimum 20MB per PDF - Gemini limit)
-        const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20MB in bytes
-        const processedPDFs: string[] = [];
-        
-        for (const pdf of pdfs) {
-          try {
-            if (!pdf.data || typeof pdf.data !== 'string') {
-              console.warn(`PDF ${pdf.name || 'unknown'} has invalid data format`);
-              continue;
-            }
-
-            let pdfData: string;
-            let mimeType = 'application/pdf';
-
-            // Base64 PDF data URI formatından mime type ve data'yı çıkar
-            if (pdf.data.startsWith('data:')) {
-              const matches = pdf.data.match(/data:([^;]+);base64,(.+)/);
-              if (!matches || !matches[2]) {
-                console.warn(`PDF ${pdf.name || 'unknown'} has invalid data URI format`);
-                continue;
-              }
-              mimeType = matches[1] || 'application/pdf';
-              pdfData = matches[2];
-            } else {
-              // Direkt base64 data
-              pdfData = pdf.data;
-            }
-
-            // Base64 decode ederek gerçek boyutu kontrol et
-            try {
-              const decodedSize = Buffer.from(pdfData, 'base64').length;
-              if (decodedSize > MAX_PDF_SIZE) {
-                console.warn(`PDF ${pdf.name || 'unknown'} is too large: ${(decodedSize / 1024 / 1024).toFixed(2)}MB (max: 20MB)`);
-                throw new Error(`PDF dosyası çok büyük (${(decodedSize / 1024 / 1024).toFixed(2)}MB). Maksimum boyut: 20MB.`);
-              }
-            } catch (sizeError: any) {
-              if (sizeError.message.includes('çok büyük')) {
-                throw sizeError;
-              }
-              // Base64 decode hatası - geçersiz base64 olabilir
-              console.warn(`PDF ${pdf.name || 'unknown'} has invalid base64 data`);
-              continue;
-            }
-
-            // PDF verisini ekle
-            lastUserContent.parts.push({
-              inlineData: {
-                mimeType: mimeType,
-                data: pdfData
-              }
-            });
-            
-            processedPDFs.push(pdf.name || 'unknown');
-            console.log(`PDF ${pdf.name || 'unknown'} başarıyla işlendi (${(Buffer.from(pdfData, 'base64').length / 1024 / 1024).toFixed(2)}MB)`);
-          } catch (pdfError: any) {
-            console.error(`PDF ${pdf.name || 'unknown'} işlenirken hata:`, pdfError);
-            // PDF işleme hatası - devam et ama kullanıcıya bilgi ver
-            if (pdfError.message && pdfError.message.includes('çok büyük')) {
-              throw pdfError; // Boyut hatası için yukarı fırlat
-            }
-            // Diğer hatalar için devam et
-          }
-        }
-
-        if (processedPDFs.length === 0 && pdfs.length > 0) {
-          throw new Error("PDF dosyaları işlenemedi. Lütfen geçerli PDF dosyaları yükleyin.");
-        }
-
-        console.log(`${processedPDFs.length}/${pdfs.length} PDF başarıyla işlendi`);
-      } catch (pdfProcessingError: any) {
-        console.error("PDF işleme hatası:", pdfProcessingError);
-        return NextResponse.json(
-          { 
-            error: pdfProcessingError.message || "PDF dosyaları işlenirken bir hata oluştu. Lütfen tekrar deneyin.",
-            details: "PDF processing failed"
-          }, 
-          { status: 400 }
-        );
       }
     }
 
