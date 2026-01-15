@@ -626,9 +626,8 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
       );
     }
 
-    // Gemini response formatı: candidates[0].content.parts - hem text hem image olabilir
+    // Gemini response formatı: candidates[0].content.parts
     let aiResponse = "";
-    const aiImages: string[] = [];
     
     if (completion.candidates && completion.candidates.length > 0) {
       const candidate = completion.candidates[0];
@@ -639,20 +638,16 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
       } else if (candidate.finishReason === "RECITATION") {
         aiResponse = "Üzgünüm, telif hakkı koruması nedeniyle bu içeriği oluşturamıyorum.";
       } else if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
-        // Hem text hem image parts'ları işle
+        // Text parts'ları işle
         for (const part of candidate.content.parts) {
           if (part.text) {
             aiResponse += (aiResponse ? "\n\n" : "") + part.text;
-          } else if (part.inlineData && part.inlineData.data) {
-            // Resim varsa base64 data URI formatında ekle
-            const imageDataUri = `data:${part.inlineData.mimeType || "image/png"};base64,${part.inlineData.data}`;
-            aiImages.push(imageDataUri);
           }
         }
       }
     }
 
-    if (!aiResponse && aiImages.length === 0) {
+    if (!aiResponse) {
       // Eğer hiç yanıt yoksa, safety blocked olabilir
       if (completion.promptFeedback?.blockReason) {
         aiResponse = `Üzgünüm, mesajınız güvenlik nedeniyle engellendi: ${completion.promptFeedback.blockReason}. Lütfen mesajınızı yeniden formüle edin.`;
@@ -661,14 +656,11 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
       }
     }
 
-    // Assistant mesajı - text ve images destekli
+    // Assistant mesajı
     const assistantMessage: any = { 
       role: "assistant", 
-      content: aiResponse || "Resim üretildi." 
+      content: aiResponse
     };
-    if (aiImages.length > 0) {
-      assistantMessage.images = aiImages;
-    }
 
     const finalMessages = [...messages, assistantMessage];
 
