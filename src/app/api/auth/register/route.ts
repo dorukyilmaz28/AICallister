@@ -21,15 +21,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify team number with Blue Alliance API (optional)
-    let teamVerification: { isValid: boolean; team?: any; error?: string } = { isValid: true, team: null, error: undefined };
+    // Verify team number with Blue Alliance API (REQUIRED)
+    let teamVerification: { isValid: boolean; team?: any; error?: string } = { isValid: false, team: null, error: undefined };
     try {
       teamVerification = await verifyTeamNumber(teamNumber);
       if (!teamVerification.isValid) {
-        console.warn("Team verification failed:", teamVerification.error);
+        // Blue Alliance'da takım bulunamadı - kayıt engelleniyor
+        return NextResponse.json(
+          { 
+            error: teamVerification.error === "Takım bulunamadı" 
+              ? "Bu takım numarası The Blue Alliance sisteminde bulunamadı. Lütfen geçerli bir FRC takım numarası girin."
+              : teamVerification.error === "Bağlantı hatası"
+              ? "The Blue Alliance API'ye bağlanılamadı. Lütfen daha sonra tekrar deneyin."
+              : "Takım doğrulaması başarısız oldu. Lütfen geçerli bir FRC takım numarası girin."
+          },
+          { status: 400 }
+        );
       }
     } catch (apiError) {
-      console.warn("Blue Alliance API error:", apiError);
+      // API hatası durumunda kayıt engelleniyor
+      console.error("Blue Alliance API error:", apiError);
+      return NextResponse.json(
+        { 
+          error: "The Blue Alliance API'ye bağlanılamadı. Lütfen daha sonra tekrar deneyin."
+        },
+        { status: 503 }
+      );
     }
 
     // Create user
