@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamDb, teamMemberDb, userDb } from "@/lib/database";
 
 
@@ -23,9 +22,9 @@ interface TeamMember {
 // Takım oluşturma
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -50,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     // Takım oluşturan kişiyi yönetici olarak ekle
     await teamMemberDb.create({
-      userId: session.user.id,
+      userId: user.id,
       teamId: team.id,
       role: "captain" // Backward compatibility için captain kullanılıyor
     });
@@ -72,9 +71,9 @@ export async function POST(req: NextRequest) {
 // Kullanıcının takımlarını getir
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -82,7 +81,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Kullanıcının üye olduğu takımları bul
-    const userMemberships = await teamMemberDb.findByUserId(session.user.id);
+    const userMemberships = await teamMemberDb.findByUserId(user.id);
     const teamIds = userMemberships.map((m: TeamMember) => m.teamId);
     
     // Tüm takımları getir ve filtrele
