@@ -16,19 +16,23 @@ function getApiBaseUrl(): string {
   
   if (isCapacitor) {
     // Capacitor'da HER ZAMAN production URL'i kullan (localhost/local IP çalışmaz)
-    // Environment variable varsa onu kullan, yoksa production URL'i kullan
-    // www ile kullan (CORS için gerekli - origin www.callisterai.com)
+    // www.callisterai.com üzerinden çalışıyoruz, API de aynı domain'de olmalı
     const productionUrl = 'https://www.callisterai.com';
     
-    // Eğer API_BASE_URL localhost veya local IP ise, production URL kullan
+    // Eğer API_BASE_URL localhost, local IP, veya HTTP ise, production URL kullan
     const isLocalUrl = API_BASE_URL.includes('localhost') || 
                        API_BASE_URL.includes('127.0.0.1') || 
-                       API_BASE_URL.match(/^http:\/\/192\.168\.\d+\.\d+/);
+                       API_BASE_URL.startsWith('http://') || // HTTP reddet (HTTPS gerekli)
+                       API_BASE_URL.match(/192\.168\.\d+\.\d+/) || // Local IP
+                       API_BASE_URL.match(/10\.\d+\.\d+\.\d+/) || // Private IP
+                       API_BASE_URL.match(/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+/); // Private IP range
     
-    const url = (API_BASE_URL && !isLocalUrl) ? API_BASE_URL : productionUrl;
+    // Capacitor'da HER ZAMAN production URL kullan (güvenlik ve CORS için)
+    const url = productionUrl;
     
-    console.log('[API] Capacitor detected, using URL:', url);
+    console.log('[API] Capacitor detected, forcing production URL:', url);
     console.log('[API] Original API_BASE_URL was:', API_BASE_URL);
+    console.log('[API] Is local URL?', isLocalUrl);
     return url;
   }
   
