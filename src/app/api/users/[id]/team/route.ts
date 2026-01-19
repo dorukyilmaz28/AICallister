@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamMemberDb, teamDb, prisma, userDb } from "@/lib/database";
 
 
@@ -9,9 +8,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -21,7 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id: userId } = await params;
 
     // Kullanıcının kendi bilgilerini sorguladığını kontrol et
-    if (userId !== session.user.id) {
+    if (userId !== user.id) {
       return NextResponse.json(
         { error: "Yetkisiz erişim." },
         { status: 403 }

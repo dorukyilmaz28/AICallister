@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { prisma } from "@/lib/database";
 
 // Force dynamic rendering (Vercel serverless function)
@@ -13,9 +12,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -37,7 +36,7 @@ export async function POST(
     const existingFavorite = await prisma.userFavoriteSnippet.findUnique({
       where: {
         userId_snippetId: {
-          userId: session.user.id,
+          userId: user.id,
           snippetId: id
         }
       }
@@ -66,7 +65,7 @@ export async function POST(
       // Favorilere ekle
       await prisma.userFavoriteSnippet.create({
         data: {
-          userId: session.user.id,
+          userId: user.id,
           snippetId: id
         }
       });

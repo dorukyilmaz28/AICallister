@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { conversationDb } from "@/lib/database";
 
 
@@ -19,16 +18,16 @@ interface Conversation {
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
       );
     }
 
-    const conversations = await conversationDb.findByUserId(session.user.id);
+    const conversations = await conversationDb.findByUserId(user.id);
 
     const formattedConversations = conversations.map((conv: Conversation) => ({
       id: conv.id,

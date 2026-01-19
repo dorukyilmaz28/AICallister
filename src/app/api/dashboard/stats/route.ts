@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { prisma } from "@/lib/database";
 
 
@@ -10,16 +9,16 @@ export const dynamic = 'force-dynamic';
 // GET /api/dashboard/stats - Get user dashboard statistics
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Giriş yapmanız gerekiyor." },
         { status: 401 }
       );
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
 
     // Get conversation stats
     const totalConversations = await prisma.conversation.count({

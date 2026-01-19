@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamNotificationDb, teamMemberDb } from "@/lib/database";
 
 
@@ -10,9 +9,9 @@ export const dynamic = 'force-dynamic';
 // Takım bildirimlerini getir
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -23,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Takım üyesi kontrolü
     const members = await teamMemberDb.findByTeamId(teamId);
-    const isMember = members.some((m: any) => m.userId === session.user.id);
+    const isMember = members.some((m: any) => m.userId === user.id);
 
     if (!isMember) {
       return NextResponse.json(
@@ -52,9 +51,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // Bildirimi okundu olarak işaretle
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -66,7 +65,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // Takım üyesi kontrolü
     const members = await teamMemberDb.findByTeamId(teamId);
-    const isMember = members.some((m: any) => m.userId === session.user.id);
+    const isMember = members.some((m: any) => m.userId === user.id);
 
     if (!isMember) {
       return NextResponse.json(

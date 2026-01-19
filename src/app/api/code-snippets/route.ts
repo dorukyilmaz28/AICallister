@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { prisma } from "@/lib/database";
 import { randomBytes } from "crypto";
 
@@ -10,7 +9,7 @@ export const dynamic = 'force-dynamic';
 // GET: Tüm snippet'leri getir (public ve kullanıcının kendi snippet'leri)
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
     const language = searchParams.get("language");
@@ -21,10 +20,10 @@ export async function GET(req: NextRequest) {
 
     if (onlyPublic) {
       where.isPublic = true;
-    } else if (session?.user?.id) {
+    } else if (user?.id) {
       // Kullanıcının kendi snippet'leri veya public snippet'ler
       where.OR = [
-        { userId: session.user.id },
+        { userId: user.id },
         { isPublic: true }
       ];
     } else {
@@ -59,9 +58,9 @@ export async function GET(req: NextRequest) {
             email: true
           }
         },
-        favorites: session?.user?.id ? {
+        favorites: user?.id ? {
           where: {
-            userId: session.user.id
+            userId: user.id
           }
         } : false,
         _count: {
@@ -95,9 +94,9 @@ export async function GET(req: NextRequest) {
 // POST: Yeni snippet oluştur
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -126,7 +125,7 @@ export async function POST(req: NextRequest) {
         tags: tags || [],
         isPublic: isPublic || false,
         shareToken,
-        userId: session.user.id
+        userId: user.id
       },
       include: {
         user: {

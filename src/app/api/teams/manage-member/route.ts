@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { userDb, teamDb, teamMemberDb, teamJoinRequestDb, prisma } from "@/lib/database";
 
 
@@ -9,9 +8,9 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
     
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -28,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Kullanıcının takım yöneticisi olduğunu kontrol et
-    const currentUser = await userDb.findById(session.user.id);
+    const currentUser = await userDb.findById(user.id);
     if (!currentUser || currentUser.role !== "admin" || !currentUser.teamId) {
       return NextResponse.json(
         { error: "Bu işlem için yetkiniz yok." },
@@ -54,7 +53,7 @@ export async function POST(req: NextRequest) {
       }
 
       // İsteği onayla (teamJoinRequestDb.approve kullanarak)
-      await teamJoinRequestDb.approve(joinRequest.id, session.user.id);
+      await teamJoinRequestDb.approve(joinRequest.id, user.id);
       
       return NextResponse.json(
         { message: "Kullanıcı başarıyla onaylandı." },
@@ -78,7 +77,7 @@ export async function POST(req: NextRequest) {
       }
 
       // İsteği reddet
-      await teamJoinRequestDb.reject(joinRequest.id, session.user.id);
+      await teamJoinRequestDb.reject(joinRequest.id, user.id);
       
       return NextResponse.json(
         { message: "Kullanıcı reddedildi." },

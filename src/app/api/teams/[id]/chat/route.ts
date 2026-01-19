@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamDb, teamMemberDb, teamChatDb, userDb } from "@/lib/database";
 
 
@@ -36,9 +35,9 @@ interface ChatMessage {
 // Takım sohbetine mesaj gönderme
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -57,7 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Kullanıcının takımda olup olmadığını kontrol et
     const members = await teamMemberDb.findByTeamId(teamId);
-    const isMember = members.some((m: TeamMember) => m.userId === session.user.id);
+    const isMember = members.some((m: TeamMember) => m.userId === user.id);
 
     if (!isMember) {
       return NextResponse.json(
@@ -68,21 +67,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Mesajı kaydet
     const chatMessage = await teamChatDb.create({
-      userId: session.user.id,
+      userId: user.id,
       teamId: teamId,
       content: content.trim()
     });
 
     // Kullanıcı bilgilerini getir
-    const user = await userDb.findById(session.user.id);
+    const userData = await userDb.findById(user.id);
 
     return NextResponse.json({
       message: {
         ...chatMessage,
-        user: user ? {
-          id: user.id,
-          name: user.name,
-          email: user.email
+        user: userData ? {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email
         } : null
       }
     });
@@ -99,9 +98,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 // Takım sohbetini getir
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -112,7 +111,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Kullanıcının takımda olup olmadığını kontrol et
     const members = await teamMemberDb.findByTeamId(teamId);
-    const isMember = members.some((m: TeamMember) => m.userId === session.user.id);
+    const isMember = members.some((m: TeamMember) => m.userId === user.id);
 
     if (!isMember) {
       return NextResponse.json(
@@ -155,9 +154,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // Mesaj silme veya tüm mesajları temizleme
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -169,7 +168,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     // Kullanıcının takımda olup olmadığını kontrol et
     const members = await teamMemberDb.findByTeamId(teamId);
-    const isMember = members.some((m: TeamMember) => m.userId === session.user.id);
+    const isMember = members.some((m: TeamMember) => m.userId === user.id);
 
     if (!isMember) {
       return NextResponse.json(
@@ -180,7 +179,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     if (clearAll) {
       // Tüm mesajları temizle
-      await teamChatDb.clearAll(teamId, session.user.id);
+      await teamChatDb.clearAll(teamId, user.id);
       return NextResponse.json({
         message: "Tüm mesajlar başarıyla silindi."
       });
@@ -193,7 +192,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         );
       }
 
-      await teamChatDb.delete(messageId, session.user.id);
+      await teamChatDb.delete(messageId, user.id);
       return NextResponse.json({
         message: "Mesaj başarıyla silindi."
       });

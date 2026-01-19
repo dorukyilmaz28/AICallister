@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { prisma } from "@/lib/database";
 import { randomBytes } from "crypto";
 
@@ -14,7 +13,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
     const snippet = await prisma.codeSnippet.findUnique({
       where: { id },
@@ -27,9 +26,9 @@ export async function GET(
             role: true
           }
         },
-        favorites: session?.user?.id ? {
+        favorites: user?.id ? {
           where: {
-            userId: session.user.id
+            userId: user.id
           }
         } : false,
         _count: {
@@ -48,7 +47,7 @@ export async function GET(
     }
 
     // Public değilse ve kullanıcı sahibi değilse erişim yok
-    if (!snippet.isPublic && snippet.userId !== session?.user?.id) {
+    if (!snippet.isPublic && snippet.userId !== user?.id) {
       return NextResponse.json(
         { error: "Bu snippet'e erişim yetkiniz yok." },
         { status: 403 }
@@ -71,8 +70,8 @@ export async function GET(
         favoriteCount: snippet._count.favorites,
         isFavorite: snippet.favorites && snippet.favorites.length > 0,
         // Seed edilmiş (admin tarafından oluşturulmuş) snippet'lerde silme izni verme
-        isDeletable: !!session?.user?.id 
-          && snippet.userId === session.user.id 
+        isDeletable: !!user?.id 
+          && snippet.userId === user.id 
           && snippet.user.role !== "admin"
       }
     });
@@ -93,9 +92,9 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -113,7 +112,7 @@ export async function PUT(
       );
     }
 
-    if (snippet.userId !== session.user.id) {
+    if (snippet.userId !== user.id) {
       return NextResponse.json(
         { error: "Bu snippet'i düzenleme yetkiniz yok." },
         { status: 403 }
@@ -163,9 +162,9 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -183,7 +182,7 @@ export async function DELETE(
       );
     }
 
-    if (snippet.userId !== session.user.id) {
+    if (snippet.userId !== user.id) {
       return NextResponse.json(
         { error: "Bu snippet'i silme yetkiniz yok." },
         { status: 403 }

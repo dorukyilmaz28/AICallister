@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamDb, teamMemberDb, userDb, teamChatDb, teamJoinRequestDb, teamNotificationDb, prisma } from "@/lib/database";
 
 
@@ -23,9 +22,9 @@ interface TeamMember {
 // Takıma katılma (katılım isteği oluşturur, doğrudan üye yapmaz)
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -46,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Zaten takımda mı?
     const existingMembers = await teamMemberDb.findByTeamId(teamId);
-    const existingMember = existingMembers.find((m: TeamMember) => m.userId === session.user.id);
+    const existingMember = existingMembers.find((m: TeamMember) => m.userId === user.id);
 
     if (existingMember) {
       return NextResponse.json(
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Bekleyen istek var mı?
     const pendingRequest = await prisma.teamJoinRequest.findFirst({
       where: {
-        userId: session.user.id,
+        userId: user.id,
         teamId,
         status: 'pending'
       }
@@ -74,7 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Katılım isteği oluştur
     await prisma.teamJoinRequest.create({
       data: {
-        userId: session.user.id,
+        userId: user.id,
         teamId,
         status: 'pending'
       }
@@ -86,7 +85,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       "join_request",
       "Yeni Katılım İsteği",
       "Bir kullanıcı takıma katılmak istiyor.",
-      session.user.id
+      user.id
     );
 
     return NextResponse.json({
@@ -105,9 +104,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 // Takım detaylarını getir
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -149,18 +148,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     );
 
     // Kullanıcının takımda olup olmadığını kontrol et
-    const isMember = members.some((m: TeamMember) => m.userId === session.user.id);
+    const isMember = members.some((m: TeamMember) => m.userId === user.id);
 
     // Takım sohbetlerini getir
     const chats = await teamChatDb.findByTeamId(teamId);
 
     // Kullanıcının bu takım için bekleyen katılım isteği var mı?
     let pendingJoinRequest = false;
-    if (!isMember && session.user.id) {
+    if (!isMember && user.id) {
       const existingPending = await prisma.teamJoinRequest.findFirst({
         where: {
           teamId: teamId,
-          userId: session.user.id,
+          userId: user.id,
           status: 'pending'
         }
       });

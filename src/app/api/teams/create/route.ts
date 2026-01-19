@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamDb, userDb } from "@/lib/database";
 
 
@@ -9,9 +8,9 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
     
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -33,13 +32,13 @@ export async function POST(req: NextRequest) {
       name,
       teamNumber,
       description,
-      adminId: session.user.id
+      adminId: user.id
     });
 
     // Kullanıcıyı takım yöneticisi yap
-    await userDb.updateRole(session.user.id, "admin");
-    await userDb.updateStatus(session.user.id, "approved");
-    await userDb.updateTeamId(session.user.id, team.id);
+    await userDb.updateRole(user.id, "admin");
+    await userDb.updateStatus(user.id, "approved");
+    await userDb.updateTeamId(user.id, team.id);
 
     return NextResponse.json(
       { 

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { conversationDb, userDb } from "@/lib/database";
 
 
@@ -12,9 +11,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -26,7 +25,7 @@ export async function GET(
     // Konuşmayı getir
     const conversation = await conversationDb.findById(conversationId);
 
-    if (!conversation || conversation.userId !== session.user.id) {
+    if (!conversation || conversation.userId !== user.id) {
       return NextResponse.json(
         { error: "Konuşma bulunamadı." },
         { status: 404 }
@@ -34,7 +33,7 @@ export async function GET(
     }
 
     // Kullanıcı bilgilerini getir
-    const user = await userDb.findById(session.user.id);
+    const userData = await userDb.findById(user.id);
 
     // Mesajları formatla
     const formattedMessages = conversation.messages?.map((msg: any) => ({
@@ -51,7 +50,7 @@ export async function GET(
         createdAt: conversation.createdAt,
         updatedAt: conversation.updatedAt,
         messageCount: conversation.messages?.length || 0,
-        user: user ? { name: user.name, email: user.email } : null,
+        user: userData ? { name: userData.name, email: userData.email } : null,
       },
       messages: formattedMessages,
     });
@@ -70,9 +69,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -82,7 +81,7 @@ export async function DELETE(
     const { id: conversationId } = await params;
 
     // Konuşmayı sil
-    await conversationDb.delete(conversationId, session.user.id);
+    await conversationDb.delete(conversationId, user.id);
 
     return NextResponse.json({
       message: "Konuşma başarıyla silindi.",

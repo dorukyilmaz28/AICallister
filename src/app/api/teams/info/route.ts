@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamDb, userDb, teamJoinRequestDb } from "@/lib/database";
 
 
@@ -9,16 +8,16 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
     
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
       );
     }
 
-    const currentUser = await userDb.findById(session.user.id);
+    const currentUser = await userDb.findById(user.id);
     
     if (!currentUser || !currentUser.teamId) {
       return NextResponse.json(

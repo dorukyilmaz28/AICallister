@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamJoinRequestDb } from "@/lib/database";
 import { prisma } from "@/lib/database";
 
@@ -11,9 +10,9 @@ export const dynamic = 'force-dynamic';
 // Takım katılım isteklerini getir (sadece admin)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -24,12 +23,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Admin kontrolü: Takım yöneticisi (Team.adminId) ya da yetkili üye
     const team = await prisma.team.findUnique({ where: { id: teamId } });
-    const isTeamAdmin = team?.adminId === session.user.id;
+    const isTeamAdmin = team?.adminId === user.id;
 
     const adminMember = await prisma.teamMember.findFirst({
       where: {
         teamId: teamId,
-        userId: session.user.id,
+        userId: user.id,
         role: { in: ['captain', 'manager', 'mentor'] }
       }
     });
@@ -57,9 +56,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // Takım katılım isteği oluştur
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -69,7 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { id: teamId } = await params;
     const { message } = await req.json();
 
-    const request = await teamJoinRequestDb.create(session.user.id, teamId, message);
+    const request = await teamJoinRequestDb.create(user.id, teamId, message);
 
     return NextResponse.json({
       message: "Katılım isteği gönderildi.",
