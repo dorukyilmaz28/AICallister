@@ -10,30 +10,37 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://www.callisterai
 function getApiBaseUrl(): string {
   if (typeof window === 'undefined') return API_BASE_URL;
   
-  // Capacitor'da https://localhost kullanılıyorsa backend'e yönlendir
-  const isCapacitor = Capacitor.isNativePlatform() || 
-                      (window.location.hostname === 'localhost' && window.location.protocol === 'https:');
+  // Capacitor tespiti: Native platform veya Server Mode (www.callisterai.com üzerinden)
+  const isNativePlatform = Capacitor.isNativePlatform();
+  const isServerMode = window.location.hostname === 'www.callisterai.com' || 
+                       window.location.hostname === 'callisterai.com' ||
+                       (window.location.hostname === 'localhost' && window.location.protocol === 'https:');
+  const isCapacitor = isNativePlatform || isServerMode;
+  
+  // Production URL - HER ZAMAN kullan
+  const productionUrl = 'https://www.callisterai.com';
   
   if (isCapacitor) {
-    // Capacitor'da HER ZAMAN production URL'i kullan (localhost/local IP çalışmaz)
-    // www.callisterai.com üzerinden çalışıyoruz, API de aynı domain'de olmalı
-    const productionUrl = 'https://www.callisterai.com';
-    
-    // Eğer API_BASE_URL localhost, local IP, veya HTTP ise, production URL kullan
-    const isLocalUrl = API_BASE_URL.includes('localhost') || 
-                       API_BASE_URL.includes('127.0.0.1') || 
-                       API_BASE_URL.startsWith('http://') || // HTTP reddet (HTTPS gerekli)
-                       API_BASE_URL.match(/192\.168\.\d+\.\d+/) || // Local IP
-                       API_BASE_URL.match(/10\.\d+\.\d+\.\d+/) || // Private IP
-                       API_BASE_URL.match(/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+/); // Private IP range
-    
     // Capacitor'da HER ZAMAN production URL kullan (güvenlik ve CORS için)
-    const url = productionUrl;
-    
-    console.log('[API] Capacitor detected, forcing production URL:', url);
+    // Local IP, HTTP, veya localhost kullanma
+    console.log('[API] Capacitor detected (native:', isNativePlatform, 'server mode:', isServerMode, ')');
+    console.log('[API] Forcing production URL:', productionUrl);
     console.log('[API] Original API_BASE_URL was:', API_BASE_URL);
-    console.log('[API] Is local URL?', isLocalUrl);
-    return url;
+    console.log('[API] Window location:', window.location.href);
+    return productionUrl;
+  }
+  
+  // Web'de de local URL kontrolü yap
+  const isLocalUrl = API_BASE_URL.includes('localhost') || 
+                     API_BASE_URL.includes('127.0.0.1') || 
+                     API_BASE_URL.startsWith('http://') ||
+                     API_BASE_URL.match(/192\.168\.\d+\.\d+/) ||
+                     API_BASE_URL.match(/10\.\d+\.\d+\.\d+/) ||
+                     API_BASE_URL.match(/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+/);
+  
+  if (isLocalUrl) {
+    console.warn('[API] Local URL detected in web mode, using production URL');
+    return productionUrl;
   }
   
   return API_BASE_URL;
