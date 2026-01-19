@@ -297,7 +297,7 @@ export const authApi = {
   login: async (email: string, password: string) => {
     try {
       const response = await api.post<{ token: string; user: any }>(
-        '/api/auth/login',
+        '/api/login',
         { email, password },
         { requireAuth: false }
       );

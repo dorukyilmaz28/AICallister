@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -56,8 +55,8 @@ export default function DashboardPage() {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await fetch("/api/dashboard/stats");
-      const data = await response.json();
+      const { api } = await import('@/lib/api');
+      const data = await api.get("/api/dashboard/stats");
       setStats(data);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);

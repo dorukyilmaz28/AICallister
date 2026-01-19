@@ -1,0 +1,19 @@
+<!-- Bu dosyayı android/app/src/main/res/xml/network_security_config.xml olarak kaydedin -->
+<!-- HTTP backend için gerekli (Android 9+) -->
+
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Development için HTTP izni -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- Production için HTTPS zorunluluğu (opsiyonel) -->
+    <!--
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">your-backend-api.com</domain>
+    </domain-config>
+    -->
+</network-security-config>

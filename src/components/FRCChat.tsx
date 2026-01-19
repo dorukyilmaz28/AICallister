@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+// Token-based auth (useSession removed)
 import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages, Moon, Sun } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -39,7 +39,6 @@ const contextConfig = {
 };
 
 export function FRCChat() {
-  const { data: session } = useSession();
   const { language, setLanguage, t } = useLanguage();
   const { theme, setTheme } = useTheme();
   const [selectedMode, setSelectedMode] = useState<Mode>("frc");
@@ -107,21 +106,8 @@ export function FRCChat() {
     };
 
     try {
-      const response = await fetch('/api/chat', {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(messageData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || `HTTP hatası! Durum: ${response.status}`;
-        throw new Error(errorMsg);
-      }
-
-      const data = await response.json();
+      const { api } = await import('@/lib/api');
+      const data = await api.post('/api/chat', messageData);
       
       if (data.error) {
         throw new Error(data.error);
@@ -353,8 +339,8 @@ export function FRCChat() {
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950 transition-colors">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950 transition-colors overscroll-contain">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl pb-safe">
           <div className="space-y-6">
             {messages.map((message, index) => (
               <div
@@ -454,25 +440,26 @@ export function FRCChat() {
       </div>
 
       {/* Input */}
-      <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-4 transition-colors">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="flex space-x-3">
+      <div className="sticky bottom-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 py-3 sm:py-4 transition-colors safe-area-bottom">
+        <div className="container mx-auto px-3 sm:px-4 max-w-4xl">
+          <div className="flex space-x-2 sm:space-x-3">
             <textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={t("chat.placeholder")}
-              className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm sm:text-base"
               rows={1}
-              style={{ minHeight: "48px", maxHeight: "120px" }}
+              style={{ minHeight: "44px", maxHeight: "120px" }}
             />
             
             <button
               onClick={sendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="px-6 py-3 rounded-xl bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 flex-shrink-0 shadow-md"
+              className="px-4 sm:px-6 py-3 rounded-xl bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2 flex-shrink-0 shadow-md min-w-[48px]"
+              aria-label={t("chat.send")}
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4 flex-shrink-0" />
               <span className="hidden sm:inline">{t("chat.send")}</span>
             </button>
           </div>

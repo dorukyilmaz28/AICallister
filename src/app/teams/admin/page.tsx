@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+// Token-based auth for Capacitor (useSession removed)
 import { useRouter } from "next/navigation";
 import { 
   Users, 
@@ -51,42 +51,43 @@ interface TeamInfo {
 }
 
 export default function TeamAdminPanel() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
   const [teamInfo, setTeamInfo] = useState<TeamInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    if (status === "loading") return;
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
     
-    if (!session) {
+    if (!token || !userStr) {
       router.push("/auth/signin");
       return;
     }
 
-    if (session.user.role !== "admin") {
-      router.push("/");
-      return;
+    try {
+      const userData = JSON.parse(userStr);
+      if (userData.role !== "admin") {
+        router.push("/");
+        return;
+      }
+      setUser(userData);
+      fetchTeamInfo();
+    } catch (e) {
+      router.push("/auth/signin");
     }
-
-    fetchTeamInfo();
-  }, [session, status, router]);
+  }, [router]);
 
   const fetchTeamInfo = async () => {
     try {
-      const response = await fetch("/api/teams/info");
-      const data = await response.json();
-      
-      if (response.ok) {
-        setTeamInfo(data);
-      } else {
-        setError(data.error);
-      }
-    } catch (error) {
-      setError(t("admin.errorFetchingTeam"));
+      const { api } = await import('@/lib/api');
+      const data = await api.get("/api/teams/info");
+      setTeamInfo(data);
+    } catch (error: any) {
+      setError(error.message || t("admin.errorFetchingTeam"));
     } finally {
       setLoading(false);
     }
@@ -97,21 +98,9 @@ export default function TeamAdminPanel() {
     setError("");
 
     try {
-      const response = await fetch("/api/teams/manage-member", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId, action }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        await fetchTeamInfo();
-      } else {
-        setError(data.error);
-      }
+      const { api } = await import('@/lib/api');
+      await api.post("/api/teams/manage-member", { userId, action });
+      await fetchTeamInfo();
     } catch (error) {
       setError(t("admin.errorProcessing"));
     } finally {

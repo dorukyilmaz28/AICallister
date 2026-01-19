@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -17,38 +16,40 @@ interface Conversation {
 }
 
 export default function Profile() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [teamInfo, setTeamInfo] = useState<{ teamId: string; teamName: string; teamNumber?: string } | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (!token || !userStr) {
       router.push("/auth/signin");
       return;
     }
 
-    if (session) {
+    try {
+      const userData = JSON.parse(userStr);
+      setUser(userData);
       fetchConversations();
-      fetchTeamInfo();
+      
+      if (userData.status === "approved") {
+        fetchTeamInfo(userData.id);
+      }
+    } catch (e) {
+      router.push("/auth/signin");
     }
-  }, [session, status, router]);
-
-  useEffect(() => {
-    if (session?.user?.status === "approved") {
-      fetchTeamInfo();
-    }
-  }, [session?.user?.status]);
+  }, [router]);
 
   const fetchConversations = async () => {
     try {
-      const response = await fetch("/api/conversations");
-      if (response.ok) {
-        const data = await response.json();
-        setConversations(data.conversations || []);
-      }
+      const { api } = await import('@/lib/api');
+      const data = await api.get("/api/conversations");
+      setConversations(data.conversations || []);
     } catch (error) {
       console.error("Error fetching conversations:", error);
     } finally {
@@ -56,27 +57,25 @@ export default function Profile() {
     }
   };
 
-  const fetchTeamInfo = async () => {
-    if (!session?.user?.id) return;
+  const fetchTeamInfo = async (userId: string) => {
+    if (!userId) return;
     try {
-      const response = await fetch(`/api/users/${session.user.id}/team`);
-      if (response.ok) {
-        const data = await response.json();
-        setTeamInfo({
-          teamId: data.teamId,
-          teamName: data.teamName,
-          teamNumber: data.teamNumber
-        });
-      } else {
-        setTeamInfo(null);
-      }
+      const { api } = await import('@/lib/api');
+      const data = await api.get(`/api/users/${userId}/team`);
+      setTeamInfo({
+        teamId: data.teamId,
+        teamName: data.teamName,
+        teamNumber: data.teamNumber
+      });
     } catch (error) {
       setTeamInfo(null);
     }
   };
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/" });
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push("/");
   };
 
   const formatDate = (dateString: string) => {
@@ -99,16 +98,12 @@ export default function Profile() {
     return labels[context as keyof typeof labels] || context;
   };
 
-  if (status === "loading" || isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 transition-colors">
         <Loading />
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   return (
@@ -146,7 +141,7 @@ export default function Profile() {
               <Link href="/teams" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium">
                 Takımlar
               </Link>
-              {session?.user.role === "admin" && (
+              {user?.role === "admin" && (
                 <Link href="/teams/admin" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium">
                   Admin
                 </Link>
@@ -170,7 +165,7 @@ export default function Profile() {
               <Link href="/teams" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Takımlar">
                 <Users className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </Link>
-              {session?.user.role === "admin" && (
+              {user?.role === "admin" && (
                 <Link href="/teams/admin" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Admin">
                   <Settings className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </Link>
@@ -201,8 +196,8 @@ export default function Profile() {
                   <User className="w-10 h-10 lg:w-12 lg:h-12 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">{session.user?.name}</h2>
-                  <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">{session.user?.email}</p>
+                  <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">{user?.name}</h2>
+                  <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">{user?.email}</p>
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
                       <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{conversations.length} Konuşma</span>

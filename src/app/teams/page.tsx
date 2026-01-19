@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+// Token-based auth for Capacitor/static export (useSession removed)
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -32,7 +32,6 @@ interface Team {
 }
 
 export default function TeamsPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
   
@@ -41,27 +40,32 @@ export default function TeamsPage() {
   const [error, setError] = useState("");
   const [joinRequestMessage, setJoinRequestMessage] = useState("");
   const [showJoinForm, setShowJoinForm] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    // Token-based auth kontrolü (Capacitor/static export için)
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (!token || !userStr) {
       router.push("/auth/signin");
       return;
     }
 
-    if (session) {
+    try {
+      const userData = JSON.parse(userStr);
+      setUser(userData);
       fetchTeams();
+    } catch (e) {
+      router.push("/auth/signin");
     }
-  }, [session, status, router]);
+  }, [router]);
 
   const fetchTeams = async () => {
     try {
-      const response = await fetch("/api/teams");
-      if (response.ok) {
-        const data = await response.json();
-        setTeams(data.teams);
-      } else {
-        setError(t("teams.errorLoading"));
-      }
+      const { api } = await import('@/lib/api');
+      const data = await api.get('/api/teams');
+      setTeams(data.teams || []);
     } catch (error) {
       console.error("Error fetching teams:", error);
       setError(t("teams.errorLoading"));
@@ -71,7 +75,10 @@ export default function TeamsPage() {
   };
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/" });
+    // Token-based logout
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push("/");
   };
 
   const handleJoinRequest = async (teamId: string) => {
@@ -81,28 +88,18 @@ export default function TeamsPage() {
     }
 
     try {
-      const response = await fetch(`/api/teams/${teamId}/join-requests`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: joinRequestMessage.trim(),
-        }),
+      const { api } = await import('@/lib/api');
+      await api.post(`/api/teams/${teamId}/join-requests`, {
+        message: joinRequestMessage.trim(),
       });
 
-      if (response.ok) {
-        setJoinRequestMessage("");
-        setShowJoinForm(null);
-        setError("");
-        alert(t("teams.joinRequestSuccess"));
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "İstek gönderilirken hata oluştu.");
-      }
-    } catch (error) {
+      setJoinRequestMessage("");
+      setShowJoinForm(null);
+      setError("");
+      alert(t("teams.joinRequestSuccess"));
+    } catch (error: any) {
       console.error("Error sending join request:", error);
-      setError("İstek gönderilirken hata oluştu.");
+      setError(error.message || "İstek gönderilirken hata oluştu.");
     }
   };
 
@@ -114,16 +111,12 @@ export default function TeamsPage() {
     });
   };
 
-  if (status === "loading" || isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 transition-colors">
         <Loading />
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   return (

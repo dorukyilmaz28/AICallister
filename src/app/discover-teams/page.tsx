@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+// Token-based auth for Capacitor (useSession removed)
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -20,7 +20,6 @@ interface Team {
 }
 
 export default function DiscoverTeamsPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
   
@@ -32,15 +31,16 @@ export default function DiscoverTeamsPage() {
   const [sendingRequest, setSendingRequest] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (!token || !userStr) {
       router.push("/auth/signin");
       return;
     }
 
-    if (session) {
-      fetchTeams();
-    }
-  }, [session, status, router]);
+    fetchTeams();
+  }, [router]);
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -60,18 +60,13 @@ export default function DiscoverTeamsPage() {
   const fetchTeams = async () => {
     try {
       setError("");
-      const response = await fetch("/api/teams/discover");
-      if (response.ok) {
-        const data = await response.json();
-        // Tüm takımları göster (veritabanındaki tüm takımlar)
-        const allTeams = data.teams || [];
-        setTeams(allTeams);
-        setFilteredTeams(allTeams);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || t("discover.errorLoading"));
-      }
-    } catch (error) {
+      const { api } = await import('@/lib/api');
+      const data = await api.get("/api/teams/discover");
+      // Tüm takımları göster (veritabanındaki tüm takımlar)
+      const allTeams = data.teams || [];
+      setTeams(allTeams);
+      setFilteredTeams(allTeams);
+    } catch (error: any) {
       console.error("Error fetching teams:", error);
       setError(t("discover.errorLoading"));
     } finally {
@@ -104,7 +99,7 @@ export default function DiscoverTeamsPage() {
     }
   };
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <Loading />

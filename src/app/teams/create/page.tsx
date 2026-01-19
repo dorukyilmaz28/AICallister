@@ -38,17 +38,10 @@ function CreateTeamForm() {
     setError("");
 
     try {
-      const response = await fetch("/api/teams/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const { api } = await import('@/lib/api');
+      const data = await api.post("/api/teams/create", formData);
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data) {
         setSuccess(true);
         setTimeout(() => {
           router.push("/teams/admin");

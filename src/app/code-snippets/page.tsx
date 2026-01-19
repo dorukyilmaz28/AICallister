@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+// Token-based auth (useSession removed)
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -46,7 +46,6 @@ const languages = [
 ];
 
 export default function CodeSnippetsPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
   const [snippets, setSnippets] = useState<CodeSnippet[]>([]);
@@ -57,15 +56,16 @@ export default function CodeSnippetsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (!token || !userStr) {
       router.push("/auth/signin");
       return;
     }
 
-    if (session) {
-      fetchSnippets();
-    }
-  }, [session, status, router, selectedCategory, selectedLanguage, searchQuery]);
+    fetchSnippets();
+  }, [router, selectedCategory, selectedLanguage, searchQuery]);
 
   const fetchSnippets = async () => {
     try {
@@ -74,11 +74,9 @@ export default function CodeSnippetsPage() {
       if (selectedLanguage) params.append("language", selectedLanguage);
       if (searchQuery) params.append("search", searchQuery);
 
-      const response = await fetch(`/api/code-snippets?${params.toString()}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSnippets(data.snippets || []);
-      }
+      const { api } = await import('@/lib/api');
+      const data = await api.get(`/api/code-snippets?${params.toString()}`);
+      setSnippets(data.snippets || []);
     } catch (error) {
       console.error("Error fetching snippets:", error);
     } finally {
@@ -87,26 +85,24 @@ export default function CodeSnippetsPage() {
   };
 
   const handleToggleFavorite = async (snippetId: string) => {
-    if (!session) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
     try {
-      const response = await fetch(`/api/code-snippets/${snippetId}/favorite`, {
-        method: "POST"
-      });
+      const { api } = await import('@/lib/api');
+      await api.post(`/api/code-snippets/${snippetId}/favorite`);
 
-      if (response.ok) {
-        setSnippets(prev => prev.map(snippet => 
-          snippet.id === snippetId 
-            ? { 
-                ...snippet, 
-                isFavorite: !snippet.isFavorite,
-                favoriteCount: snippet.isFavorite 
-                  ? snippet.favoriteCount - 1 
-                  : snippet.favoriteCount + 1
-              }
-            : snippet
-        ));
-      }
+      setSnippets(prev => prev.map(snippet => 
+        snippet.id === snippetId 
+          ? { 
+              ...snippet, 
+              isFavorite: !snippet.isFavorite,
+              favoriteCount: snippet.isFavorite 
+                ? snippet.favoriteCount - 1 
+                : snippet.favoriteCount + 1
+            }
+          : snippet
+      ));
     } catch (error) {
       console.error("Error toggling favorite:", error);
     }
@@ -118,7 +114,7 @@ export default function CodeSnippetsPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 transition-colors">
         <Loading />

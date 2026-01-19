@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String                @id @default(cuid())
+  email                   String                @unique
+  name                    String?
+  password                String
+  teamNumber              String?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  role                    String                @default("member")
+  status                  String                @default("pending")
+  teamId                  String?
+  conversations           Conversation[]
+  teamChats               TeamChat[]
+  teamJoinRequests        TeamJoinRequest[]
+  teamMemberships         TeamMember[]
+  teamNotifications       TeamNotification[]
+  adminTeams              Team[]                @relation("TeamAdmin")
+  team                    Team?                 @relation(fields: [teamId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  codeSnippets            CodeSnippet[]
+  favoriteSnippets        UserFavoriteSnippet[]
+  courseProgress          UserCourseProgress[]
+  lessonProgress          UserLessonProgress[]
+  certificates            Certificate[]
+
+  @@map("users")
+}
+
+model Conversation {
+  id        String              @id @default(cuid())
+  title     String?
+  context   String              @default("general")
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  shares    ConversationShare[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  role           String
+  content        String
+  createdAt      DateTime     @default(now())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Team {
+  id            String             @id @default(cuid())
+  name          String
+  description   String?
+  teamNumber    String?            @unique
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  adminId       String?
+  chats         TeamChat[]
+  joinRequests  TeamJoinRequest[]
+  members       TeamMember[]
+  notifications TeamNotification[]
+  admin         User?              @relation("TeamAdmin", fields: [adminId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  users         User[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+  userId   String
+  teamId   String
+  status   String   @default("approved")
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@map("team_members")
+}
+
+model TeamChat {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  userId    String
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("team_chats")
+}
+
+model TeamJoinRequest {
+  id        String   @id @default(cuid())
+  status    String   @default("pending")
+  message   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@map("team_join_requests")
+}
+
+model TeamNotification {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  teamId    String
+  userId    String?
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("team_notifications")
+}
+
+model CodeSnippet {
+  id            String                @id @default(cuid())
+  title         String
+  description   String?
+  code          String                @db.Text
+  language      String // java, cpp, python, etc.
+  category      String // motor, sensor, autonomous, etc.
+  tags          String[]              @default([])
+  isPublic      Boolean               @default(false)
+  shareToken    String?               @unique
+  viewCount     Int                   @default(0)
+  favoriteCount Int                   @default(0)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  userId        String
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favorites     UserFavoriteSnippet[]
+
+  @@map("code_snippets")
+}
+
+model UserFavoriteSnippet {
+  id        String      @id @default(cuid())
+  userId    String
+  snippetId String
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snippet   CodeSnippet @relation(fields: [snippetId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, snippetId])
+  @@map("user_favorite_snippets")
+}
+
+model ConversationShare {
+  id             String       @id @default(cuid())
+  conversationId String
+  shareToken     String       @unique
+  isActive       Boolean      @default(true)
+  expiresAt      DateTime?
+  viewCount      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("conversation_shares")
+}
+
+// FRC Academy Models
+model Course {
+  id          String              @id @default(cuid())
+  title       String
+  description String?             @db.Text
+  thumbnail   String?
+  category    String              // programming, mechanical, strategy, etc.
+  level       String              // beginner, intermediate, advanced
+  duration    Int?                // estimated minutes
+  isPublished Boolean             @default(false)
+  order       Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  lessons     Lesson[]
+  progress    UserCourseProgress[]
+  certificates Certificate[]
+
+  @@map("courses")
+}
+
+model Lesson {
+  id          String              @id @default(cuid())
+  courseId    String
+  title       String
+  description String?             @db.Text
+  content     String              @db.Text // Markdown content
+  videoUrl    String?
+  duration    Int?                // minutes
+  order       Int                 @default(0)
+  isPublished Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  course      Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress    UserLessonProgress[]
+
+  @@map("lessons")
+}
+
+model UserCourseProgress {
+  id            String   @id @default(cuid())
+  userId        String
+  courseId      String
+  progress      Float    @default(0) // 0-100 percentage
+  completedAt   DateTime?
+  startedAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("user_course_progress")
+}
+
+model UserLessonProgress {
+  id            String   @id @default(cuid())
+  userId        String
+  lessonId      String
+  isCompleted   Boolean  @default(false)
+  completedAt   DateTime?
+  startedAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("user_lesson_progress")
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  userId      String
+  courseId    String
+  certificateUrl String?
+  issuedAt    DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("certificates")
+}

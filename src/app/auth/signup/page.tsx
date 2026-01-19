@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, User, Users, ArrowRight, CheckCircle, XCircle, Languages } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { authApi } from "@/lib/api";
 
 export default function SignUp() {
   const { language, setLanguage, t } = useLanguage();
@@ -26,24 +27,16 @@ export default function SignUp() {
     }
 
     try {
-      const response = await fetch("/api/auth/verify-team", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ teamNumber: teamNum }),
-      });
-
-      const data = await response.json();
+      const data = await authApi.verifyTeam(teamNum);
       setTeamVerification(data);
       
-      if (!data.isValid && data.error === "Bu takım numarası bulunamadı.") {
+      if (!data.valid && !data.isValid && data.error && data.error.includes("bulunamadı")) {
         setShowCreateTeam(true);
       } else {
         setShowCreateTeam(false);
       }
-    } catch (error) {
-      setTeamVerification({ isValid: false, error: "Bağlantı hatası" });
+    } catch (error: any) {
+      setTeamVerification({ isValid: false, error: error.message || "Bağlantı hatası" });
       setShowCreateTeam(false);
     }
   };
@@ -77,28 +70,11 @@ export default function SignUp() {
     }
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          teamNumber,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        window.location.href = `/auth/signin?message=${t("auth.signup.successMessage")}`;
-      } else {
-        setError(data.error || t("auth.signup.registerError"));
-      }
-    } catch (error) {
-      setError(t("auth.signup.genericError"));
+      await authApi.register(name, email, password, teamNumber);
+      // Başarılı kayıt
+      window.location.href = `/auth/signin?message=${t("auth.signup.successMessage")}`;
+    } catch (error: any) {
+      setError(error.message || t("auth.signup.registerError"));
     } finally {
       setIsLoading(false);
     }

@@ -4,6 +4,7 @@ import './globals.css'
 import { SessionProvider } from '@/components/SessionProvider'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { NotificationInit } from '@/components/NotificationInit'
 import Link from 'next/link'
 import { Home } from 'lucide-react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -52,6 +53,7 @@ export default function RootLayout({
         <ThemeProvider>
           <SessionProvider>
             <LanguageProvider>
+              <NotificationInit />
               {children}
             </LanguageProvider>
           </SessionProvider>

@@ -1,32 +1,44 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function AutoJoinTeam() {
-  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "authenticated" && session?.user?.id) {
-      // Kullanıcının takım numarasını al ve takımına yönlendir
-      fetch(`/api/users/${session.user.id}/team`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.teamId) {
-            router.push(`/teams/${data.teamId}`);
-          } else {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (!token || !userStr) {
+      router.push("/auth/signin");
+      return;
+    }
+
+    try {
+      const user = JSON.parse(userStr);
+      if (user?.id) {
+        // Kullanıcının takım numarasını al ve takımına yönlendir
+        (async () => {
+          try {
+            const { api } = await import('@/lib/api');
+            const data = await api.get(`/api/users/${user.id}/team`);
+            if (data.teamId) {
+              router.push(`/teams/${data.teamId}`);
+            } else {
+              router.push("/profile");
+            }
+          } catch {
             router.push("/profile");
           }
-        })
-        .catch(() => {
-          router.push("/profile");
-        });
-    } else if (status === "unauthenticated") {
+        })();
+      } else {
+        router.push("/auth/signin");
+      }
+    } catch {
       router.push("/auth/signin");
     }
-  }, [session, status, router]);
+  }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

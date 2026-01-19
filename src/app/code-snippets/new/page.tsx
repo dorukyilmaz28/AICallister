@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+// Token-based auth (useSession removed)
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Code2, Save, X, Home, ArrowLeft } from "lucide-react";
@@ -24,7 +24,7 @@ const languages = [
 ];
 
 export default function NewCodeSnippetPage() {
-  const { data: session } = useSession();
+  // Token-based auth (useSession removed for static export)
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -47,20 +47,15 @@ export default function NewCodeSnippetPage() {
     try {
       const tagsArray = tags.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0);
 
-      const response = await fetch("/api/code-snippets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          title,
-          description: description || null,
-          code,
-          language,
-          category,
-          tags: tagsArray,
-          isPublic
-        })
+      const { api } = await import('@/lib/api');
+      const response = await api.post("/api/code-snippets", {
+        title,
+        description: description || null,
+        code,
+        language,
+        category,
+        tags: tagsArray,
+        isPublic
       });
 
       if (response.ok) {

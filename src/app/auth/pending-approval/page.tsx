@@ -1,31 +1,40 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Clock, Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Loading from "@/components/Loading";
 
 export default function PendingApproval() {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === "loading") return;
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
     
-    if (!session) {
+    if (!token || !userStr) {
       router.push("/auth/signin");
       return;
     }
 
-    if (session.user.status !== "pending") {
-      router.push("/");
-      return;
+    try {
+      const userData = JSON.parse(userStr);
+      if (userData.status !== "pending") {
+        router.push("/");
+        return;
+      }
+      setUser(userData);
+    } catch (e) {
+      router.push("/auth/signin");
+    } finally {
+      setLoading(false);
     }
-  }, [session, status, router]);
+  }, [router]);
 
-  if (status === "loading") {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loading />
@@ -58,9 +67,9 @@ export default function PendingApproval() {
                 <span className="text-gray-900 font-semibold">Takım Bilgileri</span>
               </div>
               <div className="text-gray-700 text-sm space-y-2">
-                <p><strong>Takım:</strong> #{session?.user.teamNumber}</p>
+                <p><strong>Takım:</strong> #{user?.teamNumber}</p>
                 <p><strong>Durum:</strong> Onay bekleniyor</p>
-                <p><strong>Email:</strong> {session?.user.email}</p>
+                <p><strong>Email:</strong> {user?.email}</p>
               </div>
             </div>
 

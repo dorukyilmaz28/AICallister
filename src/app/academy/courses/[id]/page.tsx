@@ -41,6 +41,13 @@ interface LessonProgress {
   isCompleted: boolean;
 }
 
+export const dynamic = 'force-static';
+
+export async function generateStaticParams() {
+  // Static export için boş array döndür (dynamic route'lar çalışmayacak)
+  return [];
+}
+
 export default function CourseDetailPage() {
   const { session } = useAuthGuard({ requireAuth: false });
   const params = useParams();
