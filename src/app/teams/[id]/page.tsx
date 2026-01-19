@@ -582,7 +582,7 @@ export default function TeamDetailPage() {
                           </div>
                           {/* Silme butonu - sadece yöneticilere görünür ve kendini silemez */}
                           {(userRole === 'captain' || userRole === 'manager' || userRole === 'mentor' || userRole === 'admin') && 
-                           member.user.id !== session?.user?.id && (
+                           member.user.id !== user?.id && (
                             <button
                               onClick={() => handleRemoveMember(member.user.id, member.user.name)}
                               className="p-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 hover:text-red-700 transition-colors"
