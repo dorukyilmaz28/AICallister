@@ -39,6 +39,12 @@ export async function getAuthUser(req: NextRequest) {
         exp?: number;
       };
 
+      // Token expire kontrolü
+      if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+        console.error("JWT token expired");
+        return null;
+      }
+
       // Token'dan user bilgisini al
       if (decoded.id) {
         // Database'den fresh user bilgisini çek (status güncellemeleri için)

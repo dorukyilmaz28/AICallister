@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { conversationDb } from "@/lib/database";
 
 // Force dynamic rendering (Vercel serverless function)
@@ -334,9 +333,9 @@ export async function POST(req: NextRequest) {
     const { messages, context, conversationId, mode, language = "tr" } = await req.json();
     console.log("Request data:", { messagesCount: messages?.length, context, conversationId, mode, language });
     
-    // Kullanıcı oturumu kontrolü
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    // Kullanıcı oturumu kontrolü (hem NextAuth hem JWT token desteği)
+    const user = await getAuthUser(req);
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -699,7 +698,7 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
         }
         
         conversation = await conversationDb.create({
-          userId: session.user.id,
+          userId: user.id,
           title: conversationTitle,
           context
         });

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamDb, teamMemberDb, prisma } from "@/lib/database";
 
 
@@ -10,9 +9,9 @@ export const dynamic = 'force-dynamic';
 // Tüm kayıtlı takımları getir (kullanıcı takım aramak için kullanır)
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -23,12 +22,12 @@ export async function GET(req: NextRequest) {
     const allTeams = await teamDb.getAll();
 
     // Kullanıcının mevcut üyeliklerini ve bekleyen isteklerini al
-    const userMemberships = await teamMemberDb.findByUserId(session.user.id);
+    const userMemberships = await teamMemberDb.findByUserId(user.id);
     const userTeamIds = userMemberships.map((m: any) => m.teamId);
 
     const pendingRequests = await prisma.teamJoinRequest.findMany({
       where: {
-        userId: session.user.id,
+        userId: user.id,
         status: 'pending'
       }
     });
