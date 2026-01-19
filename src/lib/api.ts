@@ -130,6 +130,12 @@ export async function apiRequest<T = any>(
   // Authentication gerekiyorsa token ekle
   if (requireAuth && token) {
     headers['Authorization'] = `Bearer ${token}`;
+    console.log('[API] ✅ Token added to Authorization header, length:', token.length);
+  } else if (requireAuth && !token) {
+    console.error('[API] ❌❌❌ NO TOKEN FOUND! requireAuth=true but token is null/undefined');
+    console.error('[API] This will cause 401 Unauthorized errors!');
+  } else {
+    console.log('[API] ⚠️ Auth not required or token not needed for this request');
   }
 
   // URL oluştur - endpoint zaten http ile başlıyorsa olduğu gibi kullan
