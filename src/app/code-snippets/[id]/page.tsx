@@ -45,35 +45,28 @@ export default function CodeSnippetDetailPage() {
 
   const fetchSnippet = async () => {
     try {
-      const response = await fetch(`/api/code-snippets/${snippetId}/`);
-      if (response.ok) {
-        const data = await response.json();
-        setSnippet(data.snippet);
-      } else {
-        setError("Snippet bulunamadı.");
-      }
-    } catch (error) {
-      setError("Snippet yüklenirken hata oluştu.");
+      const { api } = await import('@/lib/api');
+      const data = await api.get(`/api/code-snippets/${snippetId}/`);
+      setSnippet(data.snippet);
+    } catch (error: any) {
+      console.error("Error fetching snippet:", error);
+      setError(error?.message || error?.error || "Snippet yüklenirken hata oluştu.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleToggleFavorite = async () => {
-    if (!session || !snippet) return;
+    if (!snippet) return;
 
     try {
-      const response = await fetch(`/api/code-snippets/${snippetId}/favorite/`, {
-        method: "POST"
-      });
-
-      if (response.ok) {
-        setSnippet(prev => prev ? {
-          ...prev,
-          isFavorite: !prev.isFavorite,
-          favoriteCount: prev.isFavorite ? prev.favoriteCount - 1 : prev.favoriteCount + 1
-        } : null);
-      }
+      const { api } = await import('@/lib/api');
+      await api.post(`/api/code-snippets/${snippetId}/favorite/`, {});
+      setSnippet(prev => prev ? {
+        ...prev,
+        isFavorite: !prev.isFavorite,
+        favoriteCount: prev.isFavorite ? prev.favoriteCount - 1 : prev.favoriteCount + 1
+      } : null);
     } catch (error) {
       console.error("Error toggling favorite:", error);
     }
@@ -95,17 +88,12 @@ export default function CodeSnippetDetailPage() {
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/code-snippets/${snippetId}/`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        router.push("/code-snippets");
-      } else {
-        setError("Snippet silinirken hata oluştu.");
-      }
-    } catch (error) {
-      setError("Snippet silinirken hata oluştu.");
+      const { api } = await import('@/lib/api');
+      await api.delete(`/api/code-snippets/${snippetId}/`);
+      router.push("/code-snippets");
+    } catch (error: any) {
+      console.error("Error deleting snippet:", error);
+      setError(error?.message || error?.error || "Snippet silinirken hata oluştu.");
     } finally {
       setIsDeleting(false);
     }

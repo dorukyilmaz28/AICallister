@@ -65,11 +65,8 @@ export default function TeamDetailPage() {
   
   const markAllNotificationsAsRead = async () => {
     try {
-      await fetch(`/api/teams/${teamId}/notifications`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markAllAsRead: true })
-      });
+      const { api } = await import('@/lib/api');
+      await api.patch(`/api/teams/${teamId}/notifications/`, { markAllAsRead: true });
       setUnreadCount(0);
     } catch (error) {
       // ignore
@@ -119,24 +116,19 @@ export default function TeamDetailPage() {
 
   const fetchTeam = async () => {
     try {
-      const response = await fetch(`/api/teams/${teamId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setTeam(data.team);
-        setUserRole(data.userRole);
-        // Chats array'ini kontrol et ve sırala
-        const chats = data.team?.chats || [];
-        const sortedChats = chats.sort((a: any, b: any) => 
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-        setMessages(sortedChats);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Takım bulunamadı.");
-      }
-    } catch (error) {
+      const { api } = await import('@/lib/api');
+      const data = await api.get(`/api/teams/${teamId}/`);
+      setTeam(data.team);
+      setUserRole(data.userRole);
+      // Chats array'ini kontrol et ve sırala
+      const chats = data.team?.chats || [];
+      const sortedChats = chats.sort((a: any, b: any) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      setMessages(sortedChats);
+    } catch (error: any) {
       console.error("Error fetching team:", error);
-      setError("Takım yüklenirken hata oluştu.");
+      setError(error?.message || error?.error || "Takım yüklenirken hata oluştu.");
     } finally {
       setIsLoading(false);
     }
@@ -152,32 +144,20 @@ export default function TeamDetailPage() {
     setIsSending(true);
 
     try {
-      const response = await fetch(`/api/teams/${teamId}/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: messageContent,
-        }),
+      const { api } = await import('@/lib/api');
+      const data = await api.post(`/api/teams/${teamId}/chat/`, {
+        content: messageContent,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Mesajı local state'e ekle ve sırala
-        const newMessages = [...messages, data.message].sort((a: any, b: any) => 
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-        setMessages(newMessages);
-        // Mesaj gönderildikten hemen sonra scroll et
-        setTimeout(() => scrollToBottom(), 100);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Mesaj gönderilirken hata oluştu.");
-      }
-    } catch (error) {
+      // Mesajı local state'e ekle ve sırala
+      const newMessages = [...messages, data.message].sort((a: any, b: any) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      setMessages(newMessages);
+      // Mesaj gönderildikten hemen sonra scroll et
+      setTimeout(() => scrollToBottom(), 100);
+    } catch (error: any) {
       console.error("Error sending message:", error);
-      setError("Mesaj gönderilirken hata oluştu.");
+      setError(error?.message || error?.error || "Mesaj gönderilirken hata oluştu.");
     } finally {
       setIsSending(false);
     }
@@ -185,15 +165,13 @@ export default function TeamDetailPage() {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`/api/teams/${teamId}/chat`);
-      if (response.ok) {
-        const data = await response.json();
-        // Mesajları tarihe göre sırala (en eski en üstte)
-        const sortedMessages = (data.messages || []).sort((a: any, b: any) => 
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-        setMessages(sortedMessages);
-      }
+      const { api } = await import('@/lib/api');
+      const data = await api.get(`/api/teams/${teamId}/chat/`);
+      // Mesajları tarihe göre sırala (en eski en üstte)
+      const sortedMessages = (data.messages || []).sort((a: any, b: any) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      setMessages(sortedMessages);
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
@@ -201,12 +179,10 @@ export default function TeamDetailPage() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`/api/teams/${teamId}/notifications`);
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
-      }
+      const { api } = await import('@/lib/api');
+      const data = await api.get(`/api/teams/${teamId}/notifications/`);
+      setNotifications(data.notifications || []);
+      setUnreadCount(data.unreadCount || 0);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
@@ -222,26 +198,17 @@ export default function TeamDetailPage() {
     }
 
     try {
-      const response = await fetch(`/api/teams/${teamId}/chat`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const { api } = await import('@/lib/api');
+      await api.delete(`/api/teams/${teamId}/chat/`, {
         body: JSON.stringify({
           messageId: messageId,
         }),
-      });
-
-      if (response.ok) {
-        // Mesajı local state'den kaldır
-        setMessages(messages.filter(msg => msg.id !== messageId));
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Mesaj silinirken hata oluştu.");
-      }
-    } catch (error) {
+      } as any);
+      // Mesajı local state'den kaldır
+      setMessages(messages.filter(msg => msg.id !== messageId));
+    } catch (error: any) {
       console.error("Error deleting message:", error);
-      setError("Mesaj silinirken hata oluştu.");
+      setError(error?.message || error?.error || "Mesaj silinirken hata oluştu.");
     }
   };
 
@@ -251,26 +218,17 @@ export default function TeamDetailPage() {
     }
 
     try {
-      const response = await fetch(`/api/teams/${teamId}/chat`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const { api } = await import('@/lib/api');
+      await api.delete(`/api/teams/${teamId}/chat/`, {
         body: JSON.stringify({
           clearAll: true,
         }),
-      });
-
-      if (response.ok) {
-        // Tüm mesajları local state'den kaldır
-        setMessages([]);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || t("teamChat.errorDeletingMessages"));
-      }
-    } catch (error) {
+      } as any);
+      // Tüm mesajları local state'den kaldır
+      setMessages([]);
+    } catch (error: any) {
       console.error("Error clearing all messages:", error);
-      setError(t("teamChat.errorDeletingMessages"));
+      setError(error?.message || error?.error || t("teamChat.errorDeletingMessages"));
     }
   };
 
@@ -280,23 +238,15 @@ export default function TeamDetailPage() {
     }
 
     try {
-      const response = await fetch(`/api/teams/${teamId}/members/${userId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Başarı mesajı göster
-        alert(data.message || t("teamChat.memberRemoved"));
-        // Takım bilgilerini yeniden yükle
-        fetchTeam();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || t("teamChat.errorRemovingMember"));
-      }
-    } catch (error) {
+      const { api } = await import('@/lib/api');
+      const data = await api.delete(`/api/teams/${teamId}/members/${userId}/`);
+      // Başarı mesajı göster
+      alert(data.message || t("teamChat.memberRemoved"));
+      // Takım bilgilerini yeniden yükle
+      fetchTeam();
+    } catch (error: any) {
       console.error("Error removing member:", error);
-      setError(t("teamChat.errorRemovingMember"));
+      setError(error?.message || error?.error || t("teamChat.errorRemovingMember"));
     }
   };
 
