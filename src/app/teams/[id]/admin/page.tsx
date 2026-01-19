@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -35,43 +34,51 @@ interface Notification {
 }
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
   const { language, setLanguage, t } = useLanguage();
   const teamId = params.id as string;
   
+  // Token-based auth
+  const [user, setUser] = useState<any>(null);
   const [requests, setRequests] = useState<JoinRequest[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<'requests' | 'notifications'>('notifications');
-
+  
+  // Token-based auth kontrolü
   useEffect(() => {
-    if (status === "unauthenticated") {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (!token || !userStr) {
       router.push("/auth/signin");
       return;
     }
-
-    if (teamId) {
-      fetchRequests();
-      fetchNotifications();
+    
+    try {
+      const userData = JSON.parse(userStr);
+      setUser(userData);
+      if (teamId) {
+        fetchRequests();
+        fetchNotifications();
+      }
+    } catch (e) {
+      router.push("/auth/signin");
     }
-  }, [status, teamId]);
+  }, [router, teamId]);
+
+  // fetchData zaten yukarıdaki useEffect'te çağrılıyor
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch(`/api/teams/${teamId}/join-requests`);
-      if (response.ok) {
-        const data = await response.json();
-        setRequests(data.requests || []);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || t("admin.errorFetchingRequests"));
-      }
-    } catch (error) {
+      const { api } = await import('@/lib/api');
+      const data = await api.get(`/api/teams/${teamId}/join-requests/`);
+      setRequests(data.requests || []);
+    } catch (error: any) {
       console.error("Error fetching requests:", error);
-      setError(t("admin.errorFetchingRequests"));
+      setError(error?.message || error?.error || t("admin.errorFetchingRequests"));
     } finally {
       setIsLoading(false);
     }
@@ -79,17 +86,12 @@ export default function AdminDashboard() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`/api/teams/${teamId}/notifications`);
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || t("admin.errorFetchingNotifications"));
-      }
-    } catch (error) {
+      const { api } = await import('@/lib/api');
+      const data = await api.get(`/api/teams/${teamId}/notifications/`);
+      setNotifications(data.notifications || []);
+    } catch (error: any) {
       console.error("Error fetching notifications:", error);
-      setError(t("admin.errorFetchingNotifications"));
+      setError(error?.message || error?.error || t("admin.errorFetchingNotifications"));
     }
   };
 
@@ -100,44 +102,26 @@ export default function AdminDashboard() {
 
       if (action === 'approve') {
         // Kullanıcıyı takıma ekle
-        const response = await fetch(`/api/teams/${teamId}/join-requests`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: notification.user.id,
-            message: "Admin tarafından onaylandı"
-          }),
+        const { api } = await import('@/lib/api');
+        await api.post(`/api/teams/${teamId}/join-requests/`, {
+          userId: notification.user.id,
+          message: "Admin tarafından onaylandı"
         });
 
-        if (response.ok) {
-          // Bildirimi güncelle
-          await fetch(`/api/teams/${teamId}/notifications`, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              notificationId: notificationId,
-              markAllAsRead: false
-            }),
-          });
+        // Bildirimi güncelle
+        await api.patch(`/api/teams/${teamId}/notifications/`, {
+          notificationId: notificationId,
+          markAllAsRead: false
+        });
 
-          // Bildirimleri yeniden yükle
-          await fetchNotifications();
-        }
+        // Bildirimleri yeniden yükle
+        await fetchNotifications();
       } else {
         // Bildirimi okundu olarak işaretle
-        await fetch(`/api/teams/${teamId}/notifications`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            notificationId: notificationId,
-            markAllAsRead: false
-          }),
+        const { api } = await import('@/lib/api');
+        await api.patch(`/api/teams/${teamId}/notifications/`, {
+          notificationId: notificationId,
+          markAllAsRead: false
         });
 
         await fetchNotifications();
@@ -151,25 +135,14 @@ export default function AdminDashboard() {
   const handleRequestAction = async (requestId: string, action: 'approve' | 'reject') => {
     try {
       setError("");
-      const response = await fetch(`/api/teams/${teamId}/join-requests/${requestId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ action }),
-      });
-
-      if (response.ok) {
-        // İstekleri yeniden yükle
-        await fetchRequests();
-        await fetchNotifications();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || t("admin.errorProcessing"));
-      }
-    } catch (error) {
+      const { api } = await import('@/lib/api');
+      await api.patch(`/api/teams/${teamId}/join-requests/${requestId}/`, { action });
+      // İstekleri yeniden yükle
+      await fetchRequests();
+      await fetchNotifications();
+    } catch (error: any) {
       console.error("Error processing request:", error);
-      setError(t("admin.errorProcessing"));
+      setError(error?.message || error?.error || t("admin.errorProcessing"));
     }
   };
 

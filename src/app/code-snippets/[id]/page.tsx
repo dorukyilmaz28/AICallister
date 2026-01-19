@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { Code2, Heart, Copy, Check, Edit, Trash2, Home, ArrowLeft, Eye } from "lucide-react";
@@ -26,10 +25,24 @@ interface CodeSnippet {
 }
 
 export default function CodeSnippetDetailPage() {
-  const { data: session } = useSession();
   const router = useRouter();
   const params = useParams();
   const snippetId = params.id as string;
+  
+  // Token-based auth
+  const [user, setUser] = useState<any>(null);
+  
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (token && userStr) {
+      try {
+        setUser(JSON.parse(userStr));
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
 
   const [snippet, setSnippet] = useState<CodeSnippet | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -222,7 +235,7 @@ export default function CodeSnippetDetailPage() {
                 <span>{copied ? 'Kopyalandı!' : 'Kodu Kopyala'}</span>
               </button>
 
-              {(snippet as any).isDeletable && session?.user.id === snippet.user.id && (
+              {(snippet as any).isDeletable && user?.id === snippet.user.id && (
                 <>
                   <Link
                     href={`/code-snippets/${snippet.id}/edit`}

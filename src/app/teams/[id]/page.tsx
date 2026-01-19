@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -44,12 +43,13 @@ interface Team {
 }
 
 export default function TeamDetailPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
   const { language, setLanguage, t } = useLanguage();
   const teamId = params.id as string;
   
+  // Token-based auth
+  const [user, setUser] = useState<any>(null);
   const [team, setTeam] = useState<Team | null>(null);
   const [userRole, setUserRole] = useState<string>("");
   const [messages, setMessages] = useState<TeamChat[]>([]);
@@ -62,6 +62,27 @@ export default function TeamDetailPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Token-based auth kontrolü
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (!token || !userStr) {
+      router.push("/auth/signin");
+      return;
+    }
+    
+    try {
+      const userData = JSON.parse(userStr);
+      setUser(userData);
+      if (teamId) {
+        fetchTeam();
+      }
+    } catch (e) {
+      router.push("/auth/signin");
+    }
+  }, [router, teamId]);
   
   const markAllNotificationsAsRead = async () => {
     try {
@@ -82,16 +103,7 @@ export default function TeamDetailPage() {
     }
   };
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-      return;
-    }
-
-    if (session && teamId) {
-      fetchTeam();
-    }
-  }, [session, status, router, teamId]);
+  // fetchTeam zaten yukarıdaki useEffect'te çağrılıyor
 
   // Auto-refresh mesajları ve takım bilgileri her 3 saniyede bir
   useEffect(() => {
@@ -189,7 +201,10 @@ export default function TeamDetailPage() {
   };
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/" });
+    // Token-based logout
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push("/");
   };
 
   const handleDeleteMessage = async (messageId: string) => {
