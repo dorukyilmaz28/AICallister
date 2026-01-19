@@ -4,7 +4,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // Static export yapmaya gerek yok!
 const isDev = process.env.NODE_ENV === 'development';
 const serverUrl = process.env.CAPACITOR_SERVER_URL || 
-  (isDev ? 'http://localhost:3000' : 'https://callisterai.com');
+  (isDev ? 'http://localhost:3000' : 'https://www.callisterai.com');
 
 const config: CapacitorConfig = {
   appId: 'com.callister.frcai',

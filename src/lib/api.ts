@@ -3,8 +3,8 @@ import { CapacitorHttp } from '@capacitor/core';
 
 // API Base URL - Environment variable'dan alınır
 // Development: http://localhost:3001
-// Production: https://callisterai.com
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://callisterai.com';
+// Production: https://www.callisterai.com (www ile - CORS için gerekli)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://www.callisterai.com';
 
 // Capacitor'da backend URL'ini kullan (static export'ta API route'lar çalışmaz)
 function getApiBaseUrl(): string {
@@ -17,7 +17,8 @@ function getApiBaseUrl(): string {
   if (isCapacitor) {
     // Capacitor'da HER ZAMAN production URL'i kullan (localhost/local IP çalışmaz)
     // Environment variable varsa onu kullan, yoksa production URL'i kullan
-    const productionUrl = 'https://callisterai.com';
+    // www ile kullan (CORS için gerekli - origin www.callisterai.com)
+    const productionUrl = 'https://www.callisterai.com';
     
     // Eğer API_BASE_URL localhost veya local IP ise, production URL kullan
     const isLocalUrl = API_BASE_URL.includes('localhost') || 
