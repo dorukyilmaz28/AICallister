@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Languages } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { authApi } from "@/lib/api";
 
 export default function SignIn() {
+  const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,27 +16,38 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Token varsa zaten giriş yapılmış, yönlendir
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        // Kullanıcı durumuna göre yönlendir
+        if (user.status === 'pending') {
+          router.push('/auth/pending-approval');
+        } else if (user.status === 'approved') {
+          router.push('/teams');
+        }
+      } catch (e) {
+        // JSON parse hatası, devam et
+      }
+    }
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError(t("auth.signin.error"));
-      } else if (result?.ok) {
-        window.location.href = "/teams";
-      } else {
-        setError(t("auth.signin.unexpectedError"));
-      }
-    } catch (error) {
-      setError(t("auth.signin.genericError"));
+      const result = await authApi.login(email, password);
+      
+      // Başarılı giriş - yönlendirme
+      window.location.href = "/teams";
+    } catch (error: any) {
+      setError(error.message || t("auth.signin.error"));
     } finally {
       setIsLoading(false);
     }
