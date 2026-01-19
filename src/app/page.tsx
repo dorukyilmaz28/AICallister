@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, Shield, Users, Settings, MessageSquare, Code, Sparkles, ChevronRight, Languages, Menu, X, BookOpen, ExternalLink } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -54,7 +53,7 @@ export default function Home() {
                   {t("common.dashboard")}
                 </Link>
               )}
-              {session?.user.role === "admin" && (
+              {session?.user && session.user.role === "admin" && (
                 <Link href="/teams/admin" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
                   {t("common.admin")}
                 </Link>
@@ -87,7 +86,7 @@ export default function Home() {
               </button>
               {isAuthenticated ? (
                 <>
-                  {session?.user.status === "pending" && (
+                  {session?.user?.status === "pending" && (
                     <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-xs font-medium">
                       <Shield className="w-3 h-3" />
                       <span>{t("home.pending")}</span>
@@ -98,7 +97,7 @@ export default function Home() {
                     className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
                   >
                     <User className="w-4 h-4" />
-                    <span className="hidden sm:inline">{session?.user.name}</span>
+                    <span className="hidden sm:inline">{session?.user?.name}</span>
                   </Link>
                 </>
               ) : (
@@ -165,7 +164,7 @@ export default function Home() {
                     {t("common.dashboard")}
                   </Link>
                 )}
-                {session?.user.role === "admin" && (
+                {session?.user && session.user.role === "admin" && (
                   <Link
                     href="/teams/admin"
                     onClick={() => setMobileMenuOpen(false)}
