@@ -1,13 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // output: 'export' removed - API routes require serverless functions
+  // Static export is not compatible with dynamic API routes
   images: {
-    unoptimized: true,
+    unoptimized: true, // Can be removed if using Vercel Image Optimization
   },
   trailingSlash: true,
-  // API routes static export için çalışmaz
-  // Bu durumda API'ler ayrı bir backend'de olmalı veya
-  // client-side'da farklı bir URL kullanılmalı
 }
 
 module.exports = nextConfig
