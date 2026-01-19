@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/database";
 import { updateProgress } from "@/lib/academy-api";
 
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // POST /api/academy/progress - Update lesson progress
 export async function POST(req: NextRequest) {
   try {

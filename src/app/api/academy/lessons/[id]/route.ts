@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/database";
 import { getLesson, getUserProgress } from "@/lib/academy-api";
 
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // GET /api/academy/lessons/[id] - Get lesson details
 export async function GET(
   req: NextRequest,
