@@ -200,10 +200,8 @@ export default function TeamDetailPage() {
     try {
       const { api } = await import('@/lib/api');
       await api.delete(`/api/teams/${teamId}/chat/`, {
-        body: JSON.stringify({
-          messageId: messageId,
-        }),
-      } as any);
+        messageId: messageId,
+      });
       // Mesajı local state'den kaldır
       setMessages(messages.filter(msg => msg.id !== messageId));
     } catch (error: any) {
@@ -220,10 +218,8 @@ export default function TeamDetailPage() {
     try {
       const { api } = await import('@/lib/api');
       await api.delete(`/api/teams/${teamId}/chat/`, {
-        body: JSON.stringify({
-          clearAll: true,
-        }),
-      } as any);
+        clearAll: true,
+      });
       // Tüm mesajları local state'den kaldır
       setMessages([]);
     } catch (error: any) {
