@@ -303,7 +303,7 @@ export default function TeamDetailPage() {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return null;
   }
 
@@ -453,7 +453,7 @@ export default function TeamDetailPage() {
                     </div>
                     {/* Silme butonu - sadece yöneticilere görünür ve kendini silemez */}
                     {(userRole === 'captain' || userRole === 'manager' || userRole === 'mentor' || userRole === 'admin') && 
-                     member.user.id !== session?.user?.id && (
+                     member.user.id !== user?.id && (
                       <button
                         onClick={() => handleRemoveMember(member.user.id, member.user.name)}
                         className="opacity-0 group-hover:opacity-100 p-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 hover:text-red-700 transition-all duration-200"
@@ -717,15 +717,15 @@ export default function TeamDetailPage() {
                   messages.map((message) => (
                     <div
                       key={message.id}
-                      className={`flex ${message.user.id === session.user?.id ? "justify-end" : "justify-start"}`}
+                      className={`flex ${message.user.id === user?.id ? "justify-end" : "justify-start"}`}
                     >
                       <div
                         className={`flex items-start space-x-3 max-w-[75%] md:max-w-md ${
-                          message.user.id === session.user?.id ? "flex-row-reverse space-x-reverse" : ""
+                          message.user.id === user?.id ? "flex-row-reverse space-x-reverse" : ""
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm ${
-                          message.user.id === session.user?.id 
+                          message.user.id === user?.id 
                             ? "bg-gray-900" 
                             : "bg-gray-600"
                         }`}>
@@ -733,11 +733,11 @@ export default function TeamDetailPage() {
                         </div>
                         <div className="flex flex-col space-y-1">
                           <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
-                            {message.user.id === session.user?.id ? "Sen" : message.user.name}
+                            {message.user.id === user?.id ? "Sen" : message.user.name}
                           </div>
                           <div
                             className={`px-4 py-2.5 rounded-2xl max-w-full transition-colors duration-200 group ${
-                              message.user.id === session.user?.id
+                              message.user.id === user?.id
                                 ? "bg-gray-900 text-white rounded-br-sm"
                                 : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-sm shadow-sm"
                             }`}
@@ -746,13 +746,13 @@ export default function TeamDetailPage() {
                               {message.content}
                             </div>
                             <div className={`flex items-center justify-between mt-1.5 ${
-                              message.user.id === session.user?.id ? "text-white/70" : "text-gray-400 dark:text-gray-500"
+                              message.user.id === user?.id ? "text-white/70" : "text-gray-400 dark:text-gray-500"
                             }`}>
                               <div className="text-xs">
                                 {formatDate(message.createdAt)}
                               </div>
                               {/* Sadece kendi mesajlarını silebilir */}
-                              {message.user.id === session.user?.id && (
+                              {message.user.id === user?.id && (
                                 <button
                                   onClick={() => handleDeleteMessage(message.id)}
                                   className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-white/20 rounded-full ml-2"
