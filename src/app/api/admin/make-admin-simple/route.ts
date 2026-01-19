@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/database";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // BASİT VERSİYON: Gizli anahtar olmadan, sadece email ile
 // Sadece development için veya güvenlik önemli değilse kullanılabilir
 export async function POST(req: NextRequest) {

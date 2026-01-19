@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/database";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // Admin yükseltme: body { email }, header: x-admin-secret
 export async function POST(req: NextRequest) {
   try {

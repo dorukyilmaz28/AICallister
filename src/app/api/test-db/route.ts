@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { userDb } from "@/lib/database";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     console.log("Testing database connection...");

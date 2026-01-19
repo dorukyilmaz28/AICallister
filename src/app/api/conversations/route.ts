@@ -3,6 +3,10 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { conversationDb } from "@/lib/database";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 interface Conversation {
   id: string;
   userId: string;

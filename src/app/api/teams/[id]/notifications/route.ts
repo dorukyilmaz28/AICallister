@@ -3,6 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { teamNotificationDb, teamMemberDb } from "@/lib/database";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // Takım bildirimlerini getir
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

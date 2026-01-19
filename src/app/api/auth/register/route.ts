@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { userDb, teamDb, teamMemberDb, teamNotificationDb, teamJoinRequestDb } from "@/lib/database";
 import { verifyTeamNumber } from "@/lib/blueAlliance";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const { name, email, password, teamNumber } = await req.json();

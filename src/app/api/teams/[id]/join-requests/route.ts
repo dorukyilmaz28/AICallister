@@ -4,6 +4,10 @@ import { authOptions } from "@/lib/auth";
 import { teamJoinRequestDb } from "@/lib/database";
 import { prisma } from "@/lib/database";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // Takım katılım isteklerini getir (sadece admin)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

@@ -3,6 +3,10 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { teamDb, teamMemberDb, userDb, teamChatDb, teamJoinRequestDb, teamNotificationDb, prisma } from "@/lib/database";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 interface TeamMember {
   id: string;
   userId: string;

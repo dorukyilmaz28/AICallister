@@ -3,6 +3,10 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { teamMemberDb, teamDb, prisma } from "@/lib/database";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // Üyeyi takımdan çıkar (kick/remove)
 export async function DELETE(
   req: NextRequest,

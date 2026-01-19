@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // The Blue Alliance API - Team bilgileri getir
 export async function GET(req: NextRequest) {
   try {

@@ -4,6 +4,10 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/database";
 import { randomBytes } from "crypto";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // GET: Konuşmayı Markdown olarak export et
 export async function GET(
   req: NextRequest,

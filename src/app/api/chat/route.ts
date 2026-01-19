@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { conversationDb } from "@/lib/database";
 
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // FRC takım numaralarını tespit et
 function extractTeamNumbers(text: string): string[] {
   const teamNumbers: string[] = [];

@@ -3,6 +3,10 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { teamDb, teamMemberDb, prisma } from "@/lib/database";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // Tüm kayıtlı takımları getir (kullanıcı takım aramak için kullanır)
 export async function GET(req: NextRequest) {
   try {

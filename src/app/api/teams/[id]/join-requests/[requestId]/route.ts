@@ -3,6 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { teamJoinRequestDb, prisma } from "@/lib/database";
 
+
+// Force dynamic rendering (Vercel serverless function)
+export const dynamic = 'force-dynamic';
+
 // Takım katılım isteğini onayla veya reddet
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
