@@ -134,6 +134,23 @@ export async function apiRequest<T = any>(
   } else if (requireAuth && !token) {
     console.error('[API] ❌❌❌ NO TOKEN FOUND! requireAuth=true but token is null/undefined');
     console.error('[API] This will cause 401 Unauthorized errors!');
+    console.error('[API] Endpoint:', endpoint);
+    console.error('[API] localStorage token:', typeof window !== 'undefined' ? localStorage.getItem('token') : 'N/A (SSR)');
+    
+    // Token yoksa ve requireAuth true ise, kullanıcıyı login sayfasına yönlendir
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith('/auth/')) {
+        console.error('[API] Redirecting to login page...');
+        window.location.href = '/auth/signin';
+      }
+    }
+    
+    // Hata fırlat
+    const error = new Error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+    (error as any).statusCode = 401;
+    (error as any).noToken = true;
+    throw error;
   } else {
     console.log('[API] ⚠️ Auth not required or token not needed for this request');
   }
