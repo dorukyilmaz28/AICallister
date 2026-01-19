@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamMemberDb, teamDb, prisma } from "@/lib/database";
 
 
@@ -13,9 +12,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; userId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -37,7 +36,7 @@ export async function DELETE(
     // Kullanıcının takımın yöneticisi olup olmadığını kontrol et
     const currentUserMembership = await prisma.teamMember.findFirst({
       where: {
-        userId: session.user.id,
+        userId: user.id,
         teamId: teamId
       }
     });
@@ -59,7 +58,7 @@ export async function DELETE(
     }
 
     // Kendini çıkarmaya çalışıyor mu?
-    if (userId === session.user.id) {
+    if (userId === user.id) {
       return NextResponse.json(
         { error: "Kendinizi takımdan çıkaramazsınız." },
         { status: 400 }

@@ -79,21 +79,14 @@ export default function DiscoverTeamsPage() {
       setSendingRequest(teamId);
       setError("");
 
-      const response = await fetch(`/api/teams/${teamId}/`, {
-        method: "POST",
-      });
+      const { api } = await import('@/lib/api');
+      const data = await api.post(`/api/teams/${teamId}/`, {});
 
-      if (response.ok) {
-        const data = await response.json();
-        alert(data.message || t("discover.joinSuccess"));
-        await fetchTeams();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || t("discover.errorSending"));
-      }
-    } catch (error) {
+      alert(data.message || t("discover.joinSuccess"));
+      await fetchTeams();
+    } catch (error: any) {
       console.error("Error sending join request:", error);
-      setError(t("discover.errorSending"));
+      setError(error?.message || error?.error || t("discover.errorSending"));
     } finally {
       setSendingRequest(null);
     }

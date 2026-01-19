@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth-helper";
 import { teamJoinRequestDb, prisma } from "@/lib/database";
 
 
@@ -10,9 +9,9 @@ export const dynamic = 'force-dynamic';
 // Takım katılım isteğini onayla veya reddet
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json(
         { error: "Oturum açmanız gerekiyor." },
         { status: 401 }
@@ -31,9 +30,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // Admin kontrolü: Takım yöneticisi ya da yetkili üye olmalı
     const team = await prisma.team.findUnique({ where: { id: teamId } });
-    const isTeamAdmin = team?.adminId === session.user.id;
+    const isTeamAdmin = team?.adminId === user.id;
     const adminMember = await prisma.teamMember.findFirst({
-      where: { teamId, userId: session.user.id, role: { in: ['captain', 'manager', 'mentor'] } }
+      where: { teamId, userId: user.id, role: { in: ['captain', 'manager', 'mentor'] } }
     });
 
     if (!isTeamAdmin && !adminMember) {
@@ -44,12 +43,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     if (action === 'approve') {
-      await teamJoinRequestDb.approve(requestId, session.user.id);
+      await teamJoinRequestDb.approve(requestId, user.id);
       return NextResponse.json({
         message: "Katılım isteği onaylandı."
       });
     } else if (action === 'reject') {
-      await teamJoinRequestDb.reject(requestId, session.user.id);
+      await teamJoinRequestDb.reject(requestId, user.id);
       return NextResponse.json({
         message: "Katılım isteği reddedildi."
       });
