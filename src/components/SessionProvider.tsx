@@ -22,7 +22,7 @@ function AutoJoinEffect() {
         (async () => {
           try {
             const { api } = await import('@/lib/api');
-            await api.post("/api/teams/join", { teamNumber: user.teamNumber });
+            await api.post("/api/teams/join/", { teamNumber: user.teamNumber });
           } catch {
             // ignore errors; user can still join manually
           }

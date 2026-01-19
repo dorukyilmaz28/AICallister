@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Return token and user info
+    // ✅ Response header'larını açıkça belirt - Content-Type ve Cache-Control
     return NextResponse.json(
       {
         token,
@@ -64,7 +65,15 @@ export async function POST(req: NextRequest) {
           teamNumber: user.teamNumber,
         },
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+      }
     );
   } catch (error) {
     console.error("Login error:", error);

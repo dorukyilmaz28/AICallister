@@ -107,7 +107,7 @@ export function FRCChat() {
 
     try {
       const { api } = await import('@/lib/api');
-      const data = await api.post('/api/chat', messageData);
+      const data = await api.post('/api/chat/', messageData);
       
       if (data.error) {
         throw new Error(data.error);

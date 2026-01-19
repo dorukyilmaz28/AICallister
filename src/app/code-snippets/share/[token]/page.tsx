@@ -39,7 +39,7 @@ export default function SharedCodeSnippetPage() {
 
   const fetchSharedSnippet = async () => {
     try {
-      const response = await fetch(`/api/code-snippets/share/${token}`);
+      const response = await fetch(`/api/code-snippets/share/${token}/`);
       if (response.ok) {
         const data = await response.json();
         setSnippet(data.snippet);

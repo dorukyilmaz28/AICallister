@@ -204,7 +204,7 @@ export function getPushToken(): string | null {
 export async function registerPushToken(token: string, userId: string) {
   try {
     const { api } = await import('./api');
-    await api.post('/api/notifications/register', {
+    await api.post('/api/notifications/register/', {
       token,
       userId,
       platform: Capacitor.getPlatform(),

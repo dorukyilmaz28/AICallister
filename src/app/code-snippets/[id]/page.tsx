@@ -45,7 +45,7 @@ export default function CodeSnippetDetailPage() {
 
   const fetchSnippet = async () => {
     try {
-      const response = await fetch(`/api/code-snippets/${snippetId}`);
+      const response = await fetch(`/api/code-snippets/${snippetId}/`);
       if (response.ok) {
         const data = await response.json();
         setSnippet(data.snippet);
@@ -63,7 +63,7 @@ export default function CodeSnippetDetailPage() {
     if (!session || !snippet) return;
 
     try {
-      const response = await fetch(`/api/code-snippets/${snippetId}/favorite`, {
+      const response = await fetch(`/api/code-snippets/${snippetId}/favorite/`, {
         method: "POST"
       });
 
@@ -95,7 +95,7 @@ export default function CodeSnippetDetailPage() {
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/code-snippets/${snippetId}`, {
+      const response = await fetch(`/api/code-snippets/${snippetId}/`, {
         method: "DELETE",
       });
 

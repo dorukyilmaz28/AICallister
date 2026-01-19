@@ -84,7 +84,7 @@ export default function TeamAdminPanel() {
   const fetchTeamInfo = async () => {
     try {
       const { api } = await import('@/lib/api');
-      const data = await api.get("/api/teams/info");
+      const data = await api.get("/api/teams/info/");
       setTeamInfo(data);
     } catch (error: any) {
       setError(error.message || t("admin.errorFetchingTeam"));
@@ -99,7 +99,7 @@ export default function TeamAdminPanel() {
 
     try {
       const { api } = await import('@/lib/api');
-      await api.post("/api/teams/manage-member", { userId, action });
+      await api.post("/api/teams/manage-member/", { userId, action });
       await fetchTeamInfo();
     } catch (error) {
       setError(t("admin.errorProcessing"));

@@ -39,7 +39,7 @@ function CreateTeamForm() {
 
     try {
       const { api } = await import('@/lib/api');
-      const data = await api.post("/api/teams/create", formData);
+      const data = await api.post("/api/teams/create/", formData);
 
       if (data) {
         setSuccess(true);

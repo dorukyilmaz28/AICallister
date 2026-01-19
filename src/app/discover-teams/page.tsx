@@ -61,7 +61,7 @@ export default function DiscoverTeamsPage() {
     try {
       setError("");
       const { api } = await import('@/lib/api');
-      const data = await api.get("/api/teams/discover");
+      const data = await api.get("/api/teams/discover/");
       // Tüm takımları göster (veritabanındaki tüm takımlar)
       const allTeams = data.teams || [];
       setTeams(allTeams);
@@ -79,7 +79,7 @@ export default function DiscoverTeamsPage() {
       setSendingRequest(teamId);
       setError("");
 
-      const response = await fetch(`/api/teams/${teamId}`, {
+      const response = await fetch(`/api/teams/${teamId}/`, {
         method: "POST",
       });
 

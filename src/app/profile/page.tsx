@@ -48,7 +48,7 @@ export default function Profile() {
   const fetchConversations = async () => {
     try {
       const { api } = await import('@/lib/api');
-      const data = await api.get("/api/conversations");
+      const data = await api.get("/api/conversations/");
       setConversations(data.conversations || []);
     } catch (error) {
       console.error("Error fetching conversations:", error);

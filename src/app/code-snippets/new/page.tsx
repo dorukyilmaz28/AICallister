@@ -48,7 +48,7 @@ export default function NewCodeSnippetPage() {
       const tagsArray = tags.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0);
 
       const { api } = await import('@/lib/api');
-      const response = await api.post("/api/code-snippets", {
+      const response = await api.post("/api/code-snippets/", {
         title,
         description: description || null,
         code,

@@ -64,7 +64,7 @@ export default function TeamsPage() {
   const fetchTeams = async () => {
     try {
       const { api } = await import('@/lib/api');
-      const data = await api.get('/api/teams');
+      const data = await api.get('/api/teams/');
       setTeams(data.teams || []);
     } catch (error) {
       console.error("Error fetching teams:", error);
@@ -89,7 +89,7 @@ export default function TeamsPage() {
 
     try {
       const { api } = await import('@/lib/api');
-      await api.post(`/api/teams/${teamId}/join-requests`, {
+      await api.post(`/api/teams/${teamId}/join-requests/`, {
         message: joinRequestMessage.trim(),
       });
 

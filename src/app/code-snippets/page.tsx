@@ -75,7 +75,7 @@ export default function CodeSnippetsPage() {
       if (searchQuery) params.append("search", searchQuery);
 
       const { api } = await import('@/lib/api');
-      const data = await api.get(`/api/code-snippets?${params.toString()}`);
+      const data = await api.get(`/api/code-snippets/?${params.toString()}`);
       setSnippets(data.snippets || []);
     } catch (error) {
       console.error("Error fetching snippets:", error);
@@ -90,7 +90,7 @@ export default function CodeSnippetsPage() {
 
     try {
       const { api } = await import('@/lib/api');
-      await api.post(`/api/code-snippets/${snippetId}/favorite`);
+      await api.post(`/api/code-snippets/${snippetId}/favorite/`);
 
       setSnippets(prev => prev.map(snippet => 
         snippet.id === snippetId 

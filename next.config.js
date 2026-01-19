@@ -6,6 +6,19 @@ const nextConfig = {
     unoptimized: true, // Can be removed if using Vercel Image Optimization
   },
   trailingSlash: true,
+  // API route'ları için redirect'i önlemek için
+  async redirects() {
+    return [];
+  },
+  // API route'ları için rewrite ekle
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*',
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig

@@ -15,6 +15,9 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [statusCode, setStatusCode] = useState<number | string | null>(null);
+  const [rawResponse, setRawResponse] = useState<string>("");
+  const [apiUrl, setApiUrl] = useState<string>("");
 
   // Token varsa zaten giriş yapılmış, yönlendir
   useEffect(() => {
@@ -40,14 +43,59 @@ export default function SignIn() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setStatusCode(null);
+    setRawResponse("");
+    setApiUrl("");
 
     try {
+      // API URL'ini al - getApiBaseUrl() fonksiyonunu kullanmak için import etmemiz gerekir
+      // Şimdilik environment variable'dan alıyoruz, ama gerçek URL console'da log'lanacak
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://www.callisterai.com';
+      const fullUrl = `${baseUrl}/api/login`;
+      setApiUrl(fullUrl);
+      
+      console.log('[SignIn] Attempting login to:', fullUrl);
+      
       const result = await authApi.login(email, password);
       
       // Başarılı giriş - yönlendirme
       window.location.href = "/teams";
     } catch (error: any) {
+      console.error('[SignIn] Login error caught:', error);
+      console.error('[SignIn] Error statusCode:', error.statusCode);
+      console.error('[SignIn] Error rawResponse:', error.rawResponse);
+      
+      // Status kodunu al (error objesinden, mesajdan regex ile, veya string olarak)
+      let code: number | string | null = null;
+      
+      if (error.statusCode) {
+        // Direkt statusCode varsa kullan
+        code = error.statusCode;
+      } else if (error.message) {
+        // Mesajdan regex ile çıkar
+        const match = error.message.match(/\[HTTP (\d+)\]/);
+        if (match) {
+          code = parseInt(match[1], 10);
+        } else {
+          // String status code'ları da kontrol et (TIMEOUT, NETWORK_ERROR, vb.)
+          const stringMatch = error.message.match(/\[HTTP ([\w_]+)\]/);
+          if (stringMatch) {
+            code = stringMatch[1];
+          }
+        }
+      }
+      
+      setStatusCode(code);
       setError(error.message || t("auth.signin.error"));
+      
+      // Raw response'u al (eğer varsa)
+      if (error.rawResponse) {
+        setRawResponse(error.rawResponse);
+      } else if (error.message) {
+        setRawResponse(error.message);
+      } else {
+        setRawResponse('(Yanıt bilgisi yok)');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -90,8 +138,43 @@ export default function SignIn() {
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 border border-gray-200 dark:border-gray-800 shadow-sm">
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl text-red-700 dark:text-red-300 text-sm">
-              {error}
+            <div className="mb-6 space-y-3">
+              {/* API URL */}
+              {apiUrl && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-xl">
+                  <div className="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-1">API URL:</div>
+                  <div className="text-xs font-mono text-blue-900 dark:text-blue-100 break-all">{apiUrl}</div>
+                </div>
+              )}
+              
+              {/* HTTP Status Code - ÖNEMLİ! */}
+              {statusCode && (
+                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-yellow-800 dark:text-yellow-200">
+                      ⚠️ HTTP Status Code:
+                    </span>
+                    <span className="text-lg font-bold text-yellow-900 dark:text-yellow-100 px-3 py-1 bg-yellow-200 dark:bg-yellow-800 rounded-lg">
+                      {statusCode}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Error Message */}
+              <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl text-red-700 dark:text-red-300 text-sm">
+                {error}
+              </div>
+              
+              {/* Raw Response - DEBUG */}
+              {rawResponse && (
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+                  <div className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-2">Backend'den Gelen Raw Response:</div>
+                  <div className="text-xs font-mono text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
+                    {rawResponse.length > 1000 ? rawResponse.substring(0, 1000) + '...' : rawResponse}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
