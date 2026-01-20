@@ -6,6 +6,9 @@
 .env.local
 .env.production
 .env*.local
+backend/.env
+backend/.env.local
+backend/.env.production
 
 # Build outputs
 /build/
