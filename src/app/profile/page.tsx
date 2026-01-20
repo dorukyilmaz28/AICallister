@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, MessageSquare, Settings, Calendar, Bot, Users, Search, Home, Code2, ArrowRight, ChevronRight, Languages } from "lucide-react";
+import { User, LogOut, MessageSquare, Settings, Calendar, Bot, Users, Search, Home, Code2, ArrowRight, ChevronRight, Languages, Menu, X } from "lucide-react";
 import Loading from "@/components/Loading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -22,6 +22,7 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   const [teamInfo, setTeamInfo] = useState<{ teamId: string; teamName: string; teamNumber?: string } | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -123,62 +124,52 @@ export default function Profile() {
               </h1>
             </Link>
             
-            <nav className="hidden md:flex items-center space-x-2">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Language Switcher - Desktop only */}
               <button
                 onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                className="hidden md:flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
                 title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
               >
                 <Languages className="w-4 h-4" />
                 <span className="text-sm font-medium">{language.toUpperCase()}</span>
               </button>
-              <Link href="/chat" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium">
-                Sohbet
-              </Link>
-              <Link href="/code-snippets" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium">
-                Kod Snippets
-              </Link>
-              <Link href="/teams" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium">
-                Takımlar
-              </Link>
-              {user?.role === "admin" && (
-                <Link href="/teams/admin" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium">
-                  Admin
+              
+              {/* Desktop Navigation */}
+              <nav className="hidden md:flex items-center space-x-2">
+                <Link href="/chat" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium">
+                  Sohbet
                 </Link>
-              )}
-              <button
-                onClick={handleSignOut}
-                className="ml-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
-              >
-                Çıkış Yap
-              </button>
-            </nav>
+                <Link href="/code-snippets" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium">
+                  Kod Snippets
+                </Link>
+                <Link href="/teams" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium">
+                  Takımlar
+                </Link>
+                {user?.role === "admin" && (
+                  <Link href="/teams/admin" className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium">
+                    Admin
+                  </Link>
+                )}
+                <button
+                  onClick={handleSignOut}
+                  className="ml-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
+                >
+                  Çıkış Yap
+                </button>
+              </nav>
 
-            {/* Mobile menu */}
-            <div className="md:hidden flex items-center space-x-2">
-              <Link href="/chat" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Sohbet">
-                <MessageSquare className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              </Link>
-              <Link href="/code-snippets" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Kod Snippets">
-                <Code2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              </Link>
-              <Link href="/teams" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Takımlar">
-                <Users className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              </Link>
-              {user?.role === "admin" && (
-                <Link href="/teams/admin" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Admin">
-                  <Settings className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                </Link>
-              )}
-              <Link href="/" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Ana Sayfa">
-                <Home className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              </Link>
+              {/* Mobile menu button */}
               <button
-                onClick={handleSignOut}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                title="Çıkış Yap"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Menu"
               >
-                <LogOut className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                {mobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>
