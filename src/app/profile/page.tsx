@@ -173,6 +173,70 @@ export default function Profile() {
               </button>
             </div>
           </div>
+          
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-100 dark:border-gray-800 py-4">
+              <nav className="flex flex-col space-y-3">
+                <button
+                  onClick={() => {
+                    setLanguage(language === "tr" ? "en" : "tr");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <Languages className="w-4 h-4" />
+                  <span>{language === "tr" ? "English" : "Türkçe"}</span>
+                </button>
+                <Link
+                  href="/chat"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  Sohbet
+                </Link>
+                <Link
+                  href="/code-snippets"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  Kod Snippets
+                </Link>
+                <Link
+                  href="/teams"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  Takımlar
+                </Link>
+                {user?.role === "admin" && (
+                  <Link
+                    href="/teams/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  href="/"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  Ana Sayfa
+                </Link>
+                <button
+                  onClick={() => {
+                    handleSignOut();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors text-left"
+                >
+                  Çıkış Yap
+                </button>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 
