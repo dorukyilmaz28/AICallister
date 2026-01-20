@@ -563,20 +563,22 @@ export default function TeamDetailPage() {
                       {team?.members.map((member) => (
                         <div
                           key={member.id}
-                            className="flex items-center space-x-3 p-2 bg-gray-50 dark:bg-gray-900 rounded-lg"
+                          className="flex items-center justify-between gap-3 p-2 bg-gray-50 dark:bg-gray-900 rounded-lg"
                         >
-                          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                            {member.user.name?.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-gray-900 dark:text-white text-sm font-medium truncate">
-                              {member.user.name}
-                            </p>
-                            <div className="flex items-center space-x-1.5 mt-0.5">
-                              {getRoleIcon(member.role)}
-                              <span className="text-gray-500 dark:text-gray-400 text-xs">
-                                {getRoleLabel(member.role)}
-                              </span>
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
+                              {member.user.name?.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-gray-900 dark:text-white text-sm font-medium truncate">
+                                {member.user.name}
+                              </p>
+                              <div className="flex items-center space-x-1.5 mt-0.5">
+                                {getRoleIcon(member.role)}
+                                <span className="text-gray-500 dark:text-gray-400 text-xs">
+                                  {getRoleLabel(member.role)}
+                                </span>
+                              </div>
                             </div>
                           </div>
                           {/* Silme butonu - sadece yöneticilere görünür ve kendini silemez */}
@@ -584,7 +586,7 @@ export default function TeamDetailPage() {
                            member.user.id !== user?.id && (
                             <button
                               onClick={() => handleRemoveMember(member.user.id, member.user.name)}
-                              className="p-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 hover:text-red-700 transition-colors"
+                              className="p-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 hover:text-red-700 transition-colors flex-shrink-0"
                               title={`${member.user.name} ${t("teamChat.removeUser")}`}
                             >
                               <Trash2 className="w-4 h-4" />
