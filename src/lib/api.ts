@@ -368,11 +368,11 @@ export async function apiRequest<T = any>(
         const statusCode = nativeResponse.status;
         let error: Error;
         if (statusCode === 308 || statusCode === 301 || statusCode === 302 || statusCode === 307) {
-          error = new Error('[HTTP ' + statusCode + '] API endpoint redirect ediyor. Middleware veya route collision olabilir. URL: ' + url);
+          error = new Error('Sunucu yönlendirme hatası. Lütfen daha sonra tekrar deneyin.');
         } else if (contentType.includes('text/html')) {
-          error = new Error('[HTTP ' + statusCode + '] Backend HTML döndürüyor. API endpoint çalışmıyor. URL: ' + url);
+          error = new Error('Sunucu yanıtı beklenmeyen formatta. Lütfen daha sonra tekrar deneyin.');
         } else {
-          error = new Error('[HTTP ' + statusCode + '] Backend JSON döndürmüyor. Content-Type: ' + contentType + ' URL: ' + url);
+          error = new Error('Sunucu yanıtı işlenemedi. Lütfen tekrar deneyin.');
         }
         (error as any).statusCode = statusCode;
         (error as any).rawResponse = rawText.substring(0, 2000);
@@ -388,7 +388,7 @@ export async function apiRequest<T = any>(
         console.error('[API] Status:', nativeResponse.status);
         
         const statusCode = nativeResponse.status;
-        const error = new Error('[HTTP ' + statusCode + '] API endpoint redirect ediyor. Middleware veya route collision olabilir. URL: ' + url);
+        const error = new Error('Sunucu yönlendirme hatası. Lütfen daha sonra tekrar deneyin.');
         (error as any).statusCode = statusCode;
         (error as any).rawResponse = rawText.substring(0, 2000);
         throw error;
@@ -416,11 +416,11 @@ export async function apiRequest<T = any>(
         const statusCode = nativeResponse.status;
         let error: Error;
         if (statusCode === 404) {
-          error = new Error('[HTTP 404] API endpoint bulunamadı. URL: ' + url + ' - Vercel\'de deploy edildiğinden emin olun.');
+          error = new Error('İstenen kaynak bulunamadı.');
         } else if (statusCode === 500) {
-          error = new Error('[HTTP 500] Backend sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+          error = new Error('Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.');
         } else {
-          error = new Error('[HTTP ' + statusCode + '] Backend HTML döndürüyor. Endpoint çalışmıyor. URL: ' + url);
+          error = new Error('Sunucu yanıtı beklenmeyen formatta. Lütfen daha sonra tekrar deneyin.');
         }
         (error as any).statusCode = statusCode;
         (error as any).rawResponse = rawText.substring(0, 2000); // İlk 2000 karakter
@@ -431,25 +431,41 @@ export async function apiRequest<T = any>(
       if (nativeResponse.status >= 400) {
         // ⚠️ STATUS CODE - HATA DURUMUNDA BURAYA BAKIN! ⚠️
         console.error('[API] ⚠️⚠️⚠️ ERROR STATUS CODE:', nativeResponse.status, '⚠️⚠️⚠️');
-        let errorMessage = `HTTP ${nativeResponse.status}`;
+        let errorMessage = 'Bir hata oluştu';
         
         if (rawText) {
           try {
             const parsed = JSON.parse(rawText);
             errorMessage = parsed.error || parsed.message || errorMessage;
+            // Status kodunu mesajdan temizle
+            errorMessage = errorMessage.replace(/\[HTTP \d+\]/g, '').trim();
           } catch {
-            errorMessage = rawText.length > 200 
-              ? rawText.substring(0, 200) + '...' 
-              : rawText;
+            // JSON parse edilemezse, kullanıcı dostu mesaj ver
+            errorMessage = 'Bir hata oluştu. Lütfen tekrar deneyin.';
           }
         }
         
-        // Status kodunu hata mesajına ekle
+        // Status koduna göre kullanıcı dostu mesaj
         const statusCode = nativeResponse.status;
-        const finalErrorMessage = `[HTTP ${statusCode}] ${errorMessage}`;
+        let userFriendlyMessage = errorMessage;
         
-        // Error objesine status code'u ve raw response'u ekle (login sayfasında kullanmak için)
-        const error = new Error(finalErrorMessage);
+        if (statusCode === 401) {
+          userFriendlyMessage = 'Oturum süresi dolmuş. Lütfen tekrar giriş yapın.';
+        } else if (statusCode === 403) {
+          userFriendlyMessage = 'Bu işlem için yetkiniz bulunmuyor.';
+        } else if (statusCode === 404) {
+          userFriendlyMessage = 'İstenen kaynak bulunamadı.';
+        } else if (statusCode === 500) {
+          userFriendlyMessage = 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.';
+        } else if (statusCode >= 500) {
+          userFriendlyMessage = 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.';
+        } else if (statusCode >= 400) {
+          // Diğer 4xx hataları için backend'den gelen mesajı kullan, yoksa genel mesaj
+          userFriendlyMessage = errorMessage || 'Bir hata oluştu. Lütfen tekrar deneyin.';
+        }
+        
+        // Error objesine status code'u ve raw response'u ekle (debug için, kullanıcıya gösterilmez)
+        const error = new Error(userFriendlyMessage);
         (error as any).statusCode = statusCode;
         (error as any).rawResponse = rawText.substring(0, 2000); // İlk 2000 karakter
         throw error;
@@ -458,7 +474,7 @@ export async function apiRequest<T = any>(
       // Success - JSON parse et
       if (!rawText || rawText.trim() === '') {
         console.error('[API] Response data is empty');
-        const error = new Error('[HTTP ' + nativeResponse.status + '] API yanıtı boş geldi. Backend çalışmıyor olabilir.');
+        const error = new Error('Sunucudan yanıt alınamadı. Lütfen tekrar deneyin.');
         (error as any).statusCode = nativeResponse.status;
         (error as any).rawResponse = '(Boş yanıt)';
         throw error;
@@ -488,13 +504,13 @@ export async function apiRequest<T = any>(
         
         // HTML olabilir (tekrar kontrol)
         if (rawText.trim().startsWith('<')) {
-          const error = new Error('[HTTP ' + nativeResponse.status + '] Backend HTML döndürüyor. API endpoint çalışmıyor. URL: ' + url);
+          const error = new Error('Sunucu yanıtı beklenmeyen formatta. Lütfen daha sonra tekrar deneyin.');
           (error as any).statusCode = nativeResponse.status;
           (error as any).rawResponse = rawText.substring(0, 2000); // İlk 2000 karakter
           throw error;
         }
         
-        const error = new Error('[HTTP ' + nativeResponse.status + '] API yanıtı parse edilemedi: ' + (parseError.message || 'Bilinmeyen hata'));
+        const error = new Error('Sunucu yanıtı işlenemedi. Lütfen tekrar deneyin.');
         (error as any).statusCode = nativeResponse.status;
         (error as any).rawResponse = rawText.substring(0, 2000); // İlk 2000 karakter
         throw error;
@@ -525,11 +541,11 @@ export async function apiRequest<T = any>(
       const statusCode = response.status;
       let error: Error;
       if (statusCode === 308 || statusCode === 301 || statusCode === 302 || statusCode === 307) {
-        error = new Error('[HTTP ' + statusCode + '] API endpoint redirect ediyor. Middleware veya route collision olabilir. URL: ' + url);
+        error = new Error('Sunucu yönlendirme hatası. Lütfen daha sonra tekrar deneyin.');
       } else if (contentType.includes('text/html')) {
-        error = new Error('[HTTP ' + statusCode + '] Backend HTML döndürüyor. API endpoint çalışmıyor. URL: ' + url);
+        error = new Error('Sunucu yanıtı beklenmeyen formatta. Lütfen daha sonra tekrar deneyin.');
       } else {
-        error = new Error('[HTTP ' + statusCode + '] Backend JSON döndürmüyor. Content-Type: ' + contentType + ' URL: ' + url);
+        error = new Error('Sunucu yanıtı işlenemedi. Lütfen tekrar deneyin.');
       }
       (error as any).statusCode = statusCode;
       (error as any).rawResponse = text.substring(0, 2000);
@@ -543,7 +559,7 @@ export async function apiRequest<T = any>(
       if (typeof window !== 'undefined') {
         window.location.href = '/auth/signin';
       }
-      const error = new Error('[HTTP 401] Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+      const error = new Error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
       (error as any).statusCode = 401;
       throw error;
     }
@@ -555,11 +571,27 @@ export async function apiRequest<T = any>(
         const text = await response.text();
         // "Redirecting..." kontrolü
         if (text.trim() === 'Redirecting...' || text.toLowerCase().includes('redirecting')) {
-          throw new Error('[HTTP ' + response.status + '] API endpoint redirect ediyor. Middleware veya route collision olabilir. URL: ' + url);
+          throw new Error('Sunucu yönlendirme hatası. Lütfen daha sonra tekrar deneyin.');
         }
         return { error: text.substring(0, 200) || 'Bir hata oluştu.' };
       });
-      const error = new Error(`[HTTP ${response.status}] ${errorData.error || 'Bir hata oluştu.'}`);
+      // Status kodunu mesajdan temizle
+      let errorMsg = errorData.error || 'Bir hata oluştu.';
+      errorMsg = errorMsg.replace(/\[HTTP \d+\]/g, '').trim();
+      
+      // Status koduna göre kullanıcı dostu mesaj
+      let userFriendlyMessage = errorMsg;
+      if (response.status === 401) {
+        userFriendlyMessage = 'Oturum süresi dolmuş. Lütfen tekrar giriş yapın.';
+      } else if (response.status === 403) {
+        userFriendlyMessage = 'Bu işlem için yetkiniz bulunmuyor.';
+      } else if (response.status === 404) {
+        userFriendlyMessage = 'İstenen kaynak bulunamadı.';
+      } else if (response.status >= 500) {
+        userFriendlyMessage = 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.';
+      }
+      
+      const error = new Error(userFriendlyMessage);
       (error as any).statusCode = response.status;
       (error as any).rawResponse = typeof errorData === 'string' ? errorData : JSON.stringify(errorData, null, 2).substring(0, 2000);
       throw error;
@@ -580,15 +612,15 @@ export async function apiRequest<T = any>(
           if (!error.statusCode) {
             // Daha açıklayıcı hata mesajları
             if (error.message?.includes('timeout')) {
-              const newError = new Error('[HTTP TIMEOUT] İstek zaman aşımına uğradı. Lütfen tekrar deneyin.');
+              const newError = new Error('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.');
               (newError as any).statusCode = 'TIMEOUT';
               throw newError;
             } else if (error.message?.includes('network') || error.message?.includes('ECONNREFUSED')) {
-              const newError = new Error('[HTTP NETWORK ERROR] İnternet bağlantısı hatası. Lütfen bağlantınızı kontrol edin.');
+              const newError = new Error('İnternet bağlantısı hatası. Lütfen bağlantınızı kontrol edin.');
               (newError as any).statusCode = 'NETWORK_ERROR';
               throw newError;
             } else if (error.message?.includes('Failed to fetch')) {
-              const newError = new Error('[HTTP FETCH ERROR] Sunucuya bağlanılamıyor. Lütfen daha sonra tekrar deneyin.');
+              const newError = new Error('Sunucuya bağlanılamıyor. Lütfen daha sonra tekrar deneyin.');
               (newError as any).statusCode = 'FETCH_ERROR';
               throw newError;
             }
@@ -797,7 +829,7 @@ export const authApi = {
       
       if (!response || typeof response !== 'object') {
         console.error('[AuthAPI] ❌ Invalid response format:', response);
-        const error = new Error('[HTTP RESPONSE ERROR] API yanıtı geçersiz format. Backend\'den beklenmeyen yanıt geldi. Response type: ' + typeof response);
+        const error = new Error('Sunucu yanıtı beklenmeyen formatta. Lütfen tekrar deneyin.');
         (error as any).statusCode = 'INVALID_RESPONSE';
         (error as any).rawResponse = JSON.stringify(response, null, 2).substring(0, 2000);
         throw error;
