@@ -4,7 +4,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Bot, ArrowLeft, Settings, MessageSquare, Search, Home, Languages } from "lucide-react";
+import { User, LogOut, Users, Bot, ArrowLeft, Settings, MessageSquare, Search, Home, Languages, Menu, X } from "lucide-react";
 import Loading from "@/components/Loading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -41,6 +41,7 @@ export default function TeamsPage() {
   const [joinRequestMessage, setJoinRequestMessage] = useState("");
   const [showJoinForm, setShowJoinForm] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // Token-based auth kontrolü (Capacitor/static export için)
@@ -145,48 +146,119 @@ export default function TeamsPage() {
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Language Switcher - Desktop only */}
               <button
                 onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                className="hidden md:flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
                 title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
               >
                 <Languages className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">{language.toUpperCase()}</span>
+                <span className="text-sm font-medium">{language.toUpperCase()}</span>
               </button>
-              <Link
-                href="/"
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
-                title={t("common.home")}
-              >
-                <Home className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">{t("common.home")}</span>
-              </Link>
-              <Link
-                href="/chat"
-                className="flex items-center space-x-2 px-3 py-2 bg-blue-100 dark:bg-blue-900/40 hover:bg-blue-200 dark:hover:bg-blue-900/60 rounded-lg text-blue-600 dark:text-blue-300 transition-colors"
-                title={t("common.chat")}
-              >
-                <Bot className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">{t("common.chat")}</span>
-              </Link>
-              <Link
-                href="/discover-teams"
-                className="flex items-center space-x-2 px-3 py-2 bg-green-100 dark:bg-green-900/40 hover:bg-green-200 dark:hover:bg-green-900/60 rounded-lg text-green-600 dark:text-green-300 transition-colors"
-                title={t("common.discover")}
-              >
-                <Search className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">{t("common.discover")}</span>
-              </Link>
+              
+              {/* Desktop Navigation */}
+              <nav className="hidden md:flex items-center space-x-2">
+                <Link
+                  href="/"
+                  className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                  title={t("common.home")}
+                >
+                  <Home className="w-4 h-4" />
+                  <span className="text-sm font-medium">{t("common.home")}</span>
+                </Link>
+                <Link
+                  href="/chat"
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-100 dark:bg-blue-900/40 hover:bg-blue-200 dark:hover:bg-blue-900/60 rounded-lg text-blue-600 dark:text-blue-300 transition-colors"
+                  title={t("common.chat")}
+                >
+                  <Bot className="w-4 h-4" />
+                  <span className="text-sm font-medium">{t("common.chat")}</span>
+                </Link>
+                <Link
+                  href="/discover-teams"
+                  className="flex items-center space-x-2 px-3 py-2 bg-green-100 dark:bg-green-900/40 hover:bg-green-200 dark:hover:bg-green-900/60 rounded-lg text-green-600 dark:text-green-300 transition-colors"
+                  title={t("common.discover")}
+                >
+                  <Search className="w-4 h-4" />
+                  <span className="text-sm font-medium">{t("common.discover")}</span>
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-2 px-3 py-2 bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 rounded-lg text-red-600 dark:text-red-300 transition-colors"
+                  title={t("common.signout")}
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm font-medium">{t("common.signout")}</span>
+                </button>
+              </nav>
+
+              {/* Mobile menu button - En sağda */}
               <button
-                onClick={handleSignOut}
-                className="flex items-center space-x-2 px-3 py-2 bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 rounded-lg text-red-600 dark:text-red-300 transition-colors"
-                title={t("common.signout")}
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Menu"
               >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">{t("common.signout")}</span>
+                {mobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
               </button>
             </div>
+          </div>
+          
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-100 dark:border-gray-800 py-4">
+              <nav className="flex flex-col space-y-3">
+                <button
+                  onClick={() => {
+                    setLanguage(language === "tr" ? "en" : "tr");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <Languages className="w-4 h-4" />
+                  <span>{language === "tr" ? "English" : "Türkçe"}</span>
+                </button>
+                <Link
+                  href="/"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>{t("common.home")}</span>
+                </Link>
+                <Link
+                  href="/chat"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                >
+                  <Bot className="w-4 h-4" />
+                  <span>{t("common.chat")}</span>
+                </Link>
+                <Link
+                  href="/discover-teams"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-green-600 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
+                >
+                  <Search className="w-4 h-4" />
+                  <span>{t("common.discover")}</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    handleSignOut();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors text-left"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>{t("common.signout")}</span>
+                </button>
+              </nav>
+            </div>
+          )}
           </div>
         </div>
       </header>
