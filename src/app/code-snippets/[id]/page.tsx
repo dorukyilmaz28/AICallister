@@ -217,21 +217,21 @@ export default function CodeSnippetDetailPage() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleToggleFavorite}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all ${
                   snippet.isFavorite
-                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 border-2 border-red-200 dark:border-red-700'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 border-2 border-gray-200 dark:border-gray-700'
                 }`}
               >
-                <Heart className={`w-4 h-4 ${snippet.isFavorite ? 'fill-current' : ''}`} />
+                <Heart className={`w-5 h-5 ${snippet.isFavorite ? 'fill-current' : ''}`} />
                 <span>{snippet.isFavorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}</span>
               </button>
 
               <button
                 onClick={handleCopyCode}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 font-medium transition-all"
+                className="flex items-center justify-center space-x-2 px-6 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border-2 border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-200 font-semibold transition-all"
               >
-                {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
                 <span>{copied ? 'Kopyalandı!' : 'Kodu Kopyala'}</span>
               </button>
 
