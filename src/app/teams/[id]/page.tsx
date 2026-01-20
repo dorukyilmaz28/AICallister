@@ -3,7 +3,7 @@
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash, Info, Settings2, Bell, Languages } from "lucide-react";
+import { User, LogOut, Users, Bot, ArrowLeft, Send, MessageSquare, Settings, Crown, Shield, Trash2, Trash, Info, Settings2, Bell, Languages, Menu, X } from "lucide-react";
 import Loading from "@/components/Loading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -61,6 +61,7 @@ export default function TeamDetailPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Token-based auth kontrolü
@@ -474,32 +475,26 @@ export default function TeamDetailPage() {
               {/* Chat Header */}
               <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-t-2xl gap-2">
                 <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">{t("teamChat.title")}</h3>
-                <div className="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
-                  {/* Mobile Team Info Button */}
-                  <button
-                    onClick={() => setShowTeamInfo(!showTeamInfo)}
-                    className="lg:hidden p-1.5 sm:p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
-                    title={t("teamChat.teamInfoTitle")}
-                  >
-                    <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  </button>
+                
+                {/* Desktop Buttons */}
+                <div className="hidden md:flex items-center space-x-2 flex-shrink-0">
                   {/* Admin Panel Button */}
                   {(userRole === 'captain' || userRole === 'manager' || userRole === 'mentor') && (
                     <Link
                       href={`/teams/${teamId}/admin`}
-                      className="p-1.5 sm:p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                      className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
                       title={t("teamChat.adminPanel")}
                     >
-                      <Settings2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <Settings2 className="w-4 h-4" />
                     </Link>
                   )}
                   {/* Notification Button */}
                   <button
                     onClick={toggleNotifications}
-                    className="relative p-1.5 sm:p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                    className="relative p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
                     title={t("teamChat.notifications")}
                   >
-                    <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <Bell className="w-4 h-4" />
                     {unreadCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-semibold">
                         {unreadCount > 9 ? '9+' : unreadCount}
@@ -510,14 +505,91 @@ export default function TeamDetailPage() {
                   {messages.length > 0 && (
                     <button
                       onClick={handleClearAllMessages}
-                      className="p-1.5 sm:p-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-red-600 dark:text-red-300 transition-colors"
+                      className="p-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-red-600 dark:text-red-300 transition-colors"
                       title={t("teamChat.deleteAllMessages")}
                     >
-                      <Trash className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <Trash className="w-4 h-4" />
                     </button>
                   )}
                 </div>
+
+                {/* Mobile Hamburger Menu Button */}
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  aria-label="Menu"
+                >
+                  {mobileMenuOpen ? (
+                    <X className="w-5 h-5" />
+                  ) : (
+                    <Menu className="w-5 h-5" />
+                  )}
+                </button>
               </div>
+
+              {/* Mobile Menu Dropdown */}
+              {mobileMenuOpen && (
+                <div className="md:hidden border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                  <div className="p-4 space-y-3">
+                    {/* Team Info Button */}
+                    <button
+                      onClick={() => {
+                        setShowTeamInfo(!showTeamInfo);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                    >
+                      <Info className="w-5 h-5" />
+                      <span className="text-sm font-medium">{t("teamChat.teamInfo")}</span>
+                    </button>
+                    
+                    {/* Admin Panel Button */}
+                    {(userRole === 'captain' || userRole === 'manager' || userRole === 'mentor') && (
+                      <Link
+                        href={`/teams/${teamId}/admin`}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="w-full flex items-center space-x-3 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                      >
+                        <Settings2 className="w-5 h-5" />
+                        <span className="text-sm font-medium">{t("teamChat.adminPanel")}</span>
+                      </Link>
+                    )}
+                    
+                    {/* Notification Button */}
+                    <button
+                      onClick={() => {
+                        toggleNotifications();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Bell className="w-5 h-5" />
+                        <span className="text-sm font-medium">{t("teamChat.notifications")}</span>
+                      </div>
+                      {unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </button>
+                    
+                    {/* Delete All Messages Button */}
+                    {messages.length > 0 && (
+                      <button
+                        onClick={() => {
+                          handleClearAllMessages();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center space-x-3 px-4 py-2.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-red-600 dark:text-red-300 transition-colors"
+                      >
+                        <Trash className="w-5 h-5" />
+                        <span className="text-sm font-medium">{t("teamChat.deleteAllMessages")}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
               
               {/* Mobile Team Info Dropdown */}
               {showTeamInfo && (
