@@ -120,12 +120,64 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Mobile Menu - Sadece Tema Toggle */}
+          {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="md:hidden border-t border-gray-100 dark:border-gray-800 py-4">
-              <div className="px-4">
-                <ThemeToggle />
-              </div>
+              <nav className="flex flex-col space-y-3">
+                <Link
+                  href="/chat"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  {t("common.chat")}
+                </Link>
+                <a
+                  href="https://frcacademy.com/html/main.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors inline-flex items-center gap-1"
+                >
+                  {t("common.academy")}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+                <Link
+                  href="/code-snippets"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  {t("common.snippets")}
+                </Link>
+                <Link
+                  href="/teams"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  {t("common.teams")}
+                </Link>
+                {isAuthenticated && (
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    {t("common.dashboard")}
+                  </Link>
+                )}
+                {session?.user && session.user.role === "admin" && (
+                  <Link
+                    href="/teams/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    {t("common.admin")}
+                  </Link>
+                )}
+                {/* Theme Toggle in Mobile Menu */}
+                <div className="px-4 py-2">
+                  <ThemeToggle />
+                </div>
+              </nav>
             </div>
           )}
         </div>
