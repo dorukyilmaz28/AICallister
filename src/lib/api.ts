@@ -1,10 +1,9 @@
 import { Capacitor } from '@capacitor/core';
 import { CapacitorHttp } from '@capacitor/core';
 
-// API Base URL - Environment variable'dan alınır
-// Development: http://localhost:3001
+// API Base URL - Hardcoded (environment variable expose olmasın diye)
 // Production: https://www.callisterai.com (www ile - CORS için gerekli)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://www.callisterai.com';
+const API_BASE_URL = 'https://www.callisterai.com';
 
 // Capacitor'da backend URL'ini kullan (static export'ta API route'lar çalışmaz)
 function getApiBaseUrl(): string {

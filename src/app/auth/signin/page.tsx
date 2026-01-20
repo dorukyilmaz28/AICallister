@@ -50,7 +50,7 @@ export default function SignIn() {
     try {
       // API URL'ini al - getApiBaseUrl() fonksiyonunu kullanmak için import etmemiz gerekir
       // Şimdilik environment variable'dan alıyoruz, ama gerçek URL console'da log'lanacak
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://www.callisterai.com';
+      const baseUrl = 'https://www.callisterai.com';
       const fullUrl = `${baseUrl}/api/login`;
       setApiUrl(fullUrl);
       
