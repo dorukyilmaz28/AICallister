@@ -2,7 +2,7 @@ diff --git a/node_modules/@capacitor/push-notifications/android/build.gradle b/n
 index 93ecab5..82c513f 100644
 --- a/node_modules/@capacitor/push-notifications/android/build.gradle
 +++ b/node_modules/@capacitor/push-notifications/android/build.gradle
-@@ -43,7 +43,7 @@ android {
+@@ -43,7 +43,12 @@ android {
      buildTypes {
          release {
              minifyEnabled false
@@ -11,3 +11,12 @@ index 93ecab5..82c513f 100644
          }
      }
      lintOptions {
+         abortOnError = false
+     }
++    compileOptions {
++        sourceCompatibility JavaVersion.VERSION_21
++        targetCompatibility JavaVersion.VERSION_21
++    }
+     publishing {
+         singleVariant("release")
+     }

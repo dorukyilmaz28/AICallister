@@ -226,7 +226,7 @@ export default function DiscoverTeamsPage() {
                     </p>
                   )}
 
-                  <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <div className="pt-4 border-t border-gray-100 dark:border-gray-800 space-y-3">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-sm text-gray-600 dark:text-gray-400">
                         {team.memberCount} {team.memberCount === 1 ? t("discover.member") : t("discover.members")}
@@ -237,31 +237,34 @@ export default function DiscoverTeamsPage() {
                           <span>{t("discover.isMember")}</span>
                         </span>
                       )}
+                      {team.hasPendingRequest && (
+                        <span className="inline-flex items-center space-x-1 text-yellow-600 dark:text-yellow-400 text-sm font-semibold">
+                          <Clock className="w-4 h-4" />
+                          <span>{t("discover.pending")}</span>
+                        </span>
+                      )}
                     </div>
 
-                    <div className="space-y-2">
+                    {/* Action Buttons - Vertical Stack */}
+                    <div className="flex flex-col gap-3">
                       <Link
                         href={`/teams/${team.id}`}
-                        className="block w-full text-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium transition-colors py-1"
+                        className="w-full flex items-center justify-center px-4 py-3.5 bg-gray-900 dark:bg-gray-800 hover:bg-gray-800 dark:hover:bg-gray-700 rounded-xl text-white text-base font-semibold transition-all shadow-sm hover:shadow-md"
                       >
-                        {t("teamChat.goToTeam")}
+                        <ArrowRight className="w-5 h-5 mr-2" />
+                        <span>Takıma Git</span>
                       </Link>
                       
-                      {team.hasPendingRequest ? (
-                        <div className="w-full px-4 py-2.5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-xl text-yellow-600 dark:text-yellow-400 text-sm font-semibold text-center">
-                          <Clock className="w-4 h-4 inline mr-1" />
-                          {t("discover.pending")}
-                        </div>
-                      ) : !team.isMember ? (
+                      {!team.isMember && !team.hasPendingRequest && (
                         <button
                           onClick={() => handleJoinRequest(team.id)}
                           disabled={sendingRequest === team.id}
-                          className="w-full px-4 py-2.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-700 rounded-xl text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-200 transition-colors duration-200 text-sm font-semibold disabled:opacity-50"
+                          className="w-full flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white text-base font-semibold transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
                         >
-                          <UserPlus className="w-4 h-4 inline mr-1" />
-                          {sendingRequest === team.id ? t("discover.sending") : t("teamChat.sendJoinRequest")}
+                          <UserPlus className="w-5 h-5 mr-2" />
+                          <span>{sendingRequest === team.id ? t("discover.sending") : "Katılım İsteği Gönder"}</span>
                         </button>
-                      ) : null}
+                      )}
                     </div>
                   </div>
                 </div>

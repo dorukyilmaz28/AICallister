@@ -169,7 +169,7 @@ export default function CodeSnippetDetailPage() {
       </header>
 
       {/* Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 pt-20 sm:pt-8">
           <div className="max-w-5xl mx-auto">
           {/* Snippet Info Card */}
           <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 mb-6 border border-gray-200 dark:border-gray-800 shadow-sm">
@@ -214,13 +214,13 @@ export default function CodeSnippetDetailPage() {
             )}
 
             {/* Actions */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleToggleFavorite}
-                className={`flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all ${
+                className={`flex items-center justify-center space-x-2 px-6 py-3.5 rounded-xl font-semibold transition-all text-base border-2 ${
                   snippet.isFavorite
-                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 border-2 border-red-200 dark:border-red-700'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 border-2 border-gray-200 dark:border-gray-700'
+                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 border-red-300 dark:border-red-700'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-700'
                 }`}
               >
                 <Heart className={`w-5 h-5 ${snippet.isFavorite ? 'fill-current' : ''}`} />
@@ -229,7 +229,7 @@ export default function CodeSnippetDetailPage() {
 
               <button
                 onClick={handleCopyCode}
-                className="flex items-center justify-center space-x-2 px-6 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border-2 border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-200 font-semibold transition-all"
+                className="flex items-center justify-center space-x-2 px-6 py-3.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-200 font-semibold transition-all text-base"
               >
                 {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
                 <span>{copied ? 'Kopyalandı!' : 'Kodu Kopyala'}</span>
