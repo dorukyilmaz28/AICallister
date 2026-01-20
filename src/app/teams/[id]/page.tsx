@@ -472,37 +472,37 @@ export default function TeamDetailPage() {
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm h-[500px] md:h-[600px] lg:h-[700px] flex flex-col">
               {/* Chat Header */}
-              <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-t-2xl">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t("teamChat.title")}</h3>
-                <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-t-2xl gap-2">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">{t("teamChat.title")}</h3>
+                <div className="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
                   {/* Mobile Team Info Button */}
                   <button
                     onClick={() => setShowTeamInfo(!showTeamInfo)}
-                    className="lg:hidden p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                    className="lg:hidden p-1.5 sm:p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
                     title={t("teamChat.teamInfoTitle")}
                   >
-                    <Info className="w-4 h-4" />
+                    <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                   {/* Admin Panel Button */}
                   {(userRole === 'captain' || userRole === 'manager' || userRole === 'mentor') && (
                     <Link
                       href={`/teams/${teamId}/admin`}
-                      className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                      className="p-1.5 sm:p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
                       title={t("teamChat.adminPanel")}
                     >
-                      <Settings2 className="w-4 h-4" />
+                      <Settings2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </Link>
                   )}
                   {/* Notification Button */}
                   <button
                     onClick={toggleNotifications}
-                    className="relative p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                    className="relative p-1.5 sm:p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
                     title={t("teamChat.notifications")}
                   >
-                    <Bell className="w-4 h-4" />
+                    <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                        {unreadCount}
+                      <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-semibold">
+                        {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
                     )}
                   </button>
@@ -510,10 +510,10 @@ export default function TeamDetailPage() {
                   {messages.length > 0 && (
                     <button
                       onClick={handleClearAllMessages}
-                      className="p-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-red-600 dark:text-red-300 transition-colors"
+                      className="p-1.5 sm:p-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-red-600 dark:text-red-300 transition-colors"
                       title={t("teamChat.deleteAllMessages")}
                     >
-                      <Trash className="w-4 h-4" />
+                      <Trash className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   )}
                 </div>
