@@ -266,27 +266,27 @@ export default function TeamAdminPanel() {
               {teamInfo.approvedMembers.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+                  className="flex items-center justify-between gap-3 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <div className="flex items-center space-x-4 flex-1 min-w-0">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <Users className="w-5 h-5 text-white" />
                     </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h4 className="font-semibold text-gray-900 dark:text-white">{member.name}</h4>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 flex-wrap">
+                        <h4 className="font-semibold text-gray-900 dark:text-white truncate">{member.name}</h4>
                         {member.id === teamInfo.team.adminId && (
-                          <Crown className="w-4 h-4 text-yellow-500 dark:text-yellow-400" />
+                          <Crown className="w-4 h-4 text-yellow-500 dark:text-yellow-400 flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{member.email}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{member.email}</p>
                     </div>
                   </div>
                   {member.id !== teamInfo.team.adminId && (
                     <button
                       onClick={() => handleMemberAction(member.id, "remove")}
                       disabled={actionLoading === `${member.id}-remove`}
-                      className="p-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 transition-colors disabled:opacity-50"
+                      className="p-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 transition-colors disabled:opacity-50 flex-shrink-0"
                       title={t("admin.removeMember")}
                     >
                       <Trash2 className="w-4 h-4" />
