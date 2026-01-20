@@ -61,20 +61,6 @@ export default function Home() {
             </nav>
 
             <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-                aria-label="Menu"
-              >
-                {mobileMenuOpen ? (
-                  <X className="w-5 h-5" />
-                ) : (
-                  <Menu className="w-5 h-5" />
-                )}
-              </button>
-              {/* Theme Toggle */}
-              <ThemeToggle />
               {/* Language Switcher */}
               <button
                 onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
@@ -83,6 +69,20 @@ export default function Home() {
               >
                 <Languages className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">{language.toUpperCase()}</span>
+              </button>
+              {/* Theme Toggle */}
+              <ThemeToggle />
+              {/* Mobile menu button - En sağda */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
               </button>
               {isAuthenticated ? (
                 <>

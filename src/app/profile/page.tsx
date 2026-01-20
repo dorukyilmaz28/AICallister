@@ -198,16 +198,16 @@ export default function Profile() {
                 <div>
                   <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">{user?.name}</h2>
                   <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">{user?.email}</p>
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div className="px-4 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
                       <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{conversations.length} Konuşma</span>
                     </div>
                     {teamInfo && (
                       <Link
                         href={`/teams/${teamInfo.teamId}`}
-                        className="group flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 rounded-lg transition-colors"
+                        className="group flex items-center space-x-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 rounded-lg transition-colors"
                       >
-                      <Users className="w-4 h-4 text-blue-600 dark:text-blue-300" />
+                        <Users className="w-4 h-4 text-blue-600 dark:text-blue-300" />
                         <span className="text-sm font-semibold text-blue-600 dark:text-blue-300">
                           {teamInfo.teamName} {teamInfo.teamNumber && `#${teamInfo.teamNumber}`}
                         </span>

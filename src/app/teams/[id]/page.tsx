@@ -473,12 +473,12 @@ export default function TeamDetailPage() {
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm h-[500px] md:h-[600px] lg:h-[700px] flex flex-col">
               {/* Chat Header */}
               <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-t-2xl">
-                <div className="flex items-center space-x-3">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t("teamChat.title")}</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t("teamChat.title")}</h3>
+                <div className="flex items-center space-x-2">
                   {/* Mobile Team Info Button */}
                   <button
                     onClick={() => setShowTeamInfo(!showTeamInfo)}
-                    className="lg:hidden p-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                    className="lg:hidden p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
                     title={t("teamChat.teamInfoTitle")}
                   >
                     <Info className="w-4 h-4" />
@@ -506,18 +506,17 @@ export default function TeamDetailPage() {
                       </span>
                     )}
                   </button>
+                  {/* Delete All Messages Button */}
+                  {messages.length > 0 && (
+                    <button
+                      onClick={handleClearAllMessages}
+                      className="p-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-red-600 dark:text-red-300 transition-colors"
+                      title={t("teamChat.deleteAllMessages")}
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-                {messages.length > 0 && (
-                  <button
-                    onClick={handleClearAllMessages}
-                    className="flex items-center space-x-2 px-3 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 hover:text-red-700 transition-colors text-sm font-medium"
-                    title={t("teamChat.deleteAllMessages")}
-                  >
-                    <Trash className="w-4 h-4" />
-                    <span className="hidden sm:inline">{t("teamChat.deleteAll")}</span>
-                    <span className="sm:hidden">{t("teamChat.delete")}</span>
-                  </button>
-                )}
               </div>
               
               {/* Mobile Team Info Dropdown */}
