@@ -212,12 +212,14 @@ export default function CodeSnippetDetailPage() {
                 ))}
               </div>
             )}
+          </div>
 
-            {/* Actions */}
+          {/* Action Buttons - Above Code Block */}
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 lg:p-6 mb-6 border border-gray-200 dark:border-gray-800 shadow-sm">
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleToggleFavorite}
-                className={`flex items-center justify-center space-x-2 px-6 py-3.5 rounded-xl font-semibold transition-all text-base border-2 ${
+                className={`flex-1 flex items-center justify-center space-x-2 px-6 py-4 rounded-xl font-semibold transition-all text-base border-2 ${
                   snippet.isFavorite
                     ? 'bg-red-50 dark:bg-red-900/30 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 border-red-300 dark:border-red-700'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-700'
@@ -229,7 +231,7 @@ export default function CodeSnippetDetailPage() {
 
               <button
                 onClick={handleCopyCode}
-                className="flex items-center justify-center space-x-2 px-6 py-3.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-200 font-semibold transition-all text-base"
+                className="flex-1 flex items-center justify-center space-x-2 px-6 py-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-200 font-semibold transition-all text-base"
               >
                 {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
                 <span>{copied ? 'Kopyalandı!' : 'Kodu Kopyala'}</span>
@@ -239,18 +241,18 @@ export default function CodeSnippetDetailPage() {
                 <>
                   <Link
                     href={`/code-snippets/${snippet.id}/edit`}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-700 dark:text-blue-300 font-medium transition-all"
+                    className="flex items-center justify-center space-x-2 px-4 py-4 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 border-2 border-blue-200 dark:border-blue-700 rounded-xl text-blue-700 dark:text-blue-300 font-semibold transition-all text-base"
                   >
-                    <Edit className="w-4 h-4" />
+                    <Edit className="w-5 h-5" />
                     <span>Düzenle</span>
                   </Link>
 
                   <button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="flex items-center space-x-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-700 rounded-lg text-red-600 font-medium transition-all disabled:opacity-50"
+                    className="flex items-center justify-center space-x-2 px-4 py-4 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/60 border-2 border-red-200 dark:border-red-700 rounded-xl text-red-600 font-semibold transition-all disabled:opacity-50 text-base"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-5 h-5" />
                     <span>{isDeleting ? 'Siliniyor...' : 'Sil'}</span>
                   </button>
                 </>
