@@ -62,6 +62,7 @@ export default function TeamDetailPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Token-based auth kontrolü
@@ -357,30 +358,83 @@ export default function TeamDetailPage() {
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Desktop Buttons */}
+              <div className="hidden md:flex items-center space-x-3">
+                <button
+                  onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
+                  className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                  title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+                >
+                  <Languages className="w-4 h-4" />
+                  <span className="text-sm font-medium">{language.toUpperCase()}</span>
+                </button>
+                <Link
+                  href="/chat"
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
+                >
+                  <Bot className="w-4 h-4" />
+                  <span>{t("teamChat.aiChat")}</span>
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 text-sm font-medium transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>{t("teamChat.signOut")}</span>
+                </button>
+              </div>
+
+              {/* Mobile Hamburger Menu Button */}
               <button
-                onClick={() => setLanguage(language === "tr" ? "en" : "tr")}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
-                title={language === "tr" ? "Switch to English" : "Türkçe'ye Geç"}
+                onClick={() => setHeaderMenuOpen(!headerMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Menu"
               >
-                <Languages className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">{language.toUpperCase()}</span>
-              </button>
-              <Link
-                href="/chat"
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 rounded-lg text-white text-sm font-medium transition-colors"
-              >
-                <Bot className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("teamChat.aiChat")}</span>
-              </Link>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 text-sm font-medium transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("teamChat.signOut")}</span>
+                {headerMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
               </button>
             </div>
+          </div>
+          
+          {/* Mobile Header Menu Dropdown */}
+          {headerMenuOpen && (
+            <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+              <div className="p-4 space-y-3">
+                <button
+                  onClick={() => {
+                    setLanguage(language === "tr" ? "en" : "tr");
+                    setHeaderMenuOpen(false);
+                  }}
+                  className="w-full flex items-center space-x-3 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 transition-colors"
+                >
+                  <Languages className="w-5 h-5" />
+                  <span className="text-sm font-medium">{language === "tr" ? "English" : "Türkçe"}</span>
+                </button>
+                <Link
+                  href="/chat"
+                  onClick={() => setHeaderMenuOpen(false)}
+                  className="w-full flex items-center space-x-3 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 rounded-lg text-white transition-colors"
+                >
+                  <Bot className="w-5 h-5" />
+                  <span className="text-sm font-medium">{t("teamChat.aiChat")}</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    handleSignOut();
+                    setHeaderMenuOpen(false);
+                  }}
+                  className="w-full flex items-center space-x-3 px-4 py-2.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-red-600 dark:text-red-300 transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="text-sm font-medium">{t("teamChat.signOut")}</span>
+                </button>
+              </div>
+            </div>
+          )}
           </div>
         </div>
         
