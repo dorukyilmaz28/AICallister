@@ -435,7 +435,6 @@ export default function TeamDetailPage() {
               </div>
             </div>
           )}
-          </div>
         </div>
         
         {/* Pending approval banner */}
