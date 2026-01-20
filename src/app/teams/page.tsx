@@ -259,7 +259,6 @@ export default function TeamsPage() {
               </nav>
             </div>
           )}
-          </div>
         </div>
       </header>
 
