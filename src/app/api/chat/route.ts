@@ -513,10 +513,13 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     
-    console.log("=== GEMINI API DEBUG INFO ===");
-    console.log("Model:", GEMINI_MODEL);
-    console.log("API Key exists:", !!GEMINI_API_KEY);
-    console.log("=== END DEBUG ===");
+    // API Key debug - sadece development'ta
+    if (process.env.NODE_ENV === 'development') {
+      console.log("=== GEMINI API DEBUG INFO ===");
+      console.log("Model:", GEMINI_MODEL);
+      console.log("API Key exists:", !!GEMINI_API_KEY);
+      console.log("=== END DEBUG ===");
+    }
     
     if (!GEMINI_API_KEY) {
       return NextResponse.json(
