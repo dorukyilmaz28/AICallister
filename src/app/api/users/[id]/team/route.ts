@@ -27,16 +27,40 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       );
     }
 
+    // Önce kullanıcı bilgilerini al (teamNumber için)
+    const user = await userDb.findById(userId);
+    
     // Kullanıcının takımını bul
     let userMemberships = await teamMemberDb.findByUserId(userId);
     
     console.log(`[GET /api/users/${userId}/team] Found ${userMemberships.length} team memberships`);
     userMemberships.forEach((member, index) => {
-      console.log(`[GET /api/users/${userId}/team] Membership ${index}: teamId=${member.teamId}, role=${member.role}, status=${member.status}`);
+      console.log(`[GET /api/users/${userId}/team] Membership ${index}: teamId=${member.teamId}, teamNumber=${(member as any).team?.teamNumber || 'N/A'}, role=${member.role}, status=${member.status}`);
     });
 
+    // Kullanıcının birden fazla takımda üyeliği varsa, teamNumber'a göre doğru takımı seç
+    let selectedTeamMember = null;
+    if (userMemberships.length > 0) {
+      if (user?.teamNumber && userMemberships.length > 1) {
+        // Kullanıcının teamNumber'ına göre doğru takımı bul
+        selectedTeamMember = userMemberships.find((member: any) => 
+          member.team?.teamNumber === user.teamNumber
+        );
+        console.log(`[GET /api/users/${userId}/team] User has ${userMemberships.length} memberships. Looking for team with teamNumber=${user.teamNumber}`);
+        if (selectedTeamMember) {
+          console.log(`[GET /api/users/${userId}/team] Found matching team: teamId=${selectedTeamMember.teamId}, teamNumber=${(selectedTeamMember as any).team?.teamNumber}`);
+        } else {
+          console.log(`[GET /api/users/${userId}/team] No matching team found by teamNumber, using first membership`);
+          selectedTeamMember = userMemberships[0];
+        }
+      } else {
+        // Tek üyelik varsa veya teamNumber yoksa, ilk üyeliği kullan
+        selectedTeamMember = userMemberships[0];
+      }
+    }
+
     // Üyelik bulunamazsa, onaylanmış katılım isteğine bak ve eksik üyeliği otomatik oluştur
-    if (userMemberships.length === 0) {
+    if (!selectedTeamMember && userMemberships.length === 0) {
       const approvedRequest = await prisma.teamJoinRequest.findFirst({
         where: { userId, status: 'approved' },
         orderBy: { createdAt: 'desc' }
@@ -60,41 +84,42 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         }
         // Tekrar yükle
         userMemberships = await teamMemberDb.findByUserId(userId);
+        selectedTeamMember = userMemberships[0];
         console.log(`[GET /api/users/${userId}/team] Memberships reloaded after auto-fix: ${userMemberships.length}`);
       }
 
-      if (userMemberships.length === 0) {
-        // Fallback 2: Kullanıcının user.teamId alanı set edilmiş olabilir, oradan üyelik üret
-        const user = await userDb.findById(userId);
-        // Sadece onaylı kullanıcılar için user.teamId üzerinden üyelik oluştur
-        if (user?.teamId && user?.status === 'approved') {
-          console.log(`[GET /api/users/${userId}/team] Fallback by user.teamId (${user.teamId}) with approved status. Creating TeamMember if missing.`);
+      if (!selectedTeamMember && userMemberships.length === 0 && user?.teamNumber) {
+        // Fallback: Kullanıcının teamNumber'ına göre takım bul ve üyelik oluştur
+        const teamByNumber = await teamDb.findByTeamNumber(user.teamNumber);
+        if (teamByNumber && user?.status === 'approved') {
+          console.log(`[GET /api/users/${userId}/team] Fallback by teamNumber (${user.teamNumber}) -> teamId (${teamByNumber.id}) with approved status. Creating TeamMember if missing.`);
           const exists = await prisma.teamMember.findFirst({
-            where: { userId, teamId: user.teamId }
+            where: { userId, teamId: teamByNumber.id }
           });
           if (!exists) {
             await prisma.teamMember.create({
-              data: { userId, teamId: user.teamId, role: 'member', status: 'approved' }
+              data: { userId, teamId: teamByNumber.id, role: 'member', status: 'approved' }
             });
           }
           userMemberships = await teamMemberDb.findByUserId(userId);
-        } else if (user?.teamId) {
-          console.log(`[GET /api/users/${userId}/team] user.teamId (${user.teamId}) mevcut ama kullanıcı status='${user?.status}'. Üyelik oluşturulmadı.`);
+          selectedTeamMember = userMemberships.find((member: any) => 
+            member.team?.teamNumber === user.teamNumber
+          ) || userMemberships[0];
+        } else if (teamByNumber) {
+          console.log(`[GET /api/users/${userId}/team] Team found by teamNumber (${user.teamNumber}) -> teamId (${teamByNumber.id}) but user status='${user?.status}'. Üyelik oluşturulmadı.`);
         }
+      }
 
-        if (userMemberships.length === 0) {
-          console.log(`[GET /api/users/${userId}/team] No memberships found, returning 404`);
-          return NextResponse.json(
-            { error: "Kullanıcı hiçbir takımda değil." },
-            { status: 404 }
-          );
-        }
+      if (!selectedTeamMember) {
+        console.log(`[GET /api/users/${userId}/team] No memberships found, returning 404`);
+        return NextResponse.json(
+          { error: "Kullanıcı hiçbir takımda değil." },
+          { status: 404 }
+        );
       }
     }
 
-    // İlk takımını al (birden fazla takımda olabilir)
-    const teamMember = userMemberships[0];
-    const team = await teamDb.findById(teamMember.teamId);
+    const team = await teamDb.findById(selectedTeamMember!.teamId);
 
     if (!team) {
       return NextResponse.json(

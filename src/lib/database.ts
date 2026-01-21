@@ -174,11 +174,14 @@ export const teamMemberDb = {
   },
 
   async findByUserId(userId: string) {
-    // Sadece onaylanmış üyelikleri getir
+    // Sadece onaylanmış üyelikleri getir, en son eklenen önce gelsin
     const allMembers = await prisma.teamMember.findMany({
       where: { userId },
       include: {
         team: true
+      },
+      orderBy: {
+        joinedAt: 'desc' // En son eklenen üyelik önce gelsin
       }
     });
     

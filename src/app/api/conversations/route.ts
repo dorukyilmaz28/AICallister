@@ -27,7 +27,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    console.log(`[conversations] Fetching conversations for user ID: ${user.id}, email: ${user.email}`);
     const conversations = await conversationDb.findByUserId(user.id);
+    console.log(`[conversations] Found ${conversations.length} conversations for user ${user.id}`);
 
     const formattedConversations = conversations.map((conv: Conversation) => ({
       id: conv.id,
