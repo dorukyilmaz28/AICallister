@@ -8,7 +8,7 @@
     "build:static": "node scripts/rename-api-folder.js && node scripts/fix-dynamic-routes.js && next build && node scripts/restore-dynamic-routes.js && node scripts/restore-api-folder.js",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate && patch-package",
+    "postinstall": "prisma generate && (patch-package || true)",
     "vercel-build": "node scripts/vercel-build.js",
     "seed-snippets": "node scripts/seed-snippets.js",
     "cap:sync": "npx cap sync",
