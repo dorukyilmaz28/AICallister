@@ -119,7 +119,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
-    const team = await teamDb.findById(selectedTeamMember!.teamId);
+    // TypeScript için null kontrolü
+    if (!selectedTeamMember) {
+      return NextResponse.json(
+        { error: "Kullanıcı hiçbir takımda değil." },
+        { status: 404 }
+      );
+    }
+
+    const team = await teamDb.findById(selectedTeamMember.teamId);
 
     if (!team) {
       return NextResponse.json(
