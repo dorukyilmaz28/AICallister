@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Shield, ArrowLeft, Mail, Calendar } from "lucide-react";
+import { Shield, ArrowLeft, Calendar } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PrivacyPolicy() {
@@ -12,7 +12,6 @@ export default function PrivacyPolicy() {
       title: "Gizlilik Politikası",
       lastUpdated: "Son Güncelleme: 23 Ocak 2026",
       intro: "Callister FRC AI olarak, kullanıcılarımızın gizliliğini korumayı taahhüt ediyoruz. Bu gizlilik politikası, uygulamamızı kullandığınızda topladığımız bilgileri, bu bilgileri nasıl kullandığımızı ve paylaştığımızı açıklar.",
-      contact: "Sorularınız için bizimle iletişime geçebilirsiniz:",
       sections: {
         dataCollection: {
           title: "1. Toplanan Veriler",
@@ -94,8 +93,7 @@ export default function PrivacyPolicy() {
         contactInfo: {
           title: "9. İletişim",
           content: [
-            "Gizlilik politikamız hakkında sorularınız varsa, lütfen bizimle iletişime geçin:",
-            "E-posta: privacy@callisterai.com",
+            "Gizlilik politikamız hakkında sorularınız varsa, lütfen bizimle iletişime geçin.",
             "Web: https://www.callisterai.com"
           ]
         }
@@ -105,7 +103,6 @@ export default function PrivacyPolicy() {
       title: "Privacy Policy",
       lastUpdated: "Last Updated: January 23, 2026",
       intro: "At Callister FRC AI, we are committed to protecting our users' privacy. This privacy policy explains what information we collect when you use our application, how we use it, and how we share it.",
-      contact: "You can contact us with questions at:",
       sections: {
         dataCollection: {
           title: "1. Data We Collect",
@@ -187,8 +184,7 @@ export default function PrivacyPolicy() {
         contactInfo: {
           title: "9. Contact",
           content: [
-            "If you have questions about our privacy policy, please contact us:",
-            "Email: privacy@callisterai.com",
+            "If you have questions about our privacy policy, please contact us.",
             "Web: https://www.callisterai.com"
           ]
         }
@@ -271,26 +267,6 @@ export default function PrivacyPolicy() {
               </ul>
             </section>
           ))}
-        </div>
-
-        {/* Contact Section */}
-        <div className="mt-12 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
-          <div className="flex items-start space-x-3">
-            <Mail className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" />
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                {currentContent.contact}
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                <a
-                  href="mailto:privacy@callisterai.com"
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  privacy@callisterai.com
-                </a>
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
