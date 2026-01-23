@@ -1,19 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trash2, ArrowLeft, AlertTriangle, CheckCircle, Mail } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSession } from "next-auth/react";
 
 export default function DeleteAccount() {
   const { language } = useLanguage();
-  const { data: session } = useSession();
+  const sessionQuery = useSession();
+  const session = sessionQuery?.data ?? null;
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  // Client-side only rendering
+  useEffect(() => {
+    setMounted(true);
+    if (session?.user?.email) {
+      setEmail(session.user.email);
+    }
+  }, [session]);
 
   const content = {
     tr: {
@@ -167,7 +177,7 @@ export default function DeleteAccount() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: email || session?.user?.email,
+          email: email || (session?.user?.email || ""),
           reason: reason || undefined,
         }),
       });
@@ -218,6 +228,15 @@ export default function DeleteAccount() {
       </header>
 
       {/* Main Content */}
+      {!mounted ? (
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-4xl">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <p className="text-gray-600 dark:text-gray-400">Yükleniyor...</p>
+            </div>
+          </div>
+        </main>
+      ) : (
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-4xl">
         {/* Title Section */}
         <div className="mb-12">
@@ -433,6 +452,7 @@ export default function DeleteAccount() {
           </p>
         </div>
       </main>
+      )}
     </div>
   );
 }
