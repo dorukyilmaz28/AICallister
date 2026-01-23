@@ -10,6 +10,40 @@ export default function PendingApproval() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchUserStatus = async () => {
+    try {
+      const { api } = await import('@/lib/api');
+      
+      // Güncel kullanıcı bilgisini çek
+      const updatedUser = await api.get("/api/users/me/");
+      
+      if (updatedUser) {
+        // localStorage'ı güncelle
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        
+        // Eğer onaylandıysa yönlendir
+        if (updatedUser.status === 'approved') {
+          router.push('/teams');
+          return;
+        }
+      }
+    } catch (error: any) {
+      console.error("Error refreshing status:", error);
+      // Hata durumunda da localStorage'daki bilgiyi kullan
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const userData = JSON.parse(userStr);
+          setUser(userData);
+        } catch (e) {
+          // JSON parse hatası
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -27,6 +61,8 @@ export default function PendingApproval() {
         return;
       }
       setUser(userData);
+      // İlk yüklemede de güncel durumu çek
+      fetchUserStatus();
     } catch (e) {
       router.push("/auth/signin");
     } finally {
@@ -82,10 +118,22 @@ export default function PendingApproval() {
 
             <div className="flex flex-col space-y-3">
               <button
-                onClick={() => window.location.reload()}
-                className="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 rounded-xl text-white font-semibold transition-colors shadow-md"
+                onClick={async () => {
+                  setRefreshing(true);
+                  await fetchUserStatus();
+                  setRefreshing(false);
+                }}
+                disabled={refreshing}
+                className="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 rounded-xl text-white font-semibold transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                Durumu Yenile
+                {refreshing ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span>
+                    <span>Yenileniyor...</span>
+                  </>
+                ) : (
+                  "Durumu Yenile"
+                )}
               </button>
               
               <Link
