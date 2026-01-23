@@ -673,15 +673,6 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
         model: GEMINI_MODEL,
       });
       
-    } catch (dbError) {
-      console.error("Database error:", dbError);
-      // Veritabanı hatası olsa bile yanıtı döndür
-      return NextResponse.json({
-        messages: finalMessages,
-        context,
-        timestamp: new Date().toISOString(),
-        model: GEMINI_MODEL,
-      });
       } catch (dbError) {
         console.error("Database error:", dbError);
         // Veritabanı hatası olsa bile yanıtı döndür
