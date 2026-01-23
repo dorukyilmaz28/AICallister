@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helper";
 import { conversationDb } from "@/lib/database";
+import { GoogleGenAI } from "@google/genai";
 
 // Force dynamic rendering (Vercel serverless function)
 export const dynamic = 'force-dynamic';
@@ -511,7 +512,7 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
 
     // Google Gemini API Configuration
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-    const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+    const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
     
     // API Key debug - sadece development'ta
     if (process.env.NODE_ENV === 'development') {
@@ -530,20 +531,20 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
       );
     }
 
+    // Yeni Google GenAI SDK kullan
+    const client = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+    
     // Gemini için mesaj formatını hazırla
     // Gemini API için system instruction ve conversation history'yi birleştir
     const systemInstruction = systemPrompt + ragContext;
     
     // Son mesajları Gemini formatına dönüştür
-    // Gemini API için contents array formatı kullanılıyor
-    const contents: any[] = [];
-    
-    // System instruction varsa config'e ekle
     // Son mesajları al: En son 3 mesaj tutulacak (sliding window)
-    // Her yeni mesaj geldiğinde en eski mesaj silinir
     const lastMessages = messages.slice(-3); // Son 3 mesajı al
     
     // Gemini için mesaj formatı: role ve parts içeriyor
+    const contents: any[] = [];
+    
     for (const msg of lastMessages) {
       if (msg.role === "system") continue; // System mesajlarını atla (config'de olacak)
       
@@ -565,112 +566,60 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
     console.log("Messages count:", contents.length);
     console.log("System instruction length:", systemInstruction.length);
 
-    // Google Gemini API çağrısı
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-    
-    const requestBody: any = {
-      contents: contents,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 4000, // Yaklaşık 3000 kelime için yeterli
-      }
-    };
-
-    // System instruction varsa ekle
-    if (systemInstruction.trim()) {
-      requestBody.systemInstruction = {
-        parts: [{ text: systemInstruction }]
-      };
-    }
-
-    const res = await fetch(`${endpoint}?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    console.log("HTTP Status:", res.status);
-    console.log("Endpoint:", endpoint);
-
-    if (!res.ok) {
-      const rawText = await res.text();
-      console.error("Gemini API Error:", rawText);
-      let errorMessage = "Gemini API hatası";
-      
-      if (res.status === 400) {
-        errorMessage = "Geçersiz istek. Lütfen mesajları kontrol edin.";
-      } else if (res.status === 401 || res.status === 403) {
-        errorMessage = "Gemini API key geçersiz veya yetkisiz. Lütfen GEMINI_API_KEY'i kontrol edin.";
-      } else if (res.status === 429) {
-        errorMessage = "API rate limit aşıldı. Lütfen birkaç dakika bekleyin.";
-      } else if (res.status === 500 || res.status === 503) {
-        errorMessage = "Gemini servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.";
-      }
-      
-      return NextResponse.json(
-        { 
-          error: errorMessage, 
-          status: res.status,
-          details: rawText.substring(0, 200)
-        }, 
-        { status: 500 }
-      );
-    }
-
-    // JSON parse et
-    let completion;
     try {
-      completion = await res.json();
-    } catch (parseError) {
-      console.error("JSON Parse Error:", parseError);
-      return NextResponse.json(
-        { error: "API yanıtı parse edilemedi" },
-        { status: 500 }
-      );
-    }
+      // Yeni SDK ile generateContent çağrısı
+      const response = await client.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: contents,
+        systemInstruction: systemInstruction.trim() ? {
+          parts: [{ text: systemInstruction }]
+        } : undefined,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 4000,
+        }
+      });
 
-    // Gemini response formatı: candidates[0].content.parts
-    let aiResponse = "";
-    
-    if (completion.candidates && completion.candidates.length > 0) {
-      const candidate = completion.candidates[0];
+      // Response'dan text'i çıkar
+      let aiResponse = "";
       
-      // Safety filter kontrolü
-      if (candidate.finishReason === "SAFETY") {
-        aiResponse = "Üzgünüm, güvenlik filtresi nedeniyle bu mesaja yanıt veremiyorum. Lütfen mesajınızı yeniden formüle edin.";
-      } else if (candidate.finishReason === "RECITATION") {
-        aiResponse = "Üzgünüm, telif hakkı koruması nedeniyle bu içeriği oluşturamıyorum.";
-      } else if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
-        // Text parts'ları işle
-        for (const part of candidate.content.parts) {
-          if (part.text) {
-            aiResponse += (aiResponse ? "\n\n" : "") + part.text;
+      if (response.candidates && response.candidates.length > 0) {
+        const candidate = response.candidates[0];
+        
+        // Safety filter kontrolü
+        if (candidate.finishReason === "SAFETY") {
+          aiResponse = "Üzgünüm, güvenlik filtresi nedeniyle bu mesaja yanıt veremiyorum. Lütfen mesajınızı yeniden formüle edin.";
+        } else if (candidate.finishReason === "RECITATION") {
+          aiResponse = "Üzgünüm, telif hakkı koruması nedeniyle bu içeriği oluşturamıyorum.";
+        } else if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+          // Text parts'ları işle
+          for (const part of candidate.content.parts) {
+            if (part.text) {
+              aiResponse += (aiResponse ? "\n\n" : "") + part.text;
+            }
           }
         }
       }
-    }
 
-    if (!aiResponse) {
-      // Eğer hiç yanıt yoksa, safety blocked olabilir
-      if (completion.promptFeedback?.blockReason) {
-        aiResponse = `Üzgünüm, mesajınız güvenlik nedeniyle engellendi: ${completion.promptFeedback.blockReason}. Lütfen mesajınızı yeniden formüle edin.`;
-      } else {
-        aiResponse = "Üzgünüm, bir yanıt oluşturamadım.";
+      if (!aiResponse) {
+        // Eğer hiç yanıt yoksa, safety blocked olabilir
+        if (response.promptFeedback?.blockReason) {
+          aiResponse = `Üzgünüm, mesajınız güvenlik nedeniyle engellendi: ${response.promptFeedback.blockReason}. Lütfen mesajınızı yeniden formüle edin.`;
+        } else {
+          aiResponse = "Üzgünüm, bir yanıt oluşturamadım.";
+        }
       }
-    }
 
-    // Assistant mesajı
-    const assistantMessage: any = { 
-      role: "assistant", 
-      content: aiResponse
-    };
+      // Assistant mesajı
+      const assistantMessage: any = { 
+        role: "assistant", 
+        content: aiResponse
+      };
 
-    const finalMessages = [...messages, assistantMessage];
+      const finalMessages = [...messages, assistantMessage];
 
-    // Konuşmayı veritabanına kaydet
-    try {
+      // Konuşmayı veritabanına kaydet
+      try {
       let conversation: any;
       
       if (conversationId) {
@@ -733,11 +682,46 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
         timestamp: new Date().toISOString(),
         model: GEMINI_MODEL,
       });
+      } catch (dbError) {
+        console.error("Database error:", dbError);
+        // Veritabanı hatası olsa bile yanıtı döndür
+        return NextResponse.json({
+          messages: finalMessages,
+          context,
+          timestamp: new Date().toISOString(),
+          model: GEMINI_MODEL,
+        });
+      }
+
+    } catch (apiError: any) {
+      console.error("Gemini API Error:", apiError);
+      let errorMessage = "Gemini API hatası";
+      
+      // Hata mesajını kontrol et
+      if (apiError.message) {
+        if (apiError.message.includes("API key") || apiError.message.includes("401") || apiError.message.includes("403")) {
+          errorMessage = "Gemini API key geçersiz veya yetkisiz. Lütfen GEMINI_API_KEY'i kontrol edin.";
+        } else if (apiError.message.includes("429") || apiError.message.includes("rate limit")) {
+          errorMessage = "API rate limit aşıldı. Lütfen birkaç dakika bekleyin.";
+        } else if (apiError.message.includes("500") || apiError.message.includes("503")) {
+          errorMessage = "Gemini servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.";
+        } else {
+          errorMessage = `Gemini API hatası: ${apiError.message}`;
+        }
+      }
+      
+      return NextResponse.json(
+        { 
+          error: errorMessage, 
+          details: apiError.message,
+        }, 
+        { status: 500 }
+      );
     }
 
   } catch (error: any) {
     console.error("Route Error:", error);
-    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    const model = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
     return NextResponse.json(
       {
         error: "AI servisine erişilemiyor.",

@@ -96,6 +96,14 @@ export default function PrivacyPolicy() {
             "Gizlilik politikamız hakkında sorularınız varsa, lütfen bizimle iletişime geçin.",
             "Web: https://www.callisterai.com"
           ]
+        },
+        accountDeletion: {
+          title: "10. Hesap Silme",
+          content: [
+            "Hesabınızı silmek istiyorsanız, lütfen hesap silme sayfamızı ziyaret edin:",
+            "Hesap Silme: https://www.callisterai.com/delete-account",
+            "Hesap silme talebiniz 30 gün içinde işleme alınacak ve tüm verileriniz kalıcı olarak silinecektir."
+          ]
         }
       }
     },
@@ -186,6 +194,14 @@ export default function PrivacyPolicy() {
           content: [
             "If you have questions about our privacy policy, please contact us.",
             "Web: https://www.callisterai.com"
+          ]
+        },
+        accountDeletion: {
+          title: "10. Account Deletion",
+          content: [
+            "If you wish to delete your account, please visit our account deletion page:",
+            "Account Deletion: https://www.callisterai.com/delete-account",
+            "Your account deletion request will be processed within 30 days and all your data will be permanently deleted."
           ]
         }
       }

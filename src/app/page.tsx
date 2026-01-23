@@ -402,12 +402,19 @@ export default function Home() {
               />
               <span className="text-lg font-bold text-gray-900 dark:text-white">Callister AI</span>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 flex-wrap justify-center gap-2">
               <Link
                 href="/privacy"
                 className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
               >
                 {language === "tr" ? "Gizlilik Politikası" : "Privacy Policy"}
+              </Link>
+              <span className="text-gray-400">|</span>
+              <Link
+                href="/delete-account"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              >
+                {language === "tr" ? "Hesap Silme" : "Delete Account"}
               </Link>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 {t("home.footer.copyright")}
