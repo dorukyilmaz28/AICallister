@@ -9,6 +9,7 @@ export default async function sitemap() {
     '/teams',
     '/discover-teams',
     '/profile',
+    '/privacy',
   ];
   const now = new Date().toISOString();
   return routes.map((route) => ({
