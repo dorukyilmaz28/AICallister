@@ -34,18 +34,20 @@ function getApiBaseUrl(): string {
   
   // Eğer Capacitor VEYA local IP ise HER ZAMAN production URL kullan
   if (isCapacitor) {
-    console.log('[API] ========== CAPACITOR/LOCAL IP DETECTED ==========');
-    console.log('[API] Native platform:', isNativePlatform);
-    console.log('[API] Capacitor protocol:', isCapacitorProtocol);
-    console.log('[API] HTTPS localhost:', isHttpsLocalhost);
-    console.log('[API] Capacitor global:', hasCapacitorGlobal);
-    console.log('[API] Server mode:', isServerMode);
-    console.log('[API] Is local IP:', isLocalIP);
-    console.log('[API] Current hostname:', currentHost);
-    console.log('[API] Window location:', window.location.href);
-    console.log('[API] Original API_BASE_URL:', API_BASE_URL);
-    console.log('[API] ⚠️⚠️⚠️ FORCING PRODUCTION URL:', productionUrl, '⚠️⚠️⚠️');
-    console.log('[API] ========================================');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API] ========== CAPACITOR/LOCAL IP DETECTED ==========');
+      console.log('[API] Native platform:', isNativePlatform);
+      console.log('[API] Capacitor protocol:', isCapacitorProtocol);
+      console.log('[API] HTTPS localhost:', isHttpsLocalhost);
+      console.log('[API] Capacitor global:', hasCapacitorGlobal);
+      console.log('[API] Server mode:', isServerMode);
+      console.log('[API] Is local IP:', isLocalIP);
+      console.log('[API] Current hostname:', currentHost);
+      console.log('[API] Window location:', window.location.href);
+      console.log('[API] Original API_BASE_URL:', API_BASE_URL);
+      console.log('[API] ⚠️⚠️⚠️ FORCING PRODUCTION URL:', productionUrl, '⚠️⚠️⚠️');
+      console.log('[API] ========================================');
+    }
     return productionUrl;
   }
   
@@ -129,7 +131,9 @@ export async function apiRequest<T = any>(
   // Authentication gerekiyorsa token ekle
   if (requireAuth && token) {
     headers['Authorization'] = `Bearer ${token}`;
-    console.log('[API] ✅ Token added to Authorization header, length:', token.length);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API] ✅ Token added to Authorization header, length:', token.length);
+    }
   } else if (requireAuth && !token) {
     console.error('[API] ❌❌❌ NO TOKEN FOUND! requireAuth=true but token is null/undefined');
     console.error('[API] This will cause 401 Unauthorized errors!');
@@ -150,9 +154,11 @@ export async function apiRequest<T = any>(
     (error as any).statusCode = 401;
     (error as any).noToken = true;
     throw error;
-  } else {
-    console.log('[API] ⚠️ Auth not required or token not needed for this request');
-  }
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API] ⚠️ Auth not required or token not needed for this request');
+      }
+    }
 
   // URL oluştur - endpoint zaten http ile başlıyorsa olduğu gibi kullan
   // Aksi halde base URL ekle
@@ -178,7 +184,9 @@ export async function apiRequest<T = any>(
         finalEndpoint = finalEndpoint + '/';
       }
     }
-    console.log('[API] ✅ TRAILING SLASH NORMALIZED:', endpoint, '->', finalEndpoint);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API] ✅ TRAILING SLASH NORMALIZED:', endpoint, '->', finalEndpoint);
+    }
   }
   
   const url = finalEndpoint.startsWith('http') ? finalEndpoint : `${baseUrl}${finalEndpoint}`;
@@ -186,36 +194,42 @@ export async function apiRequest<T = any>(
   // 🔴🔴🔴 TRAILING SLASH DOĞRULAMA - URL'DE MUTLAKA OLMALI 🔴🔴🔌
   if (url.includes('/api/') && !url.includes('?')) {
     if (!url.endsWith('/')) {
-      console.error('[API] ❌❌❌ TRAILING SLASH EKSİK! URL:', url);
-      // Son çare: URL'e trailing slash ekle
-      const correctedUrl = url + '/';
-      console.log('[API] ✅ TRAILING SLASH DÜZELTİLDİ:', url, '->', correctedUrl);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[API] ❌❌❌ TRAILING SLASH EKSİK! URL:', url);
+        // Son çare: URL'e trailing slash ekle
+        const correctedUrl = url + '/';
+        console.log('[API] ✅ TRAILING SLASH DÜZELTİLDİ:', url, '->', correctedUrl);
+      }
       // Düzeltilmiş URL'i kullan (ama bu noktaya gelmemeli)
       // const url = correctedUrl; // Bu satırı aktif etme, sadece log için
     }
   }
 
   // 🔴🔴🔴 KRİTİK DEBUG LOG - URL'Yİ NET GÖR 🔴🔴🔴
-  console.log('[API DEBUG] ========== FETCH URL DEBUG ==========');
-  console.log('[API DEBUG] Fetch URL:', url);
-  console.log('[API DEBUG] Base URL:', baseUrl);
-  console.log('[API DEBUG] Original endpoint:', endpoint);
-  console.log('[API DEBUG] Final endpoint:', finalEndpoint);
-  console.log('[API DEBUG] Full URL constructed:', url);
-  console.log('[API DEBUG] URL starts with http?', url.startsWith('http'));
-  console.log('[API DEBUG] URL includes /api/?', url.includes('/api/'));
-  console.log('[API DEBUG] ======================================');
-  
-  // DEBUG: URL'yi log'la
-  console.log('[API] Making request to:', url);
-  console.log('[API] Base URL:', baseUrl);
-  console.log('[API] Original endpoint:', endpoint);
-  console.log('[API] Final endpoint:', finalEndpoint);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[API DEBUG] ========== FETCH URL DEBUG ==========');
+    console.log('[API DEBUG] Fetch URL:', url);
+    console.log('[API DEBUG] Base URL:', baseUrl);
+    console.log('[API DEBUG] Original endpoint:', endpoint);
+    console.log('[API DEBUG] Final endpoint:', finalEndpoint);
+    console.log('[API DEBUG] Full URL constructed:', url);
+    console.log('[API DEBUG] URL starts with http?', url.startsWith('http'));
+    console.log('[API DEBUG] URL includes /api/?', url.includes('/api/'));
+    console.log('[API DEBUG] ======================================');
+    
+    // DEBUG: URL'yi log'la
+    console.log('[API] Making request to:', url);
+    console.log('[API] Base URL:', baseUrl);
+    console.log('[API] Original endpoint:', endpoint);
+    console.log('[API] Final endpoint:', finalEndpoint);
+  }
 
   // Capacitor'da native HTTP kullan (mixed content sorununu çözer)
   const isCapacitor = isCapacitorPlatform();
   
-  console.log('[API] Is Capacitor:', isCapacitor);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[API] Is Capacitor:', isCapacitor);
+  }
 
   try {
     // Capacitor'da tüm istekler için native HTTP kullan (mixed content ve CORS sorunlarını çözer)
@@ -247,21 +261,25 @@ export async function apiRequest<T = any>(
       let nativeResponse = await Promise.race([requestPromise, timeoutPromise]) as any;
       
       // ========== DETAYLI LOGGING ==========
-      console.log('[API] ========== RESPONSE START ==========');
-      console.log('[API] URL:', url);
-      // ⚠️ STATUS CODE - BURAYA BAKIN! ⚠️
-      console.log('[API] ⚠️⚠️⚠️ STATUS CODE:', nativeResponse.status, '⚠️⚠️⚠️');
-      console.log('[API] Status:', nativeResponse.status);
-      console.log('[API] Data type:', typeof nativeResponse.data);
-      console.log('[API] Data is null?', nativeResponse.data === null);
-      console.log('[API] Data is undefined?', nativeResponse.data === undefined);
-      console.log('[API] Headers:', JSON.stringify(nativeResponse.headers || {}, null, 2));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API] ========== RESPONSE START ==========');
+        console.log('[API] URL:', url);
+        // ⚠️ STATUS CODE - BURAYA BAKIN! ⚠️
+        console.log('[API] ⚠️⚠️⚠️ STATUS CODE:', nativeResponse.status, '⚠️⚠️⚠️');
+        console.log('[API] Status:', nativeResponse.status);
+        console.log('[API] Data type:', typeof nativeResponse.data);
+        console.log('[API] Data is null?', nativeResponse.data === null);
+        console.log('[API] Data is undefined?', nativeResponse.data === undefined);
+        console.log('[API] Headers:', JSON.stringify(nativeResponse.headers || {}, null, 2));
+      }
       
       // Redirect handling - Eğer 308 redirect alırsak, Location header'ı takip et
       if (nativeResponse.status === 308 || nativeResponse.status === 301 || nativeResponse.status === 302 || nativeResponse.status === 307) {
-        console.log('[API] ⚠️ REDIRECT DETECTED! Status:', nativeResponse.status);
-        console.log('[API] URL:', url);
-        console.log('[API] Headers:', JSON.stringify(nativeResponse.headers || {}, null, 2));
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[API] ⚠️ REDIRECT DETECTED! Status:', nativeResponse.status);
+          console.log('[API] URL:', url);
+          console.log('[API] Headers:', JSON.stringify(nativeResponse.headers || {}, null, 2));
+        }
         
         // Headers'ı case-insensitive oku
         const headersObj = nativeResponse.headers || {};
@@ -280,7 +298,9 @@ export async function apiRequest<T = any>(
             redirectUrl = baseUrl + '/' + locationHeader;
           }
           
-          console.log('[API] Following redirect to:', redirectUrl);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[API] Following redirect to:', redirectUrl);
+          }
           
           // Redirect URL'e tekrar istek yap
           const redirectPromise = CapacitorHttp.request({
@@ -296,12 +316,16 @@ export async function apiRequest<T = any>(
           });
           
           nativeResponse = await Promise.race([redirectPromise, timeoutPromise]) as any;
-          console.log('[API] ✅ Redirect followed, new status:', nativeResponse.status);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[API] ✅ Redirect followed, new status:', nativeResponse.status);
+          }
         } else {
           // Location header yoksa, URL'e trailing slash ekleyip tekrar dene
           if (!url.endsWith('/')) {
             const redirectUrl = url + '/';
-            console.log('[API] No Location header, retrying with trailing slash:', redirectUrl);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[API] No Location header, retrying with trailing slash:', redirectUrl);
+            }
             const redirectPromise = CapacitorHttp.request({
               method: method,
               url: redirectUrl,
@@ -314,7 +338,9 @@ export async function apiRequest<T = any>(
               throw error;
             });
             nativeResponse = await Promise.race([redirectPromise, timeoutPromise]) as any;
-            console.log('[API] ✅ Retry successful, status:', nativeResponse.status);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[API] ✅ Retry successful, status:', nativeResponse.status);
+            }
           }
         }
       }
@@ -346,15 +372,19 @@ export async function apiRequest<T = any>(
         rawText = String(nativeResponse.data);
       }
       
-      console.log('[API] Raw text length:', rawText.length);
-      console.log('[API] Raw text preview (first 500 chars):', rawText.substring(0, 500));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API] Raw text length:', rawText.length);
+        console.log('[API] Raw text preview (first 500 chars):', rawText.substring(0, 500));
+      }
       
       // ✅ CONTENT-TYPE KONTROLÜ - JSON olmayan response'ları yakala
       const headersObj = nativeResponse.headers || {};
       const contentTypeKey = Object.keys(headersObj).find(key => key.toLowerCase() === 'content-type');
       const contentType = contentTypeKey ? headersObj[contentTypeKey] : null;
       
-      console.log('[API] Content-Type:', contentType);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API] Content-Type:', contentType);
+      }
       
       // Content-Type kontrolü - JSON değilse hata ver
       if (contentType && !contentType.includes('application/json') && !contentType.includes('text/json')) {
@@ -485,17 +515,23 @@ export async function apiRequest<T = any>(
         if (typeof nativeResponse.data === 'object' && nativeResponse.data !== null) {
           // Zaten object ise direkt kullan
           parsedData = nativeResponse.data;
-          console.log('[API] ✅ Using pre-parsed object');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[API] ✅ Using pre-parsed object');
+          }
         } else {
           // String ise parse et
           parsedData = JSON.parse(rawText);
-          console.log('[API] ✅ Parsed JSON from string');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[API] ✅ Parsed JSON from string');
+          }
         }
         
-        console.log('[API] Final parsed data:', JSON.stringify(parsedData, null, 2));
-        console.log('[API] Parsed data type:', typeof parsedData);
-        console.log('[API] Parsed data keys:', parsedData && typeof parsedData === 'object' ? Object.keys(parsedData) : 'N/A');
-        console.log('[API] ========== RESPONSE END ==========');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[API] Final parsed data:', JSON.stringify(parsedData, null, 2));
+          console.log('[API] Parsed data type:', typeof parsedData);
+          console.log('[API] Parsed data keys:', parsedData && typeof parsedData === 'object' ? Object.keys(parsedData) : 'N/A');
+          console.log('[API] ========== RESPONSE END ==========');
+        }
         return parsedData as T;
       } catch (parseError: any) {
         console.error('[API] ❌ JSON Parse Error:', parseError);
@@ -524,7 +560,9 @@ export async function apiRequest<T = any>(
 
     // ✅ CONTENT-TYPE KONTROLÜ - JSON olmayan response'ları yakala
     const contentType = response.headers.get('content-type');
-    console.log('[API] Web fetch - Content-Type:', contentType);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API] Web fetch - Content-Type:', contentType);
+    }
     
     // Content-Type kontrolü - JSON değilse hata ver
     if (contentType && !contentType.includes('application/json') && !contentType.includes('text/json')) {
@@ -677,19 +715,23 @@ export const authApi = {
       
       // FARKLI YÖNTEM: Capacitor için özel login implementasyonu
       if (isCapacitor) {
-        console.log('[AuthAPI] Using Capacitor-specific login method');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AuthAPI] Using Capacitor-specific login method');
+        }
         
         // URL'i her zaman trailing slash ile oluştur
         let loginUrl = `${baseUrl}/api/login/`;
         
         // 🔴🔴🔴 KRİTİK DEBUG LOG - LOGIN URL'Yİ NET GÖR 🔴🔴🔴
-        console.log('[API DEBUG] ========== LOGIN URL DEBUG ==========');
-        console.log('[API DEBUG] Base URL:', baseUrl);
-        console.log('[API DEBUG] Login URL:', loginUrl);
-        console.log('[API DEBUG] URL starts with http?', loginUrl.startsWith('http'));
-        console.log('[API DEBUG] URL includes /api/login/?', loginUrl.includes('/api/login/'));
-        console.log('[API DEBUG] Full constructed URL:', loginUrl);
-        console.log('[API DEBUG] ======================================');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[API DEBUG] ========== LOGIN URL DEBUG ==========');
+          console.log('[API DEBUG] Base URL:', baseUrl);
+          console.log('[API DEBUG] Login URL:', loginUrl);
+          console.log('[API DEBUG] URL starts with http?', loginUrl.startsWith('http'));
+          console.log('[API DEBUG] URL includes /api/login/?', loginUrl.includes('/api/login/'));
+          console.log('[API DEBUG] Full constructed URL:', loginUrl);
+          console.log('[API DEBUG] ======================================');
+        }
         
         // İlk deneme
         let attempt = 0;
@@ -697,7 +739,9 @@ export const authApi = {
         
         while (attempt < maxAttempts) {
           attempt++;
-          console.log(`[AuthAPI] Login attempt ${attempt}/${maxAttempts} to: ${loginUrl}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[AuthAPI] Login attempt ${attempt}/${maxAttempts} to: ${loginUrl}`);
+          }
           
           try {
             const timeoutPromise = new Promise<never>((_, reject) => {
@@ -720,8 +764,10 @@ export const authApi = {
             
             const nativeResponse = await Promise.race([requestPromise, timeoutPromise]) as any;
             
-            console.log('[AuthAPI] Response status:', nativeResponse.status);
-            console.log('[AuthAPI] Response data type:', typeof nativeResponse.data);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[AuthAPI] Response status:', nativeResponse.status);
+              console.log('[AuthAPI] Response data type:', typeof nativeResponse.data);
+            }
             
             // Redirect kontrolü
             if (nativeResponse.status === 308 || nativeResponse.status === 301 || nativeResponse.status === 302 || nativeResponse.status === 307) {
@@ -736,7 +782,9 @@ export const authApi = {
                 } else if (!locationHeader.startsWith('http')) {
                   redirectUrl = baseUrl + '/' + locationHeader;
                 }
-                console.log('[AuthAPI] Redirect detected, following to:', redirectUrl);
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('[AuthAPI] Redirect detected, following to:', redirectUrl);
+                }
                 loginUrl = redirectUrl;
                 continue; // Redirect'i takip et
               }
@@ -780,7 +828,9 @@ export const authApi = {
               localStorage.setItem('user', JSON.stringify(responseData.user));
             }
             
-            console.log('[AuthAPI] ✅ Login successful');
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[AuthAPI] ✅ Login successful');
+            }
             return { token: responseData.token, user: responseData.user };
             
           } catch (error: any) {
@@ -789,7 +839,9 @@ export const authApi = {
               // URL'e trailing slash ekle ve tekrar dene
               if (!loginUrl.endsWith('/')) {
                 loginUrl = loginUrl + '/';
-                console.log('[AuthAPI] Retrying with trailing slash:', loginUrl);
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('[AuthAPI] Retrying with trailing slash:', loginUrl);
+                }
                 continue;
               }
             }
@@ -808,12 +860,14 @@ export const authApi = {
       // 🔴🔴🔌 KRİTİK DEBUG LOG - WEB LOGIN URL 🔴🔴🔌
       const webBaseUrl = getApiBaseUrl();
       const webLoginUrl = `${webBaseUrl}${webLoginEndpoint}`;
-      console.log('[API DEBUG] ========== WEB LOGIN URL DEBUG ==========');
-      console.log('[API DEBUG] Web Base URL:', webBaseUrl);
-      console.log('[API DEBUG] Web Login Endpoint:', webLoginEndpoint);
-      console.log('[API DEBUG] Web Login URL:', webLoginUrl);
-      console.log('[API DEBUG] URL ends with /?', webLoginUrl.endsWith('/'));
-      console.log('[API DEBUG] ======================================');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API DEBUG] ========== WEB LOGIN URL DEBUG ==========');
+        console.log('[API DEBUG] Web Base URL:', webBaseUrl);
+        console.log('[API DEBUG] Web Login Endpoint:', webLoginEndpoint);
+        console.log('[API DEBUG] Web Login URL:', webLoginUrl);
+        console.log('[API DEBUG] URL ends with /?', webLoginUrl.endsWith('/'));
+        console.log('[API DEBUG] ======================================');
+      }
       
       // ✅ Trailing slash GARANTİLİ endpoint kullan
       const response = await api.post<{ token: string; user: any }>(
@@ -823,8 +877,10 @@ export const authApi = {
       );
       
       // Response direkt { token: "...", user: {...} } formatında gelir
-      console.log('[AuthAPI] Login response type:', typeof response);
-      console.log('[AuthAPI] Login response:', response);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AuthAPI] Login response type:', typeof response);
+        console.log('[AuthAPI] Login response:', response);
+      }
       
       if (!response || typeof response !== 'object') {
         console.error('[AuthAPI] ❌ Invalid response format:', response);
