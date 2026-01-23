@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helper";
 import { conversationDb } from "@/lib/database";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Force dynamic rendering (Vercel serverless function)
 export const dynamic = 'force-dynamic';
@@ -531,8 +531,8 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
       );
     }
 
-    // Yeni Google GenAI SDK kullan
-    const client = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+    // Google Generative AI SDK kullan
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     
     // Gemini için mesaj formatını hazırla
     // Gemini API için system instruction ve conversation history'yi birleştir
@@ -567,35 +567,45 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
     console.log("System instruction length:", systemInstruction.length);
 
     try {
-      // Yeni SDK ile generateContent çağrısı
-      const response = await client.models.generateContent({
+      // Model'i al
+      const model = genAI.getGenerativeModel({ 
         model: GEMINI_MODEL,
+        systemInstruction: systemInstruction.trim() || undefined,
+      });
+
+      // Generate content
+      const result = await model.generateContent({
         contents: contents,
-        systemInstruction: systemInstruction.trim() ? {
-          parts: [{ text: systemInstruction }]
-        } : undefined,
         generationConfig: {
           temperature: 0.7,
           maxOutputTokens: 4000,
         }
       });
 
+      const response = result.response;
+
       // Response'dan text'i çıkar
       let aiResponse = "";
       
-      if (response.candidates && response.candidates.length > 0) {
-        const candidate = response.candidates[0];
-        
-        // Safety filter kontrolü
-        if (candidate.finishReason === "SAFETY") {
-          aiResponse = "Üzgünüm, güvenlik filtresi nedeniyle bu mesaja yanıt veremiyorum. Lütfen mesajınızı yeniden formüle edin.";
-        } else if (candidate.finishReason === "RECITATION") {
-          aiResponse = "Üzgünüm, telif hakkı koruması nedeniyle bu içeriği oluşturamıyorum.";
-        } else if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
-          // Text parts'ları işle
-          for (const part of candidate.content.parts) {
-            if (part.text) {
-              aiResponse += (aiResponse ? "\n\n" : "") + part.text;
+      try {
+        aiResponse = response.text();
+      } catch (textError: any) {
+        // Eğer text() metodu hata verirse, candidates'ı kontrol et
+        const candidates = response.candidates;
+        if (candidates && candidates.length > 0) {
+          const candidate = candidates[0];
+          
+          // Safety filter kontrolü
+          if (candidate.finishReason === "SAFETY") {
+            aiResponse = "Üzgünüm, güvenlik filtresi nedeniyle bu mesaja yanıt veremiyorum. Lütfen mesajınızı yeniden formüle edin.";
+          } else if (candidate.finishReason === "RECITATION") {
+            aiResponse = "Üzgünüm, telif hakkı koruması nedeniyle bu içeriği oluşturamıyorum.";
+          } else if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+            // Text parts'ları işle
+            for (const part of candidate.content.parts) {
+              if (part.text) {
+                aiResponse += (aiResponse ? "\n\n" : "") + part.text;
+              }
             }
           }
         }
@@ -603,8 +613,9 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
 
       if (!aiResponse) {
         // Eğer hiç yanıt yoksa, safety blocked olabilir
-        if (response.promptFeedback?.blockReason) {
-          aiResponse = `Üzgünüm, mesajınız güvenlik nedeniyle engellendi: ${response.promptFeedback.blockReason}. Lütfen mesajınızı yeniden formüle edin.`;
+        const promptFeedback = result.response.promptFeedback;
+        if (promptFeedback?.blockReason) {
+          aiResponse = `Üzgünüm, mesajınız güvenlik nedeniyle engellendi: ${promptFeedback.blockReason}. Lütfen mesajınızı yeniden formüle edin.`;
         } else {
           aiResponse = "Üzgünüm, bir yanıt oluşturamadım.";
         }
