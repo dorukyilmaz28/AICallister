@@ -11,6 +11,7 @@ export default async function sitemap() {
     '/profile',
     '/privacy',
     '/delete-account',
+    '/yagsl',
   ];
   const now = new Date().toISOString();
   return routes.map((route) => ({

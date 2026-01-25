@@ -42,6 +42,9 @@ export default function Home() {
                 {t("common.academy")}
                 <ExternalLink className="h-3 w-3" />
               </a>
+              <Link href="/yagsl" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+                {t("common.yagsl")}
+              </Link>
               <Link href="/code-snippets" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
                 {t("common.snippets")}
               </Link>
@@ -141,6 +144,13 @@ export default function Home() {
                   {t("common.academy")}
                   <ExternalLink className="h-3 w-3" />
                 </a>
+                <Link
+                  href="/yagsl"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  {t("common.yagsl")}
+                </Link>
                 <Link
                   href="/code-snippets"
                   onClick={() => setMobileMenuOpen(false)}
@@ -408,6 +418,13 @@ export default function Home() {
                 className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
               >
                 {language === "tr" ? "Gizlilik Politikası" : "Privacy Policy"}
+              </Link>
+              <span className="text-gray-400">|</span>
+              <Link
+                href="/yagsl"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              >
+                {t("common.yagsl")}
               </Link>
               <span className="text-gray-400">|</span>
               <Link

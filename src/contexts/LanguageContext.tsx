@@ -34,6 +34,7 @@ const translations = {
     "common.clear": "Temizle",
     "common.dashboard": "Dashboard",
     "common.academy": "Academy",
+    "common.yagsl": "YAGSL (TR)",
     "common.admin": "Admin",
     
     // Home page
@@ -284,6 +285,7 @@ const translations = {
     "common.clear": "Clear",
     "common.dashboard": "Dashboard",
     "common.academy": "Academy",
+    "common.yagsl": "YAGSL (TR)",
     "common.admin": "Admin",
     
     // Home page
