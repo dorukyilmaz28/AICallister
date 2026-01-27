@@ -552,11 +552,25 @@ export async function apiRequest<T = any>(
       }
     }
 
-    // Web için normal fetch kullan
-    const response = await fetch(url, {
-      ...fetchOptions,
-      headers,
-    });
+    // Web için normal fetch kullan - timeout ile
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 saniye timeout
+    
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        ...fetchOptions,
+        headers,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        throw new Error('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.');
+      }
+      throw fetchError;
+    }
 
     // ✅ CONTENT-TYPE KONTROLÜ - JSON olmayan response'ları yakala
     const contentType = response.headers.get('content-type');

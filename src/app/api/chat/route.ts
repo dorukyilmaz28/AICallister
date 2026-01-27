@@ -566,22 +566,68 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
     console.log("Messages count:", contents.length);
     console.log("System instruction length:", systemInstruction.length);
 
-    try {
-      // Model'i al
-      const model = genAI.getGenerativeModel({ 
-        model: GEMINI_MODEL,
-        systemInstruction: systemInstruction.trim() || undefined,
-      });
+    // Retry mekanizması - 3 deneme
+    let lastError: any = null;
+    let result: any = null;
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Model'i al
+        const model = genAI.getGenerativeModel({ 
+          model: GEMINI_MODEL,
+          systemInstruction: systemInstruction.trim() || undefined,
+        });
 
-      // Generate content
-      const result = await model.generateContent({
-        contents: contents,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 4000,
+        // Timeout ekle (30 saniye per attempt)
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Gemini API timeout: 30 saniye içinde yanıt alınamadı.')), 30000);
+        });
+
+        // Generate content with timeout
+        const generatePromise = model.generateContent({
+          contents: contents,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 4000,
+          }
+        });
+
+        result = await Promise.race([generatePromise, timeoutPromise]);
+        
+        // Başarılı oldu, retry loop'tan çık
+        break;
+      } catch (apiError: any) {
+        lastError = apiError;
+        
+        // Rate limit veya timeout ise retry yap
+        const isRetryable = 
+          apiError.message?.includes('timeout') ||
+          apiError.message?.includes('429') ||
+          apiError.message?.includes('rate limit') ||
+          apiError.message?.includes('503') ||
+          apiError.message?.includes('500') ||
+          apiError.message?.includes('ECONNREFUSED') ||
+          apiError.message?.includes('network');
+        
+        if (isRetryable && attempt < maxRetries) {
+          // Exponential backoff: 1s, 2s, 4s
+          const delay = Math.pow(2, attempt - 1) * 1000;
+          console.log(`[Gemini API] Attempt ${attempt} failed, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
         }
-      });
+        
+        // Retry yapılamazsa veya son deneme ise hata fırlat
+        throw apiError;
+      }
+    }
+    
+    if (!result) {
+      throw lastError || new Error('Gemini API yanıt veremedi.');
+    }
 
+    try {
       const response = result.response;
 
       // Response'dan text'i çıkar

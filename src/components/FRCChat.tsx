@@ -105,14 +105,55 @@ export function FRCChat() {
       language: language,
     };
 
-    try {
-      const { api } = await import('@/lib/api');
-      const data = await api.post('/api/chat/', messageData);
-      
-      if (data.error) {
-        throw new Error(data.error);
+    // Retry mekanizması - 3 deneme
+    let lastError: any = null;
+    let data: any = null;
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const { api } = await import('@/lib/api');
+        data = await api.post('/api/chat/', messageData);
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        // Başarılı oldu, retry loop'tan çık
+        break;
+      } catch (error: any) {
+        lastError = error;
+        
+        // Retry yapılabilir hatalar
+        const isRetryable = 
+          error.message?.includes('timeout') ||
+          error.message?.includes('network') ||
+          error.message?.includes('ECONNREFUSED') ||
+          error.message?.includes('Failed to fetch') ||
+          error.message?.includes('503') ||
+          error.message?.includes('500') ||
+          error.statusCode === 'TIMEOUT' ||
+          error.statusCode === 'NETWORK_ERROR' ||
+          error.statusCode === 'FETCH_ERROR';
+        
+        if (isRetryable && attempt < maxRetries) {
+          // Exponential backoff: 1s, 2s
+          const delay = Math.pow(2, attempt - 1) * 1000;
+          console.log(`[Chat] Attempt ${attempt} failed, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // Retry yapılamazsa veya son deneme ise hata fırlat
+        throw error;
       }
-
+    }
+    
+    if (!data) {
+      throw lastError || new Error('AI servisine erişilemedi.');
+    }
+    
+    try {
       const assistantMessage = data.messages[data.messages.length - 1];
       const assistantText = assistantMessage?.content || "";
 
@@ -155,8 +196,16 @@ export function FRCChat() {
       
       // Daha spesifik hata mesajları
       if (error.message) {
-        if (error.message.includes("API") || error.message.includes("Gemini")) {
-          errorMessage = `AI servisi hatası: ${error.message}\n\nLütfen birkaç dakika sonra tekrar deneyin.`;
+        if (error.message.includes("timeout") || error.message.includes("zaman aşımı")) {
+          errorMessage = "⏱️ İstek zaman aşımına uğradı. Lütfen tekrar deneyin.";
+        } else if (error.message.includes("network") || error.message.includes("bağlantı")) {
+          errorMessage = "🌐 İnternet bağlantısı hatası. Lütfen bağlantınızı kontrol edin ve tekrar deneyin.";
+        } else if (error.message.includes("429") || error.message.includes("rate limit")) {
+          errorMessage = "🚦 Çok fazla istek gönderildi. Lütfen birkaç dakika bekleyip tekrar deneyin.";
+        } else if (error.message.includes("API") || error.message.includes("Gemini")) {
+          errorMessage = `🤖 AI servisi hatası: ${error.message}\n\nLütfen birkaç dakika sonra tekrar deneyin.`;
+        } else if (error.message.includes("503") || error.message.includes("500")) {
+          errorMessage = "🔧 Sunucu geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin.";
         }
       }
       
