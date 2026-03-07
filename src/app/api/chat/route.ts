@@ -512,7 +512,8 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
 
     // Google Gemini API Configuration
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-    const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
+    // Hiz: gemini-2.5-flash (stabil) veya gemini-1.5-flash
+    const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     
     // API Key debug - sadece development'ta
     if (process.env.NODE_ENV === 'development') {
@@ -769,7 +770,7 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
 
   } catch (error: any) {
     console.error("Route Error:", error);
-    const model = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
+    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     return NextResponse.json(
       {
         error: "AI servisine erişilemiyor.",
