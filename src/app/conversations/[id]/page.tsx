@@ -28,10 +28,12 @@ interface Conversation {
 }
 
 export default function ConversationDetail() {
-  const { data: session, status } = useSession();
+  const sessionResult = useSession();
+  const session = sessionResult?.data ?? null;
+  const status = sessionResult?.status ?? "loading";
   const router = useRouter();
   const params = useParams();
-  const conversationId = params.id as string;
+  const conversationId = params?.id as string;
   const { t } = useLanguage();
   
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -42,28 +44,40 @@ export default function ConversationDetail() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/auth/signin");
-      return;
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        router.push("/auth/signin");
+        return;
+      }
     }
 
-    if (session && conversationId) {
+    if (conversationId) {
       fetchConversation();
     }
   }, [session, status, router, conversationId]);
 
   const fetchConversation = async () => {
+    if (!conversationId) return;
     try {
-      const response = await fetch(`/api/conversations/${conversationId}`);
-      if (response.ok) {
-        const data = await response.json();
+      const { api } = await import("@/lib/api");
+      const data = await api.get(`/api/conversations/${conversationId}/`);
+      if (data.conversation) {
         setConversation(data.conversation);
-        setMessages(data.messages);
+        setMessages(data.messages || []);
       } else {
         setError(t("conversation.errorNotFound"));
       }
-    } catch (error) {
-      console.error("Error fetching conversation:", error);
-      setError(t("conversation.errorLoading"));
+    } catch (err: any) {
+      console.error("Error fetching conversation:", err);
+      if (err?.statusCode === 401) {
+        if (typeof window !== "undefined") window.location.href = "/auth/signin";
+        return;
+      }
+      if (err?.statusCode === 404 || err?.message?.includes("bulunamadı")) {
+        setError(t("conversation.errorNotFound"));
+      } else {
+        setError(t("conversation.errorLoading"));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -77,19 +91,11 @@ export default function ConversationDetail() {
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        router.push("/profile");
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || t("conversation.errorDeleting"));
-      }
-    } catch (error) {
-      console.error("Error deleting conversation:", error);
-      setError(t("conversation.errorDeleting"));
+      const { api } = await import("@/lib/api");
+      await api.delete(`/api/conversations/${conversationId}/`);
+      router.push("/profile");
+    } catch (err: any) {
+      setError(err?.message || t("conversation.errorDeleting"));
     } finally {
       setIsDeleting(false);
     }
@@ -123,7 +129,8 @@ export default function ConversationDetail() {
     );
   }
 
-  if (!session) {
+  const hasAuth = typeof window !== "undefined" ? !!localStorage.getItem("token") : !!session;
+  if (!hasAuth && !session) {
     return null;
   }
 
@@ -212,7 +219,7 @@ export default function ConversationDetail() {
                 </span>
                 <span className="flex items-center space-x-1">
                   <User className="w-4 h-4" />
-                  <span>{conversation.user.name}</span>
+                  <span>{conversation.user?.name ?? t("conversation.title")}</span>
                 </span>
               </div>
             </div>

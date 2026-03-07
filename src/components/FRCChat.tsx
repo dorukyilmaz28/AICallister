@@ -159,29 +159,27 @@ export function FRCChat() {
 
       setMessages(prev => [...prev, { role: "assistant", content: "" }]);
 
+      const typingIntervalMs = 2;
       let index = 0;
-      const typingIntervalMs = 8; // Daha hızlı yazma efekti
 
       await new Promise<void>((resolve) => {
         const intervalId = setInterval(() => {
-          index += 1;
+          index += Math.max(1, Math.floor(assistantText.length / 50));
+          const end = Math.min(index, assistantText.length);
           setMessages(prev => {
             const updated = [...prev];
             const lastIdx = updated.length - 1;
             if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
               updated[lastIdx] = {
                 role: "assistant",
-                content: assistantText.slice(0, index)
+                content: assistantText.slice(0, end)
               };
             }
             return updated;
           });
-          if (index >= assistantText.length) {
+          if (end >= assistantText.length) {
             clearInterval(intervalId);
-            // Mesaj tamamlandığında bir kere scroll yap
-            setTimeout(() => {
-              scrollToBottom();
-            }, 100);
+            setTimeout(() => scrollToBottom(), 100);
             resolve();
           }
         }, typingIntervalMs);
