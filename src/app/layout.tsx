@@ -16,8 +16,18 @@ export const metadata: Metadata = {
   title: 'Callister FRC AI Assistant',
   description: 'FRC robot yarışması için yapay zeka asistanı',
   metadataBase: new URL('https://callisterai.com'),
+  manifest: '/manifest.webmanifest',
   alternates: {
     canonical: '/',
+  },
+  icons: {
+    icon: '/8f28b76859c1479d839d270409be3586.jpg',
+    apple: '/8f28b76859c1479d839d270409be3586.jpg',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Callister AI',
   },
   openGraph: {
     title: 'Callister FRC AI Assistant',

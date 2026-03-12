@@ -6,6 +6,7 @@ import { Bot, Target, Wrench, Cpu, ArrowRight, Play, Trophy, Zap, User, LogIn, S
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AddToHomeScreenHint } from "@/components/AddToHomeScreenHint";
 
 export default function Home() {
   const { session, isAuthenticated } = useAuthGuard({ requireAuth: false });
@@ -245,6 +246,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* iOS Add to Home Screen Hint */}
+      <AddToHomeScreenHint />
 
       {/* Features Grid */}
       <section className="py-24 lg:py-32 bg-gray-50 dark:bg-gray-800/50">

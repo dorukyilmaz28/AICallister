@@ -1,0 +1,22 @@
+{
+  "name": "Callister FRC AI Assistant",
+  "short_name": "Callister AI",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "FRC robot yarışması için yapay zeka asistanı",
+  "icons": [
+    {
+      "src": "/8f28b76859c1479d839d270409be3586.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/8f28b76859c1479d839d270409be3586.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
