@@ -247,7 +247,7 @@ export function FRCChat() {
   }, [language]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800 transition-colors">
         <div className="container mx-auto px-4">
@@ -386,7 +386,7 @@ export function FRCChat() {
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950 transition-colors overscroll-contain">
+      <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50 dark:bg-gray-950 transition-colors overscroll-contain">
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl pb-safe">
           <div className="space-y-6">
             {messages.map((message, index) => (
