@@ -359,6 +359,74 @@ function formatOprTriple(oprsPayload: TbaOprsPayload | null | undefined, teamKey
   return s ? `TBA güç skorları (aynı etkinlik): ${s}` : "";
 }
 
+/** TBA `/event/{key}/alliances` — eleme ittifakları (çoğu regionalde 8); her biri ayrı yorumlanmalı */
+async function buildPlayoffEightAlliancesBlock(eventKey: string, apiKey: string): Promise<string> {
+  const res = await fetch(
+    `https://www.thebluealliance.com/api/v3/event/${encodeURIComponent(eventKey)}/alliances`,
+    { headers: tbaAuthHeaders(apiKey) }
+  );
+  if (!res.ok) return "";
+  const alliances: unknown = await res.json();
+  if (!Array.isArray(alliances) || alliances.length === 0) {
+    return (
+      `\n\n=== ELEME İTTİFAKLARI (TBA) ===\n` +
+      `Bu etkinlik için eleme ittifakı listesi henüz yok (qual sonrası oluşur) veya TBA’de yok.\n` +
+      `=== ELEME İTTİFAK SONU ===\n`
+    );
+  }
+
+  const oprsRes = await fetch(
+    `https://www.thebluealliance.com/api/v3/event/${encodeURIComponent(eventKey)}/oprs`,
+    { headers: tbaAuthHeaders(apiKey) }
+  );
+  const oprsData = oprsRes.ok ? await oprsRes.json() : null;
+
+  type AllianceRow = {
+    name?: string;
+    picks?: string[];
+    status?: {
+      record?: { wins?: number; losses?: number; ties?: number };
+      playoff_average?: number | null;
+    };
+  };
+
+  const sorted = [...(alliances as AllianceRow[])].sort((a, b) => {
+    const na = parseInt(String(a?.name ?? "").replace(/\D/g, ""), 10) || 0;
+    const nb = parseInt(String(b?.name ?? "").replace(/\D/g, ""), 10) || 0;
+    return na - nb;
+  });
+
+  let out =
+    `\n\n=== ELEME İTTİFAKLARI (TBA) — ${sorted.length} ittifak ===\n` +
+    `Elemede tipik olarak **8 ittifak** olur. Aşağıda her ittifak ayrı bloktadır. ` +
+    `Cevapta **listelenen her ittifak için ayrı ayrı** (Alliance 1 … Alliance 8 veya kaç tane varsa) kısa strateji yorumu ver; ` +
+    `yalnızca qual sıralamasındaki ilk 3 takımla sınırlama.\n\n`;
+
+  for (const al of sorted) {
+    const aname = al.name ?? "?";
+    const picks = Array.isArray(al.picks) ? al.picks : [];
+    const teamNums = picks.map((k) => String(k).replace(/^frc/i, ""));
+    out += `--- ${aname} ---\n`;
+    out += `Takımlar (1. = alliance captain): ${teamNums.join(" | ")}\n`;
+    const st = al.status;
+    if (st?.record) {
+      const r = st.record;
+      out += `Eleme kaydı: ${r.wins ?? "?"}-${r.losses ?? "?"}-${r.ties ?? "?"}\n`;
+    }
+    if (st?.playoff_average != null && typeof st.playoff_average === "number") {
+      out += `Eleme ortalama skor (TBA): ${st.playoff_average}\n`;
+    }
+    for (const tk of picks) {
+      const bits = formatOprStatsOnly(oprsData, tk);
+      if (bits) out += `  ${tk.replace(/^frc/i, "")}: ${bits}\n`;
+    }
+    out += "\n";
+  }
+
+  out += `=== ELEME İTTİFAKLARI SONU ===\n`;
+  return out;
+}
+
 async function fetchEventRankingAndMetricsBlock(
   eventKey: string,
   teamKey: string,
@@ -951,9 +1019,19 @@ export async function POST(req: NextRequest) {
             maxRows,
           });
           ragContext += regBlock;
+          try {
+            const playoffAlliancesBlock = await buildPlayoffEightAlliancesBlock(
+              resolvedRegionalEvent.key,
+              tbaKey
+            );
+            if (playoffAlliancesBlock) ragContext += playoffAlliancesBlock;
+          } catch (e) {
+            console.log("[TBA RAG] Eleme ittifakları hatası:", e);
+          }
           ragContext +=
             `\nREGIONAL ÇÖZÜM: Etkinlik TBA üzerinden "${resolvedRegionalEvent.name}" (${resolvedRegionalEvent.key}) olarak eşleşti. ` +
-            `Kullanıcı takım numarası vermediyse takım numarası isteme. "Tüm reg / tüm takımlar" istenmişse yukarıdaki tabloyu tüm saha analizi için kullan.\n`;
+            `Kullanıcı takım numarası vermediyse takım numarası isteme. "Tüm reg / tüm takımlar" istenmişse yukarıdaki tabloyu tüm saha analizi için kullan.\n` +
+            `ELEME İTTİFAKLARI bloğu varsa (Alliance 1–8), ittifak stratejisinde **her ittifak için ayrı** yorum yap.\n`;
         } catch (e) {
           console.log("[TBA RAG] Regional tablo hatası:", e);
         }
@@ -1030,6 +1108,7 @@ IMPORTANT RULES:
 6. When MATCHES, SCORES, or REGIONAL performance are asked, use the LIVE match/ranking block from TBA when present
 7. For ALLIANCE SELECTION or “who to pick”, base reasoning on TBA **qual average**, **rank**, **sort metrics**, and **OPR/DPR/CCWM** when present. Only compare OPR/CCWM across teams that appear in the **same event** block. Note OPR limitations (not perfect). If no shared-event block exists, say cross-event stats are not directly comparable and use each team’s own event data
 8. When the RAG includes **REGIONAL / ETKİNLİK — TÜM TAKIMLAR** or **REGIONAL ÇÖZÜM**, the user already gave a regional (name or event key). Do **not** ask for team numbers or for obscure acronyms (e.g. “what is TUIS”). Use the resolved **event name** and **leaderboard** from context. If the user asked to analyze the **whole field**, use every row in that table (within limits) for commentary
+9. When **ELEME İTTİFAKLARI (TBA)** is present, playoffs use up to **eight** alliances. Give **separate** commentary for **each** alliance listed (Alliance 1 through Alliance 8 or however many are shown)—not only three captains or top-ranked qual teams
 
 DON'T:
 ❌ Give irrelevant information (STAY ON TOPIC!)
@@ -1039,6 +1118,7 @@ DON'T:
 ❌ Give old/estimated info when TBA data is available
 ❌ Call ${currentYear - 2} or ${currentYear - 1} the "current" game — the current competition year is ${currentYear}
 ❌ Ask for team numbers when the regional leaderboard block already lists all teams for that event
+❌ Summarize alliance strategy using only three alliances when the context lists eight elimination alliances
 
 DO:
 ✅ Answer the question
@@ -1067,6 +1147,7 @@ SEN KİMSİN:
 6. MAÇ, SKOR veya REGIONAL performans sorulduğunda TBA'daki canlı maç/sıralama bölümünü kullan
 7. İTTİFAK SEÇİMİ veya “kim daha iyi pick” sorularında TBA’deki **qual skor ortalaması**, **sıra**, **sıralama metrikleri** ve **OPR/DPR/CCWM** değerlerine dayan. OPR’yi yalnızca **aynı etkinlik** bloğundaki takımlar arasında kıyasla; farklı etkinliklerdeki OPR’ler doğrudan kıyaslanmaz. OPR’nin mutlak doğru olmadığını kısaca belirtebilirsin. Ortak etkinlik yoksa bunu söyle ve her takımın kendi regional verisini kullan
 8. RAG’de **REGIONAL / ETKİNLİK — TÜM TAKIMLAR** veya **REGIONAL ÇÖZÜM** varsa kullanıcı regional adı veya event_key vermiş demektir; **takım numarası sorma**, TUIS/TÜİK gibi anlamsız kod soruları sorma. Çözümlenen **etkinlik adını** ve **tablo satırlarını** kullan. Kullanıcı “tüm reg / tüm takımlar” dediyse tablodaki **tüm satırlara** dayanarak analiz ver
+9. **ELEME İTTİFAKLARI (TBA)** bloğu varsa elemede genelde **8 ittifak** vardır; **her bir ittifak (Alliance 1 … 8 veya listedeki kadarı) için ayrı ayrı** kısa strateji yorumu ver. Sadece qual’deki ilk 3 takım veya 3 ittifak ile yetinme
 
 YAPMA:
 ❌ Alakasız bilgi verme (SORULAN KONU DIŞINA ÇIKMA!)
@@ -1076,6 +1157,7 @@ YAPMA:
 ❌ TBA verisi varken eski/tahmin bilgi verme
 ❌ ${currentYear - 2} veya ${currentYear - 1} oyununu "şu anki sezon" diye gösterme — güncel yarışma yılı ${currentYear}
 ❌ Regional tablo zaten listelenmişken kullanıcıdan tekrar takım numarası isteme
+❌ 8 eleme ittifakı veri olarak varken yalnızca üç ittifak/kaptan üzerinden özet geçme
 
 YAP:
 ✅ Soruyu cevapla

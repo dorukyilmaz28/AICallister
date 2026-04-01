@@ -41,6 +41,14 @@ export default function ConversationDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  /** JWT ile girişte NextAuth bazen sürekli "loading" kalır; sohbeti yine de yükleyebilmek için */
+  const [hasJwtToken, setHasJwtToken] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setHasJwtToken(!!localStorage.getItem("token"));
+    }
+  }, []);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -121,7 +129,8 @@ export default function ConversationDetail() {
     return labels[context] || context;
   };
 
-  if (status === "loading" || isLoading) {
+  const nextAuthStillLoading = status === "loading" && !hasJwtToken;
+  if (nextAuthStillLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <Loading />
@@ -129,8 +138,11 @@ export default function ConversationDetail() {
     );
   }
 
-  const hasAuth = typeof window !== "undefined" ? !!localStorage.getItem("token") : !!session;
-  if (!hasAuth && !session) {
+  const hasAuth =
+    hasJwtToken ||
+    (typeof window !== "undefined" && !!localStorage.getItem("token")) ||
+    !!session;
+  if (!hasAuth && status === "unauthenticated") {
     return null;
   }
 
