@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import Link from "next/link";
 // Token-based auth (useSession removed)
 import { Send, Bot, User, Home, UserCircle, Trash2, Menu, X, Languages, Moon, Sun } from "lucide-react";
@@ -62,22 +62,18 @@ export function FRCChat() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  /** Uzun cevaplarda içerik büyürken görünür alanın sonu takip edilsin (smooth typing sırasında da). */
+  const scrollToBottom = (instant = false) => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: instant ? "auto" : "smooth",
+      block: "end",
+    });
   };
 
-  // Sadece ilk yüklemede ve yeni mesaj eklendiğinde scroll yap
-  // Typing sırasında scroll yapma
-  useEffect(() => {
-    // Sadece mesaj sayısı değiştiğinde ve typing yapılmıyorsa scroll yap
-    if (messages.length > 0 && !isLoading) {
-      // Kısa bir gecikme ile scroll yap (DOM güncellemesi için)
-      const timeoutId = setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [messages.length]); // Sadece mesaj sayısı değiştiğinde tetikle
+  useLayoutEffect(() => {
+    if (messages.length === 0) return;
+    scrollToBottom(true);
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -157,33 +153,51 @@ export function FRCChat() {
       const assistantMessage = data.messages[data.messages.length - 1];
       const assistantText = assistantMessage?.content || "";
 
-      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
-      const typingIntervalMs = 2;
-      let index = 0;
-
-      await new Promise<void>((resolve) => {
-        const intervalId = setInterval(() => {
-          index += Math.max(1, Math.floor(assistantText.length / 50));
-          const end = Math.min(index, assistantText.length);
-          setMessages(prev => {
-            const updated = [...prev];
-            const lastIdx = updated.length - 1;
-            if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
-              updated[lastIdx] = {
-                role: "assistant",
-                content: assistantText.slice(0, end)
-              };
-            }
-            return updated;
-          });
-          if (end >= assistantText.length) {
-            clearInterval(intervalId);
-            setTimeout(() => scrollToBottom(), 100);
-            resolve();
+      const TYPING_SKIP_LEN = 6000;
+      if (assistantText.length >= TYPING_SKIP_LEN) {
+        setMessages((prev) => {
+          const updated = [...prev];
+          const lastIdx = updated.length - 1;
+          if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
+            updated[lastIdx] = { role: "assistant", content: assistantText };
           }
-        }, typingIntervalMs);
-      });
+          return updated;
+        });
+        requestAnimationFrame(() => scrollToBottom(true));
+      } else {
+        const typingIntervalMs = 8;
+        let index = 0;
+        let tick = 0;
+
+        await new Promise<void>((resolve) => {
+          const intervalId = setInterval(() => {
+            index += Math.max(1, Math.floor(assistantText.length / 40));
+            const end = Math.min(index, assistantText.length);
+            tick += 1;
+            setMessages((prev) => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
+                updated[lastIdx] = {
+                  role: "assistant",
+                  content: assistantText.slice(0, end),
+                };
+              }
+              return updated;
+            });
+            if (tick % 3 === 0) {
+              requestAnimationFrame(() => scrollToBottom(true));
+            }
+            if (end >= assistantText.length) {
+              clearInterval(intervalId);
+              requestAnimationFrame(() => scrollToBottom(true));
+              resolve();
+            }
+          }, typingIntervalMs);
+        });
+      }
 
       if (data.conversationId) {
         setConversationId(data.conversationId);
@@ -395,7 +409,7 @@ export function FRCChat() {
                 className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`flex items-start space-x-3 max-w-3xl ${
+                  className={`flex items-start space-x-3 max-w-3xl min-w-0 ${
                     message.role === "user" ? "flex-row-reverse space-x-reverse" : ""
                   }`}
                 >
@@ -413,7 +427,7 @@ export function FRCChat() {
                     )}
                   </div>
                   <div
-                    className={`px-6 py-4 rounded-2xl max-w-full ${
+                    className={`px-6 py-4 rounded-2xl max-w-full min-w-0 overflow-x-auto ${
                       message.role === "user"
                         ? "bg-gray-900 text-white"
                         : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
@@ -421,7 +435,7 @@ export function FRCChat() {
                   >
                     {/* Mesaj içeriği */}
                     {message.content && (
-                      <div className={`prose prose-sm max-w-none ${
+                      <div className={`prose prose-sm max-w-none break-words ${
                         message.role === "user"
                           ? "prose-invert"
                           : "prose-neutral dark:prose-invert"

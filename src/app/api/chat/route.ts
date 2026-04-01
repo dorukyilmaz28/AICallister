@@ -1217,7 +1217,10 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
 
         // Timeout ekle (30 saniye per attempt)
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Gemini API timeout: 30 saniye içinde yanıt alınamadı.')), 30000);
+          setTimeout(
+            () => reject(new Error('Gemini API timeout: 120 saniye içinde yanıt alınamadı.')),
+            120000
+          );
         });
 
         // Generate content with timeout
@@ -1225,7 +1228,7 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
           contents: contents,
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 4000,
+            maxOutputTokens: 8192,
           }
         });
 
