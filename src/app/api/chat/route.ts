@@ -16,11 +16,17 @@ function extractTeamNumbers(text: string, maxTeams = 3): string[] {
     /\b(\d{3,5})\b/g, // 3-5 haneli sayılar (muhtemelen takım numarası)
   ];
 
+  const isLikelyYearNotTeam = (num: string) => {
+    if (!/^\d{4}$/.test(num)) return false;
+    const y = parseInt(num, 10);
+    return y >= 2020 && y <= 2035;
+  };
+
   patterns.forEach((pattern) => {
     const matches = text.matchAll(pattern);
     for (const match of matches) {
       const num = match[1];
-      if (num && !teamNumbers.includes(num)) {
+      if (num && !isLikelyYearNotTeam(num) && !teamNumbers.includes(num)) {
         teamNumbers.push(num);
       }
     }
@@ -60,6 +66,195 @@ function wantsAllianceSelectionContext(text: string): boolean {
     "alliance captain",
   ];
   return keys.some((k) => t.includes(k));
+}
+
+/** Kullanıcı tüm regionaldeki takımları istediğinde tam tablo */
+function wantsEntireRegionalAnalysis(text: string): boolean {
+  const t = text.toLowerCase();
+  return (
+    /\b(tüm|bütün|butun|hepsi|tümü|her\s*takım|bütün\s*takım|tüm\s*takım|tum\s*takim)\b/.test(t) ||
+    /\b(all teams|every team|full field|entire regional)\b/.test(t) ||
+    /\b(tüm|bütün|tum)\s+reg/.test(t) ||
+    /\breg(ional)?\s*(deki|daki)?\s*(tüm|bütün|her|tum|butun)\b/.test(t) ||
+    /\b(field|saha)\s*(tüm|bütün|tam)\b/.test(t)
+  );
+}
+
+function normalizeTbaSearch(s: string): string {
+  let t = s.toLowerCase().trim();
+  const tr: Record<string, string> = {
+    ç: "c",
+    ğ: "g",
+    ı: "i",
+    i: "i",
+    ö: "o",
+    ş: "s",
+    ü: "u",
+  };
+  for (const [a, b] of Object.entries(tr)) {
+    t = t.split(a).join(b);
+  }
+  return t.replace(/[^a-z0-9]+/g, "");
+}
+
+/**
+ * Mesajdan TBA event_key (ör. 2026tuha) veya etkinlik adı parçası çıkarır.
+ * "Avrasya reg", "2026tuha", "Marmara Regional" vb.
+ */
+function extractRegionalSearchQuery(text: string): string | null {
+  const trimmed = text.trim();
+
+  const keyMatch = trimmed.match(/\b(20\d{2}[a-z][a-z0-9]{2,})\b/i);
+  if (keyMatch) return keyMatch[1].toLowerCase();
+
+  const beforeReg = trimmed.match(
+    /([A-Za-zÇçĞğİıÖöŞşÜü][A-Za-zÇçĞğİıÖöŞşÜü0-9\s\-]{1,44}?)\s*(?:regional|reg)\b/i
+  );
+  if (beforeReg) {
+    let q = beforeReg[1].trim().replace(/^(?:şu|bu|the|for|için|icin|hakkında|hakkinda|about)\s+/i, "");
+    q = q.replace(/\s+/g, " ").trim();
+    if (q.length >= 2) return q;
+  }
+
+  const lower = text.toLowerCase();
+  const hints = [
+    "avrasya",
+    "marmara",
+    "istanbul",
+    "ankara",
+    "izmir",
+    "tuis",
+    "tuik",
+    "türk",
+    "turkiye",
+    "turkey",
+    "halic",
+    "haliç",
+  ];
+  for (const h of hints) {
+    if (lower.includes(h)) return h;
+  }
+  return null;
+}
+
+async function resolveEventFromRegionalQuery(
+  query: string,
+  year: number,
+  apiKey: string
+): Promise<{ key: string; name: string } | null> {
+  if (!apiKey || !query) return null;
+  const qTrim = query.trim();
+
+  const direct = await fetch(`https://www.thebluealliance.com/api/v3/event/${encodeURIComponent(qTrim)}`, {
+    headers: tbaAuthHeaders(apiKey),
+  });
+  if (direct.ok) {
+    const j = await direct.json();
+    if (j?.key && j?.name) return { key: j.key, name: j.name };
+  }
+
+  const qNorm = normalizeTbaSearch(qTrim);
+  if (!qNorm || qNorm.length < 2) return null;
+
+  const res = await fetch(`https://www.thebluealliance.com/api/v3/events/${year}`, {
+    headers: tbaAuthHeaders(apiKey),
+  });
+  if (!res.ok) return null;
+  const events: Array<{
+    key: string;
+    name: string;
+    event_type?: number;
+    start_date?: string;
+    country?: string;
+  }> = await res.json();
+
+  const candidates = events.filter((e) => {
+    const nn = normalizeTbaSearch(e.name);
+    const kk = normalizeTbaSearch(e.key);
+    return nn.includes(qNorm) || kk.includes(qNorm);
+  });
+
+  if (candidates.length === 0) return null;
+
+  const preferRegional = candidates.filter((e) => e.event_type === TBA_EVENT_TYPE_REGIONAL);
+  const pool = preferRegional.length > 0 ? preferRegional : candidates;
+  pool.sort((a, b) => (b.start_date || "").localeCompare(a.start_date || ""));
+  const best = pool[0];
+  return { key: best.key, name: best.name };
+}
+
+/** Bir etkinlikteki tüm takımlar için qual + OPR özet tablosu (ittifak / regional analizi) */
+async function buildEntireRegionalLeaderboardBlock(
+  eventKey: string,
+  apiKey: string,
+  options: { maxRows: number }
+): Promise<string> {
+  const evRes = await fetch(`https://www.thebluealliance.com/api/v3/event/${encodeURIComponent(eventKey)}`, {
+    headers: tbaAuthHeaders(apiKey),
+  });
+  const ev = evRes.ok ? await evRes.json() : null;
+  const title = (ev?.name as string) || eventKey;
+
+  const [rankRes, oprRes] = await Promise.all([
+    fetch(`https://www.thebluealliance.com/api/v3/event/${encodeURIComponent(eventKey)}/rankings`, {
+      headers: tbaAuthHeaders(apiKey),
+    }),
+    fetch(`https://www.thebluealliance.com/api/v3/event/${encodeURIComponent(eventKey)}/oprs`, {
+      headers: tbaAuthHeaders(apiKey),
+    }),
+  ]);
+
+  const rankData = rankRes.ok ? await rankRes.json() : null;
+  const oprsData = oprRes.ok ? await oprRes.json() : null;
+  const sortMeta: Array<{ name?: string }> = Array.isArray(rankData?.sort_order_info)
+    ? rankData.sort_order_info
+    : [];
+  const rows: Array<{
+    team_key?: string;
+    rank?: number;
+    record?: { wins?: number; losses?: number; ties?: number } | null;
+    qual_average?: number | null;
+    sort_orders?: number[];
+  }> = Array.isArray(rankData?.rankings) ? rankData.rankings : [];
+
+  if (rows.length === 0) {
+    return (
+      `\n\n=== REGIONAL / ETKİNLİK (TBA) ===\n` +
+      `Etkinlik: ${title} (${eventKey})\n` +
+      `Bu etkinlik için sıralama verisi henüz yok veya yayınlanmadı.\n` +
+      `=== SON ===\n`
+    );
+  }
+
+  const sortedRows = [...rows].sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));
+  const slice = sortedRows.slice(0, options.maxRows);
+  const primaryMetric = sortMeta[0]?.name ?? "Sıra metriği 1";
+
+  let out =
+    `\n\n=== REGIONAL / ETKİNLİK — TÜM TAKIMLAR (TBA canlı) ===\n` +
+    `Etkinlik adı: ${title}\n` +
+    `event_key: ${eventKey}\n` +
+    `Bu blok kullanıcıya özel olarak çözümlenmiştir — takım numarası sorma; kullanıcı vermedikçe ek takım isteme.\n` +
+    `TUIS/TÜİK gibi kısaltmalar yerine bu resmi etkinlik adını ve sıralamayı kullan; kullanıcıya anlamsız kod soruları sorma.\n` +
+    `Satır formatı: sıra | takım | W-L-T | qual skor ort. | ${primaryMetric} | OPR/DPR/CCWM\n\n`;
+
+  for (const row of slice) {
+    const tk = row.team_key || "";
+    const num = tk.replace(/^frc/i, "");
+    const rec = row.record;
+    const wlt = rec ? `${rec.wins}-${rec.losses}-${rec.ties}` : "?";
+    const qa = row.qual_average != null ? String(row.qual_average) : "?";
+    const m1 =
+      Array.isArray(row.sort_orders) && row.sort_orders.length > 0 ? String(row.sort_orders[0]) : "?";
+    const opr = formatOprStatsOnly(oprsData, tk);
+    out += `#${row.rank ?? "?"} | ${num} | ${wlt} | ${qa} | ${m1} | ${opr || "-"}\n`;
+  }
+
+  if (sortedRows.length > slice.length) {
+    out += `\n(... ${sortedRows.length - slice.length} takım daha; özet için satır limiti)\n`;
+  }
+  out += `=== REGIONAL TABLO SONU ===\n`;
+  return out;
 }
 
 /** TBA EventType: REGIONAL = 0 */
@@ -728,9 +923,43 @@ export async function POST(req: NextRequest) {
       const userText = lastUserMessage.content;
       
       // ChromaDB disabled (Vercel serverless incompatible)
-      
-      // 1. TBA RAG - Takım bilgileri
+
+      const currentYear = new Date().getFullYear();
+      const tbaKey = process.env.TBA_API_KEY || "";
+
+      // 1a. Regional adı / event_key → etkinlik çöz + (isteğe bağlı) tüm saha tablosu
       const allianceIntent = wantsAllianceSelectionContext(userText);
+      const fullRegionalField = wantsEntireRegionalAnalysis(userText);
+      const regionalQuery = extractRegionalSearchQuery(userText);
+
+      let resolvedRegionalEvent: { key: string; name: string } | null = null;
+      if (regionalQuery && tbaKey) {
+        try {
+          resolvedRegionalEvent = await resolveEventFromRegionalQuery(regionalQuery, currentYear, tbaKey);
+          if (resolvedRegionalEvent) {
+            console.log("[TBA RAG] Regional etkinlik çözümlendi:", resolvedRegionalEvent);
+          }
+        } catch (e) {
+          console.log("[TBA RAG] Regional çözümleme hatası:", e);
+        }
+      }
+
+      if (tbaKey && resolvedRegionalEvent) {
+        try {
+          const maxRows = fullRegionalField ? 85 : 24;
+          const regBlock = await buildEntireRegionalLeaderboardBlock(resolvedRegionalEvent.key, tbaKey, {
+            maxRows,
+          });
+          ragContext += regBlock;
+          ragContext +=
+            `\nREGIONAL ÇÖZÜM: Etkinlik TBA üzerinden "${resolvedRegionalEvent.name}" (${resolvedRegionalEvent.key}) olarak eşleşti. ` +
+            `Kullanıcı takım numarası vermediyse takım numarası isteme. "Tüm reg / tüm takımlar" istenmişse yukarıdaki tabloyu tüm saha analizi için kullan.\n`;
+        } catch (e) {
+          console.log("[TBA RAG] Regional tablo hatası:", e);
+        }
+      }
+
+      // 1b. TBA RAG - Takım bilgileri (kullanıcı numara verdiyse)
       const teamNumbers = extractTeamNumbers(userText, allianceIntent ? 6 : 3);
 
       if (teamNumbers.length > 0) {
@@ -743,7 +972,6 @@ export async function POST(req: NextRequest) {
         const validInfos = teamInfos.filter((info) => info.trim() !== "");
 
         if (validInfos.length > 0) {
-          const currentYear = new Date().getFullYear();
           ragContext +=
             `\n\n=== GÜNCEL TAKIM BİLGİLERİ (The Blue Alliance - ${currentYear}) ===\n` +
             validInfos.join("\n") +
@@ -752,9 +980,9 @@ export async function POST(req: NextRequest) {
             `ÖDÜLLER: Yukarıda 🏆 ile listelenen ödüller TBA API'den canlıdır. Ödül sorularında bu listeyi kullan.\n` +
             `MAÇ / SIRALAMA: "MAÇ / SIRALAMA" bölümündeki maç özetleri ve sıralama satırları TBA API'den canlıdır; maç veya regional performans sorularında bunları kullan.\n` +
             `SKOR / İTTİFAK: Sıralama bloklarında "Qual maç skor ortalaması", sıralama metrikleri ve OPR/DPR/CCWM TBA'dendir. İttifak seçimi yorumunda bu sayıları esas al; farklı etkinliklerdeki OPR'leri doğrudan kıyaslama.\n` +
-            `İTTİFAK — ORTAK ETKİNLİK: İki veya daha fazla takım için "İTTİFAK SEÇİMİ" bölümü aynı etkinlikteki TBA karşılaştırmasını içerir (varsa).`;
+            `İTTİFAK — ORTAK ETKİNLİK: İki veya daha fazla takım için "İTTİFAK SEÇİMİ" bölümü aynı etkinlikteki TBA karşılaştırmasını içerir (varsa).\n` +
+            `REGIONAL TABLO: "REGIONAL / ETKİNLİK — TÜM TAKIMLAR" bölümü varsa ittifak ve sıralama sorularında önce onu kullan; kullanıcıdan gereksiz takım numarası isteme.`;
 
-          const tbaKey = process.env.TBA_API_KEY || "";
           if (tbaKey && teamNumbers.length >= 2) {
             try {
               const allianceBlock = await buildAllianceSelectionComparisonBlock(
@@ -801,6 +1029,7 @@ IMPORTANT RULES:
 5. When AWARDS are asked, use the LIVE award list from TBA
 6. When MATCHES, SCORES, or REGIONAL performance are asked, use the LIVE match/ranking block from TBA when present
 7. For ALLIANCE SELECTION or “who to pick”, base reasoning on TBA **qual average**, **rank**, **sort metrics**, and **OPR/DPR/CCWM** when present. Only compare OPR/CCWM across teams that appear in the **same event** block. Note OPR limitations (not perfect). If no shared-event block exists, say cross-event stats are not directly comparable and use each team’s own event data
+8. When the RAG includes **REGIONAL / ETKİNLİK — TÜM TAKIMLAR** or **REGIONAL ÇÖZÜM**, the user already gave a regional (name or event key). Do **not** ask for team numbers or for obscure acronyms (e.g. “what is TUIS”). Use the resolved **event name** and **leaderboard** from context. If the user asked to analyze the **whole field**, use every row in that table (within limits) for commentary
 
 DON'T:
 ❌ Give irrelevant information (STAY ON TOPIC!)
@@ -809,6 +1038,7 @@ DON'T:
 ❌ Give unnecessary background info
 ❌ Give old/estimated info when TBA data is available
 ❌ Call ${currentYear - 2} or ${currentYear - 1} the "current" game — the current competition year is ${currentYear}
+❌ Ask for team numbers when the regional leaderboard block already lists all teams for that event
 
 DO:
 ✅ Answer the question
@@ -836,6 +1066,7 @@ SEN KİMSİN:
 5. ÖDÜLLER sorulduğunda TBA'dan gelen CANLI ödül listesini kullan
 6. MAÇ, SKOR veya REGIONAL performans sorulduğunda TBA'daki canlı maç/sıralama bölümünü kullan
 7. İTTİFAK SEÇİMİ veya “kim daha iyi pick” sorularında TBA’deki **qual skor ortalaması**, **sıra**, **sıralama metrikleri** ve **OPR/DPR/CCWM** değerlerine dayan. OPR’yi yalnızca **aynı etkinlik** bloğundaki takımlar arasında kıyasla; farklı etkinliklerdeki OPR’ler doğrudan kıyaslanmaz. OPR’nin mutlak doğru olmadığını kısaca belirtebilirsin. Ortak etkinlik yoksa bunu söyle ve her takımın kendi regional verisini kullan
+8. RAG’de **REGIONAL / ETKİNLİK — TÜM TAKIMLAR** veya **REGIONAL ÇÖZÜM** varsa kullanıcı regional adı veya event_key vermiş demektir; **takım numarası sorma**, TUIS/TÜİK gibi anlamsız kod soruları sorma. Çözümlenen **etkinlik adını** ve **tablo satırlarını** kullan. Kullanıcı “tüm reg / tüm takımlar” dediyse tablodaki **tüm satırlara** dayanarak analiz ver
 
 YAPMA:
 ❌ Alakasız bilgi verme (SORULAN KONU DIŞINA ÇIKMA!)
@@ -844,6 +1075,7 @@ YAPMA:
 ❌ Gereksiz ön bilgi verme
 ❌ TBA verisi varken eski/tahmin bilgi verme
 ❌ ${currentYear - 2} veya ${currentYear - 1} oyununu "şu anki sezon" diye gösterme — güncel yarışma yılı ${currentYear}
+❌ Regional tablo zaten listelenmişken kullanıcıdan tekrar takım numarası isteme
 
 YAP:
 ✅ Soruyu cevapla
