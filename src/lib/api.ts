@@ -234,9 +234,18 @@ export async function apiRequest<T = any>(
   try {
     // Capacitor'da tüm istekler için native HTTP kullan (mixed content ve CORS sorunlarını çözer)
     if (isCapacitor) {
-      // Timeout ekle (60 saniye - daha uzun süre)
+      const chatLikeTimeout = url.includes("/api/chat");
+      const timeoutMs = chatLikeTimeout ? 120000 : 60000;
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout: API isteği 60 saniye içinde tamamlanamadı. İnternet bağlantınızı kontrol edin.')), 60000);
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                `Request timeout: API isteği ${timeoutMs / 1000} saniye içinde tamamlanamadı. İnternet bağlantınızı kontrol edin.`
+              )
+            ),
+          timeoutMs
+        );
       });
       
       // Method kontrolü - GET istekleri için data gönderme
@@ -485,9 +494,15 @@ export async function apiRequest<T = any>(
         } else if (statusCode === 404) {
           userFriendlyMessage = 'İstenen kaynak bulunamadı.';
         } else if (statusCode === 500) {
-          userFriendlyMessage = 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.';
+          userFriendlyMessage =
+            errorMessage && errorMessage !== 'Bir hata oluştu'
+              ? errorMessage
+              : 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.';
         } else if (statusCode >= 500) {
-          userFriendlyMessage = 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.';
+          userFriendlyMessage =
+            errorMessage && errorMessage !== 'Bir hata oluştu'
+              ? errorMessage
+              : 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.';
         } else if (statusCode >= 400) {
           // Diğer 4xx hataları için backend'den gelen mesajı kullan, yoksa genel mesaj
           userFriendlyMessage = errorMessage || 'Bir hata oluştu. Lütfen tekrar deneyin.';
@@ -552,9 +567,10 @@ export async function apiRequest<T = any>(
       }
     }
 
-    // Web için normal fetch kullan - timeout ile
+    // Web için normal fetch kullan - timeout ile (chat uzun sürebilir)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 saniye timeout
+    const webTimeoutMs = url.includes("/api/chat") ? 120000 : 60000;
+    const timeoutId = setTimeout(() => controller.abort(), webTimeoutMs);
     
     let response: Response;
     try {

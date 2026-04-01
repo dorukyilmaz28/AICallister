@@ -4,7 +4,9 @@ import { conversationDb } from "@/lib/database";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Force dynamic rendering (Vercel serverless function)
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+/** Uzun TBA RAG + Gemini yanıtları için (varsayılan ~10–60s aşımını önlemek için) */
+export const maxDuration = 120;
 
 // FRC takım numaralarını tespit et
 function extractTeamNumbers(text: string, maxTeams = 3): string[] {
@@ -160,13 +162,14 @@ async function resolveEventFromRegionalQuery(
     headers: tbaAuthHeaders(apiKey),
   });
   if (!res.ok) return null;
+  const rawEvents = await res.json();
   const events: Array<{
     key: string;
     name: string;
     event_type?: number;
     start_date?: string;
     country?: string;
-  }> = await res.json();
+  }> = Array.isArray(rawEvents) ? rawEvents : [];
 
   const candidates = events.filter((e) => {
     const nn = normalizeTbaSearch(e.name);
@@ -361,6 +364,7 @@ function formatOprTriple(oprsPayload: TbaOprsPayload | null | undefined, teamKey
 
 /** TBA `/event/{key}/alliances` — eleme ittifakları (çoğu regionalde 8); her biri ayrı yorumlanmalı */
 async function buildPlayoffEightAlliancesBlock(eventKey: string, apiKey: string): Promise<string> {
+  try {
   const res = await fetch(
     `https://www.thebluealliance.com/api/v3/event/${encodeURIComponent(eventKey)}/alliances`,
     { headers: tbaAuthHeaders(apiKey) }
@@ -425,6 +429,14 @@ async function buildPlayoffEightAlliancesBlock(eventKey: string, apiKey: string)
 
   out += `=== ELEME İTTİFAKLARI SONU ===\n`;
   return out;
+  } catch (e) {
+    console.error("[TBA RAG] buildPlayoffEightAlliancesBlock:", e);
+    return (
+      `\n\n=== ELEME İTTİFAKLARI (TBA) ===\n` +
+      `Eleme ittifak verisi okunurken hata oluştu; qual/ittifak aşaması verisi eksik olabilir.\n` +
+      `=== SON ===\n`
+    );
+  }
 }
 
 async function fetchEventRankingAndMetricsBlock(
@@ -1254,7 +1266,21 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
     
     // Gemini için mesaj formatını hazırla
     // Gemini API için system instruction ve conversation history'yi birleştir
-    const systemInstruction = systemPrompt + ragContext;
+    /** Çok büyük RAG bazen INVALID_ARGUMENT / 500 üretebilir */
+    const MAX_SYSTEM_CHARS = 200_000;
+    let systemInstruction = systemPrompt + ragContext;
+    if (systemInstruction.length > MAX_SYSTEM_CHARS) {
+      systemInstruction =
+        systemInstruction.slice(0, MAX_SYSTEM_CHARS) +
+        "\n\n[... bağlam çok uzun olduğu için API limitiyle kesildi; özet soruda daraltılabilir.]";
+      console.warn(
+        "[Chat] systemInstruction truncated:",
+        systemInstruction.length,
+        "chars (cap",
+        MAX_SYSTEM_CHARS,
+        ")"
+      );
+    }
     
     // Son mesajları Gemini formatına dönüştür
     // Son mesajları al: En son 3 mesaj tutulacak (sliding window)
@@ -1283,6 +1309,13 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
 
     console.log("Messages count:", contents.length);
     console.log("System instruction length:", systemInstruction.length);
+
+    if (contents.length === 0) {
+      return NextResponse.json(
+        { error: "Gönderilecek mesaj bulunamadı. Sohbeti yenileyip tekrar deneyin." },
+        { status: 400 }
+      );
+    }
 
     // Retry mekanizması - 3 deneme
     let lastError: any = null;
@@ -1491,10 +1524,14 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
   } catch (error: any) {
     console.error("Route Error:", error);
     const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    const msg = error?.message || String(error);
     return NextResponse.json(
       {
-        error: "AI servisine erişilemiyor.",
-        details: error.message,
+        error:
+          msg.length > 10 && msg.length < 400
+            ? `İstek işlenemedi: ${msg}`
+            : "AI servisine erişilemiyor. Lütfen kısa bir süre sonra tekrar deneyin.",
+        details: msg,
         timestamp: new Date().toISOString(),
         model: model,
       },
