@@ -7,16 +7,16 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 export const dynamic = 'force-dynamic';
 
 // FRC takım numaralarını tespit et
-function extractTeamNumbers(text: string): string[] {
+function extractTeamNumbers(text: string, maxTeams = 3): string[] {
   const teamNumbers: string[] = [];
-  
+
   // "254", "frc 254", "team 254", "takım 254" gibi formatları yakala
   const patterns = [
     /(?:frc|team|takım)\s*(\d{1,5})/gi,
-    /\b(\d{3,5})\b/g,  // 3-5 haneli sayılar (muhtemelen takım numarası)
+    /\b(\d{3,5})\b/g, // 3-5 haneli sayılar (muhtemelen takım numarası)
   ];
-  
-  patterns.forEach(pattern => {
+
+  patterns.forEach((pattern) => {
     const matches = text.matchAll(pattern);
     for (const match of matches) {
       const num = match[1];
@@ -25,8 +25,369 @@ function extractTeamNumbers(text: string): string[] {
       }
     }
   });
-  
-  return teamNumbers.slice(0, 3); // Max 3 takım
+
+  return teamNumbers.slice(0, Math.max(1, Math.min(maxTeams, 8)));
+}
+
+/** İttifak seçimi / OPR / scouting tarzı sorularda daha çok takım numarası yakala */
+function wantsAllianceSelectionContext(text: string): boolean {
+  const t = text.toLowerCase();
+  const keys = [
+    "ittifak",
+    "alliance",
+    "allianceselection",
+    "seçim",
+    "secim",
+    "pick list",
+    "picklist",
+    "first pick",
+    "second pick",
+    "third pick",
+    "draft",
+    "scouting",
+    "hangi takım",
+    "kimle ittifak",
+    "opr",
+    "dpr",
+    "ccwm",
+    "güç skor",
+    "guc skor",
+    "sıralama skor",
+    "sirala",
+    "ranking score",
+    "average score",
+    "skor ort",
+    "alliance captain",
+  ];
+  return keys.some((k) => t.includes(k));
+}
+
+/** TBA EventType: REGIONAL = 0 */
+const TBA_EVENT_TYPE_REGIONAL = 0;
+const MAX_EVENTS_FOR_MATCHES = 3;
+const MAX_MATCH_LINES_PER_EVENT = 55;
+
+function tbaAuthHeaders(apiKey: string): HeadersInit {
+  return { "X-TBA-Auth-Key": apiKey, Accept: "application/json" };
+}
+
+/** Official FRC game names by competition year (update annually). */
+function frcGameNameForYear(year: number): string {
+  const games: Record<number, string> = {
+    2026: "REBUILT (presented by Haas)",
+    2025: "REEFSCAPE",
+    2024: "Crescendo",
+    2023: "Charged Up",
+    2022: "Rapid React",
+    2021: "INFINITE RECHARGE",
+    2020: "INFINITE RECHARGE",
+  };
+  return games[year] ?? `FRC ${year} season (verify current name on firstinspires.org)`;
+}
+
+function formatPreviousSeasonsForPrompt(currentYear: number): string {
+  const parts: string[] = [];
+  for (let y = currentYear - 1; y >= currentYear - 4 && y >= 2000; y--) {
+    parts.push(`${y}: ${frcGameNameForYear(y)}`);
+  }
+  return parts.join("; ");
+}
+
+function getAllianceTeamKeys(alliance: { team_keys?: string[]; teams?: string[] } | undefined): string[] {
+  if (!alliance) return [];
+  const raw = alliance.team_keys ?? alliance.teams;
+  return Array.isArray(raw) ? raw : [];
+}
+
+function formatOneMatchLine(m: {
+  comp_level?: string;
+  match_number?: number;
+  alliances?: Array<{ color?: string; team_keys?: string[]; teams?: string[]; score?: number }>;
+}): string {
+  const alliances = m.alliances;
+  if (!alliances?.length) return "";
+  const red = alliances.find((a) => a.color === "red");
+  const blue = alliances.find((a) => a.color === "blue");
+  const rs = red?.score ?? "?";
+  const bs = blue?.score ?? "?";
+  const rt = getAllianceTeamKeys(red)
+    .map((k) => k.replace(/^frc/i, ""))
+    .join("/");
+  const bt = getAllianceTeamKeys(blue)
+    .map((k) => k.replace(/^frc/i, ""))
+    .join("/");
+  const level = m.comp_level ?? "?";
+  const num = m.match_number ?? "?";
+  return `${level}${num}: [${rt}] ${rs} - ${bs} [${bt}]`;
+}
+
+function compLevelOrder(level: string | undefined): number {
+  const o: Record<string, number> = { qm: 0, ef: 1, qf: 2, sf: 3, f: 4 };
+  return level ? (o[level] ?? 50) : 50;
+}
+
+function selectMatchesForContext(
+  matches: Array<Parameters<typeof formatOneMatchLine>[0]>
+): Array<Parameters<typeof formatOneMatchLine>[0]> {
+  const sorted = [...matches].sort((a, b) => {
+    const c = compLevelOrder(a.comp_level) - compLevelOrder(b.comp_level);
+    if (c !== 0) return c;
+    return (a.match_number || 0) - (b.match_number || 0);
+  });
+  const qm = sorted.filter((m) => m.comp_level === "qm");
+  const playoff = sorted.filter((m) => m.comp_level && m.comp_level !== "qm");
+  const maxQm = Math.max(0, MAX_MATCH_LINES_PER_EVENT - playoff.length);
+  const qmPick = qm.length <= maxQm ? qm : qm.slice(-maxQm);
+  return [...qmPick, ...playoff];
+}
+
+type TbaOprsPayload = {
+  oprs?: Record<string, number>;
+  dprs?: Record<string, number>;
+  ccwms?: Record<string, number>;
+};
+
+function formatOprStatsOnly(oprsPayload: TbaOprsPayload | null | undefined, teamKey: string): string {
+  if (!oprsPayload) return "";
+  const opr = oprsPayload.oprs?.[teamKey];
+  const dpr = oprsPayload.dprs?.[teamKey];
+  const ccwm = oprsPayload.ccwms?.[teamKey];
+  const parts: string[] = [];
+  if (typeof opr === "number" && !Number.isNaN(opr)) parts.push(`OPR ${opr.toFixed(2)}`);
+  if (typeof dpr === "number" && !Number.isNaN(dpr)) parts.push(`DPR ${dpr.toFixed(2)}`);
+  if (typeof ccwm === "number" && !Number.isNaN(ccwm)) parts.push(`CCWM ${ccwm.toFixed(2)}`);
+  return parts.join(", ");
+}
+
+function formatOprTriple(oprsPayload: TbaOprsPayload | null | undefined, teamKey: string): string {
+  const s = formatOprStatsOnly(oprsPayload, teamKey);
+  return s ? `TBA güç skorları (aynı etkinlik): ${s}` : "";
+}
+
+async function fetchEventRankingAndMetricsBlock(
+  eventKey: string,
+  teamKey: string,
+  apiKey: string
+): Promise<string> {
+  const res = await fetch(`https://www.thebluealliance.com/api/v3/event/${eventKey}/rankings`, {
+    headers: tbaAuthHeaders(apiKey),
+  });
+  if (!res.ok) return "";
+  const data = await res.json();
+  const sortMeta: Array<{ name?: string }> = Array.isArray(data?.sort_order_info) ? data.sort_order_info : [];
+  const extraMeta: Array<{ name?: string }> = Array.isArray(data?.extra_stats_info) ? data.extra_stats_info : [];
+  const rows: Array<{
+    team_key?: string;
+    rank?: number;
+    record?: { wins?: number; losses?: number; ties?: number } | null;
+    matches_played?: number;
+    qual_average?: number | null;
+    sort_orders?: number[];
+    extra_stats?: number[];
+  }> = Array.isArray(data?.rankings) ? data.rankings : [];
+
+  const row = rows.find((r) => r.team_key === teamKey);
+  if (!row) return "";
+
+  const lines: string[] = [];
+  const rank = row.rank ?? "?";
+  const rec = row.record;
+  const w = rec?.wins ?? "?";
+  const l = rec?.losses ?? "?";
+  const t = rec?.ties ?? "?";
+  lines.push(`Sıralama (qual): #${rank} — kayıt ${w}-${l}-${t}`);
+  if (row.matches_played != null) lines.push(`Oynanan qual maçı: ${row.matches_played}`);
+  if (row.qual_average != null && row.qual_average !== undefined) {
+    lines.push(`Qual maç skor ortalaması (TBA): ${row.qual_average}`);
+  }
+
+  const so = row.sort_orders;
+  if (Array.isArray(so) && sortMeta.length > 0) {
+    const parts: string[] = [];
+    for (let i = 0; i < Math.min(so.length, sortMeta.length, 6); i++) {
+      const name = sortMeta[i]?.name;
+      if (name != null) parts.push(`${name}: ${so[i]}`);
+    }
+    if (parts.length) lines.push(`Sıralama metrikleri: ${parts.join("; ")}`);
+  }
+
+  const es = row.extra_stats;
+  if (Array.isArray(es) && extraMeta.length > 0) {
+    const parts: string[] = [];
+    for (let i = 0; i < Math.min(es.length, extraMeta.length, 4); i++) {
+      const name = extraMeta[i]?.name;
+      if (name != null) parts.push(`${name}: ${es[i]}`);
+    }
+    if (parts.length) lines.push(`Ek istatistikler: ${parts.join("; ")}`);
+  }
+
+  try {
+    const opRes = await fetch(`https://www.thebluealliance.com/api/v3/event/${eventKey}/oprs`, {
+      headers: tbaAuthHeaders(apiKey),
+    });
+    if (opRes.ok) {
+      const oprsJson = await opRes.json();
+      const oprLine = formatOprTriple(oprsJson, teamKey);
+      if (oprLine) lines.push(oprLine);
+    }
+  } catch {
+    /* ignore */
+  }
+
+  return lines.join("\n");
+}
+
+/** Aynı etkinlikte birden fazla takım için TBA tabanlı ittifak / kıyaslama özeti */
+async function buildAllianceSelectionComparisonBlock(
+  teamNumbers: string[],
+  currentYear: number,
+  apiKey: string
+): Promise<string> {
+  if (teamNumbers.length < 2) return "";
+
+  type Ev = { key?: string; name?: string; event_type?: number };
+  const perTeam: { num: string; keySet: Set<string>; nameByKey: Map<string, string> }[] = [];
+
+  for (const num of teamNumbers) {
+    const res = await fetch(
+      `https://www.thebluealliance.com/api/v3/team/frc${num}/events/${currentYear}`,
+      { headers: tbaAuthHeaders(apiKey) }
+    );
+    const events: Ev[] = res.ok ? await res.json() : [];
+    const regional = events.filter((e) => e.event_type === TBA_EVENT_TYPE_REGIONAL);
+    const selected = regional.length > 0 ? regional : events;
+    const keySet = new Set<string>();
+    const nameByKey = new Map<string, string>();
+    for (const e of selected) {
+      if (e.key) {
+        keySet.add(e.key);
+        if (e.name) nameByKey.set(e.key, e.name);
+      }
+    }
+    perTeam.push({ num, keySet, nameByKey });
+  }
+
+  let intersection = [...perTeam[0].keySet];
+  for (let i = 1; i < perTeam.length; i++) {
+    intersection = intersection.filter((k) => perTeam[i].keySet.has(k));
+  }
+
+  if (intersection.length === 0) {
+    return (
+      `\n\n=== İTTİFAK SEÇİMİ — ortak etkinlik (${currentYear}, TBA) ===\n` +
+      `Bu mesajdaki takımlar ${currentYear} sezonunda TBA’de ortak bir etkinlik anahtarı paylaşmıyor gibi görünüyor. ` +
+      `Qual skor ortalaması ve OPR’yi yalnızca aynı etkinlik içinde kıyasla; farklı regional’lerdeki OPR’ler doğrudan karşılaştırılmamalı.\n` +
+      `=== İTTİFAK TBA SONU ===\n`
+    );
+  }
+
+  const sharedKey = intersection[0];
+  const eventName = perTeam[0].nameByKey.get(sharedKey) || sharedKey;
+
+  const rankRes = await fetch(
+    `https://www.thebluealliance.com/api/v3/event/${sharedKey}/rankings`,
+    { headers: tbaAuthHeaders(apiKey) }
+  );
+  const oprsRes = await fetch(`https://www.thebluealliance.com/api/v3/event/${sharedKey}/oprs`, {
+    headers: tbaAuthHeaders(apiKey),
+  });
+  const rankData = rankRes.ok ? await rankRes.json() : null;
+  const oprsData = oprsRes.ok ? await oprsRes.json() : null;
+  const rows: Array<{
+    team_key?: string;
+    rank?: number;
+    record?: { wins?: number; losses?: number; ties?: number } | null;
+    qual_average?: number | null;
+    sort_orders?: number[];
+  }> = Array.isArray(rankData?.rankings) ? rankData.rankings : [];
+  const sortMeta: Array<{ name?: string }> = Array.isArray(rankData?.sort_order_info)
+    ? rankData.sort_order_info
+    : [];
+
+  let out =
+    `\n\n=== İTTİFAK SEÇİMİ — TBA karşılaştırma (aynı etkinlik: ${eventName} / ${sharedKey}) ===\n` +
+    `Aşağıdaki qual skor ortalaması, sıra ve OPR/DPR/CCWM değerleri bu etkinlik için TBA’den gelir. ` +
+    `İttifak yorumunu bu sayılara dayandır; OPR tek başına yeterli değildir, oyun rolü ve güvenilirlik de önemlidir.\n`;
+
+  for (const num of teamNumbers) {
+    const tk = `frc${num}`;
+    const row = rows.find((r) => r.team_key === tk);
+    out += `\n• Takım ${num}:`;
+    if (row) {
+      out += ` sıra #${row.rank ?? "?"}`;
+      const rec = row.record;
+      if (rec) out += ` (${rec.wins}-${rec.losses}-${rec.ties})`;
+      if (row.qual_average != null) out += `; qual skor ort. ${row.qual_average}`;
+      if (Array.isArray(row.sort_orders) && sortMeta[0]?.name != null) {
+        out += `; ${sortMeta[0].name}: ${row.sort_orders[0]}`;
+      }
+    } else {
+      out += " (bu etkinlikte sıralama satırı yok)";
+    }
+    const oprBits = formatOprStatsOnly(oprsData, tk);
+    if (oprBits) out += ` | ${oprBits}`;
+  }
+
+  out += `\n=== İTTİFAK TBA SONU ===\n`;
+  return out;
+}
+
+async function buildRegionalMatchesAndRankingsSection(
+  teamKey: string,
+  yearEvents: Array<{ key?: string; name?: string; event_type?: number }>,
+  currentYear: number,
+  apiKey: string
+): Promise<string> {
+  if (!yearEvents?.length) return "";
+
+  let selected = yearEvents.filter((e) => e.event_type === TBA_EVENT_TYPE_REGIONAL);
+  if (selected.length === 0) selected = [...yearEvents];
+  selected = selected.slice(0, MAX_EVENTS_FOR_MATCHES);
+
+  const blocks: string[] = [];
+  for (const ev of selected) {
+    const ek = ev.key;
+    if (!ek) continue;
+    const ename = ev.name || ek;
+    let block = `\n\n📍 ${ename} (${ek})`;
+
+    try {
+      const rankBlock = await fetchEventRankingAndMetricsBlock(ek, teamKey, apiKey);
+      if (rankBlock) block += `\n${rankBlock}`;
+    } catch {
+      /* ignore */
+    }
+
+    try {
+      const mres = await fetch(
+        `https://www.thebluealliance.com/api/v3/team/${teamKey}/event/${ek}/matches`,
+        { headers: tbaAuthHeaders(apiKey) }
+      );
+      if (mres.ok) {
+        const matches = await mres.json();
+        const arr = Array.isArray(matches) ? matches : [];
+        const picked = selectMatchesForContext(arr);
+        const lines = picked.map((m) => formatOneMatchLine(m)).filter((l) => l.length > 0);
+        if (lines.length > 0) {
+          block += `\nMaçlar (özet, TBA):`;
+          for (const line of lines) {
+            block += `\n  ${line}`;
+          }
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+
+    blocks.push(block);
+  }
+
+  if (blocks.length === 0) return "";
+  return (
+    `\n\n=== MAÇ / SIRALAMA — Regional & etkinlik (The Blue Alliance, ${currentYear}) ===` +
+    blocks.join("") +
+    `\n=== MAÇ / SIRALAMA SONU ===`
+  );
 }
 
 // TBA'dan takım bilgisi çek (güncel verilerle)
@@ -44,7 +405,7 @@ async function fetchTeamInfo(teamNumber: string): Promise<string> {
     // Temel takım bilgileri
     const teamResponse = await fetch(
       `https://www.thebluealliance.com/api/v3/team/frc${teamNumber}`,
-      { headers: { "X-TBA-Auth-Key": TBA_API_KEY } }
+      { headers: tbaAuthHeaders(TBA_API_KEY) }
     );
 
     if (!teamResponse.ok) {
@@ -53,26 +414,41 @@ async function fetchTeamInfo(teamNumber: string): Promise<string> {
     }
 
     const team = await teamResponse.json();
-    
-    // Güncel sezon yılını al (2025)
+    const teamKey = team.key as string;
+
     const currentYear = new Date().getFullYear();
-    
-    // Son 2 sezonun etkinliklerini çek (2024, 2025)
+
+    let yearEvents: Array<{ key?: string; name?: string; event_type?: number }> = [];
     let recentEvents = "";
     try {
       const eventsResponse = await fetch(
         `https://www.thebluealliance.com/api/v3/team/frc${teamNumber}/events/${currentYear}`,
-        { headers: { "X-TBA-Auth-Key": TBA_API_KEY } }
+        { headers: tbaAuthHeaders(TBA_API_KEY) }
       );
-      
+
       if (eventsResponse.ok) {
-        const events = await eventsResponse.json();
-        if (events && events.length > 0) {
-          recentEvents = `\n- ${currentYear} Etkinlikleri: ${events.slice(0, 3).map((e: any) => e.name).join(", ")}`;
+        yearEvents = await eventsResponse.json();
+        if (yearEvents?.length > 0) {
+          recentEvents = `\n- ${currentYear} Etkinlikleri: ${yearEvents
+            .slice(0, 5)
+            .map((e: { name?: string }) => e.name)
+            .join(", ")}`;
         }
       }
+    } catch {
+      /* Etkinlik bilgisi yoksa devam et */
+    }
+
+    let regionalMatchesBlock = "";
+    try {
+      regionalMatchesBlock = await buildRegionalMatchesAndRankingsSection(
+        teamKey,
+        yearEvents,
+        currentYear,
+        TBA_API_KEY
+      );
     } catch (e) {
-      // Etkinlik bilgisi yoksa devam et
+      console.log(`[TBA RAG] Regional/maç çekerken hata:`, e);
     }
     
     // Ödülleri çek (Awards)
@@ -86,7 +462,7 @@ async function fetchTeamInfo(teamNumber: string): Promise<string> {
         try {
           const awardsResponse = await fetch(
             `https://www.thebluealliance.com/api/v3/team/frc${teamNumber}/awards/${year}`,
-            { headers: { "X-TBA-Auth-Key": TBA_API_KEY } }
+            { headers: tbaAuthHeaders(TBA_API_KEY) }
           );
           
           if (awardsResponse.ok) {
@@ -155,7 +531,7 @@ FRC Takım ${teamNumber} Bilgileri (The Blue Alliance - ${currentYear}):
 - Tam İsim: ${team.name || "N/A"}
 - Şehir: ${team.city || "N/A"}, ${team.state_prov || "N/A"}, ${team.country || "N/A"}
 - Rookie Yılı: ${team.rookie_year || "N/A"}
-- Website: ${team.website || "N/A"}${recentEvents}${awardsInfo}
+- Website: ${team.website || "N/A"}${recentEvents}${regionalMatchesBlock}${awardsInfo}
 - Veri Kaynağı: The Blue Alliance (Güncel - ${currentYear})
 `;
   } catch (error) {
@@ -354,24 +730,43 @@ export async function POST(req: NextRequest) {
       // ChromaDB disabled (Vercel serverless incompatible)
       
       // 1. TBA RAG - Takım bilgileri
-      const teamNumbers = extractTeamNumbers(userText);
-      
+      const allianceIntent = wantsAllianceSelectionContext(userText);
+      const teamNumbers = extractTeamNumbers(userText, allianceIntent ? 6 : 3);
+
       if (teamNumbers.length > 0) {
-        console.log("Tespit edilen takımlar:", teamNumbers);
-        
+        console.log("Tespit edilen takımlar:", teamNumbers, "allianceIntent:", allianceIntent);
+
         // TBA'dan bilgi çek (paralel)
-        const teamInfoPromises = teamNumbers.map(num => fetchTeamInfo(num));
+        const teamInfoPromises = teamNumbers.map((num) => fetchTeamInfo(num));
         const teamInfos = await Promise.all(teamInfoPromises);
-        
-        const validInfos = teamInfos.filter(info => info.trim() !== "");
-        
+
+        const validInfos = teamInfos.filter((info) => info.trim() !== "");
+
         if (validInfos.length > 0) {
           const currentYear = new Date().getFullYear();
-          ragContext += `\n\n=== GÜNCEL TAKIM BİLGİLERİ (The Blue Alliance - ${currentYear}) ===\n` + 
-                       validInfos.join("\n") + 
-                       `\n=== BİLGİ SONU ===\n\n` +
-                       `ÖNEMLİ: Yukarıdaki veriler The Blue Alliance'dan CANLI çekildi (${currentYear}). Bu GÜNCEL bilgileri kullan, eski eğitim verilerini değil!\n` +
-                       `ÖDÜLLER: Yukarıda 🏆 sembolü ile gösterilen ödüller TBA API'den canlı çekildi. Ödül soruları için bu listeyi kullan!`;
+          ragContext +=
+            `\n\n=== GÜNCEL TAKIM BİLGİLERİ (The Blue Alliance - ${currentYear}) ===\n` +
+            validInfos.join("\n") +
+            `\n=== BİLGİ SONU ===\n\n` +
+            `ÖNEMLİ: Yukarıdaki veriler The Blue Alliance'dan CANLI çekildi (${currentYear}). Bu GÜNCEL bilgileri kullan, eski eğitim verilerini değil!\n` +
+            `ÖDÜLLER: Yukarıda 🏆 ile listelenen ödüller TBA API'den canlıdır. Ödül sorularında bu listeyi kullan.\n` +
+            `MAÇ / SIRALAMA: "MAÇ / SIRALAMA" bölümündeki maç özetleri ve sıralama satırları TBA API'den canlıdır; maç veya regional performans sorularında bunları kullan.\n` +
+            `SKOR / İTTİFAK: Sıralama bloklarında "Qual maç skor ortalaması", sıralama metrikleri ve OPR/DPR/CCWM TBA'dendir. İttifak seçimi yorumunda bu sayıları esas al; farklı etkinliklerdeki OPR'leri doğrudan kıyaslama.\n` +
+            `İTTİFAK — ORTAK ETKİNLİK: İki veya daha fazla takım için "İTTİFAK SEÇİMİ" bölümü aynı etkinlikteki TBA karşılaştırmasını içerir (varsa).`;
+
+          const tbaKey = process.env.TBA_API_KEY || "";
+          if (tbaKey && teamNumbers.length >= 2) {
+            try {
+              const allianceBlock = await buildAllianceSelectionComparisonBlock(
+                teamNumbers,
+                currentYear,
+                tbaKey
+              );
+              if (allianceBlock) ragContext += allianceBlock;
+            } catch (e) {
+              console.log("[TBA RAG] İttifak karşılaştırma hatası:", e);
+            }
+          }
         }
       }
       
@@ -392,10 +787,11 @@ export async function POST(req: NextRequest) {
 WHO YOU ARE:
 - You are an expert FRC (FIRST Robotics Competition) AI assistant
 - You use The Blue Alliance and WPILib documentation
-- CURRENT SEASON: ${currentYear}
-- FRC games: 2024 (Crescendo), 2023 (Charged Up), 2022 (Rapid React), etc.
-- You get CURRENT and LIVE data from TBA API - don't use old information!
-- Team info: name, city, rookie year, events, AWARDS (last 3 years)
+- CALENDAR YEAR / SEASON FOCUS: ${currentYear}
+- CURRENT FRC GAME (${currentYear}): ${frcGameNameForYear(currentYear)}
+- Previous seasons (historical only — NOT the current game): ${formatPreviousSeasonsForPrompt(currentYear)}
+- You receive CURRENT and LIVE data from the TBA API when present — do not treat training-cutoff years as "today"
+- Team data may include: profile, ${currentYear} events, regional match summaries & rankings (qual match score average, sort metrics), OPR/DPR/CCWM per event, AWARDS (last 3 years), and a multi-team block for same-event alliance comparison when available
 
 IMPORTANT RULES:
 1. Be natural and helpful
@@ -403,6 +799,8 @@ IMPORTANT RULES:
 3. Don't repeat unnecessarily
 4. Get straight to the point
 5. When AWARDS are asked, use the LIVE award list from TBA
+6. When MATCHES, SCORES, or REGIONAL performance are asked, use the LIVE match/ranking block from TBA when present
+7. For ALLIANCE SELECTION or “who to pick”, base reasoning on TBA **qual average**, **rank**, **sort metrics**, and **OPR/DPR/CCWM** when present. Only compare OPR/CCWM across teams that appear in the **same event** block. Note OPR limitations (not perfect). If no shared-event block exists, say cross-event stats are not directly comparable and use each team’s own event data
 
 DON'T:
 ❌ Give irrelevant information (STAY ON TOPIC!)
@@ -410,30 +808,34 @@ DON'T:
 ❌ Explain topics that weren't asked about
 ❌ Give unnecessary background info
 ❌ Give old/estimated info when TBA data is available
+❌ Call ${currentYear - 2} or ${currentYear - 1} the "current" game — the current competition year is ${currentYear}
 
 DO:
 ✅ Answer the question
 ✅ Be clear and concise
 ✅ Provide code/examples when needed
 ✅ Explain sufficiently (not too little, not too much)
-✅ Use current data from TBA for awards
+✅ Use current data from TBA for awards, matches, and rankings when provided
 
 RESPOND IN ENGLISH.
 ` : `
 SEN KİMSİN:
 - FRC (FIRST Robotics Competition) konusunda uzman bir AI asistanısın
 - The Blue Alliance ve WPILib dokümantasyonunu kullanırsın
-- GÜNCEL SEZON: ${currentYear}
-- FRC oyunları: 2024 (Crescendo), 2023 (Charged Up), 2022 (Rapid React), vb.
-- TBA API'den GÜNCEL ve CANLI veri alıyorsun - eski bilgiler verme!
-- Takım bilgileri: isim, şehir, rookie year, etkinlikler, ÖDÜLLER (son 3 yıl)
+- TAKVİM YILI / SEZON ODAĞI: ${currentYear}
+- GÜNCEL FRC OYUNU (${currentYear}): ${frcGameNameForYear(currentYear)}
+- Önceki sezonlar (sadece geçmiş — güncel oyun değil): ${formatPreviousSeasonsForPrompt(currentYear)}
+- TBA API'den gelen CANLI veri varken eğitim kesim yılını "bugün" sanma
+- Takım verisi şunları içerebilir: profil, ${currentYear} etkinlikleri, regional maç/sıralama özetleri, qual maç skor ortalaması, sıralama metrikleri, etkinlik bazlı OPR/DPR/CCWM, ÖDÜLLER (son 3 yıl) ve mümkünse aynı etkinlikte çoklu takım için TBA karşılaştırması
 
 ÖNEMLİ KURALLAR:
 1. Doğal ve yardımsever ol
 2. Sadece SORULAN soruyu cevapla - alakasız bilgi verme
 3. Gereksiz tekrar yapma
 4. Direkt konuya gir
-5. ÖDÜLLER sorulduğunda, TBA'dan gelen CANLI ödül listesini kullan
+5. ÖDÜLLER sorulduğunda TBA'dan gelen CANLI ödül listesini kullan
+6. MAÇ, SKOR veya REGIONAL performans sorulduğunda TBA'daki canlı maç/sıralama bölümünü kullan
+7. İTTİFAK SEÇİMİ veya “kim daha iyi pick” sorularında TBA’deki **qual skor ortalaması**, **sıra**, **sıralama metrikleri** ve **OPR/DPR/CCWM** değerlerine dayan. OPR’yi yalnızca **aynı etkinlik** bloğundaki takımlar arasında kıyasla; farklı etkinliklerdeki OPR’ler doğrudan kıyaslanmaz. OPR’nin mutlak doğru olmadığını kısaca belirtebilirsin. Ortak etkinlik yoksa bunu söyle ve her takımın kendi regional verisini kullan
 
 YAPMA:
 ❌ Alakasız bilgi verme (SORULAN KONU DIŞINA ÇIKMA!)
@@ -441,13 +843,14 @@ YAPMA:
 ❌ Soru sorulmamış konuları açıklama
 ❌ Gereksiz ön bilgi verme
 ❌ TBA verisi varken eski/tahmin bilgi verme
+❌ ${currentYear - 2} veya ${currentYear - 1} oyununu "şu anki sezon" diye gösterme — güncel yarışma yılı ${currentYear}
 
 YAP:
 ✅ Soruyu cevapla
 ✅ Net ve anlaşılır ol
 ✅ Gerekirse kod/örnek ver
 ✅ Yeterince açıkla (az değil, çok değil)
-✅ Ödüller için TBA'dan gelen güncel veriyi kullan
+✅ Ödül, maç ve sıralama için TBA'dan gelen güncel veriyi kullan
 
 TÜRKÇE CEVAP VER.
 `;

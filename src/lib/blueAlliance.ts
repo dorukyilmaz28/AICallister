@@ -1,4 +1,9 @@
 // Blue Alliance API utility functions
+
+function tbaApiKey(): string {
+  return process.env.TBA_API_KEY || process.env.BLUE_ALLIANCE_API_KEY || "";
+}
+
 export interface BlueAllianceTeam {
   key: string;
   team_number: number;
@@ -23,7 +28,7 @@ export async function verifyTeamNumber(teamNumber: string): Promise<{ isValid: b
     
     const response = await fetch(url, {
       headers: {
-        'X-TBA-Auth-Key': process.env.BLUE_ALLIANCE_API_KEY || '', // API key opsiyonel
+        'X-TBA-Auth-Key': tbaApiKey(),
         'User-Agent': 'Callister-FRC-AI/1.0'
       }
     });
@@ -82,7 +87,7 @@ export async function searchTeamByName(teamName: string): Promise<{ teams: BlueA
       
       const response = await fetch(url, {
         headers: {
-          'X-TBA-Auth-Key': process.env.BLUE_ALLIANCE_API_KEY || '',
+          'X-TBA-Auth-Key': tbaApiKey(),
           'User-Agent': 'Callister-FRC-AI/1.0'
         }
       });
