@@ -8,6 +8,34 @@ export const dynamic = "force-dynamic";
 /** Uzun TBA RAG + Gemini yanıtları için (varsayılan ~10–60s aşımını önlemek için) */
 export const maxDuration = 120;
 
+/** Gemini / Google Generative AI hatalarından 429 ve kota türünü çıkarır */
+function getGeminiErrorMeta(err: unknown): {
+  is429: boolean;
+  isDailyFreeTierQuota: boolean;
+  retryAfterMs?: number;
+} {
+  const e = err as { message?: string; status?: number; statusCode?: number };
+  const msg = String(e?.message ?? err ?? "");
+  const status = e?.status ?? e?.statusCode;
+  const is429 =
+    status === 429 ||
+    msg.includes("429") ||
+    msg.includes("Too Many Requests");
+  const isDailyFreeTierQuota =
+    msg.includes("PerDay") ||
+    msg.includes("free_tier") ||
+    msg.includes("FreeTier") ||
+    msg.includes("generate_content_free_tier");
+  let retryAfterMs: number | undefined;
+  const retryIn = msg.match(/Please retry in ([\d.]+)s/i);
+  if (retryIn) retryAfterMs = Math.ceil(parseFloat(retryIn[1]) * 1000);
+  if (retryAfterMs == null) {
+    const rd = msg.match(/"retryDelay":"(\d+)s"/);
+    if (rd) retryAfterMs = parseInt(rd[1], 10) * 1000;
+  }
+  return { is429, isDailyFreeTierQuota, retryAfterMs };
+}
+
 // FRC takım numaralarını tespit et
 function extractTeamNumbers(text: string, maxTeams = 3): string[] {
   const teamNumbers: string[] = [];
@@ -977,12 +1005,15 @@ Simulation Kullanımı:
 }
 
 export async function POST(req: NextRequest) {
+  let language: string = "tr";
   try {
     console.log("=== API Route Başladı ===");
     console.log("Environment:", process.env.NODE_ENV);
     console.log("Vercel URL:", process.env.VERCEL_URL);
-    
-    const { messages, context, conversationId, mode, language = "tr" } = await req.json();
+
+    const body = await req.json();
+    language = typeof body.language === "string" ? body.language : "tr";
+    const { messages, context, conversationId, mode } = body;
     console.log("Request data:", { messagesCount: messages?.length, context, conversationId, mode, language });
     
     // Kullanıcı oturumu kontrolü (hem NextAuth hem JWT token desteği)
@@ -1353,26 +1384,37 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
         break;
       } catch (apiError: any) {
         lastError = apiError;
-        
-        // Rate limit veya timeout ise retry yap
-        const isRetryable = 
-          apiError.message?.includes('timeout') ||
-          apiError.message?.includes('429') ||
-          apiError.message?.includes('rate limit') ||
-          apiError.message?.includes('503') ||
-          apiError.message?.includes('500') ||
-          apiError.message?.includes('ECONNREFUSED') ||
-          apiError.message?.includes('network');
-        
+        const meta = getGeminiErrorMeta(apiError);
+
+        // Günlük ücretsiz kota: kısa aralıklı yeniden denemeler işe yaramaz
+        if (meta.is429 && meta.isDailyFreeTierQuota) {
+          throw apiError;
+        }
+
+        const msg = String(apiError?.message ?? "");
+        // Rate limit veya timeout ise retry yap (günlük kota hariç)
+        const isRetryable =
+          msg.includes("timeout") ||
+          (meta.is429 && !meta.isDailyFreeTierQuota) ||
+          msg.includes("rate limit") ||
+          msg.includes("503") ||
+          msg.includes("500") ||
+          msg.includes("ECONNREFUSED") ||
+          msg.includes("network");
+
         if (isRetryable && attempt < maxRetries) {
-          // Exponential backoff: 1s, 2s, 4s
-          const delay = Math.pow(2, attempt - 1) * 1000;
+          // 429 için API "Please retry in Xs" verir; aksi halde üstel gecikme
+          let delay =
+            meta.is429 && meta.retryAfterMs != null
+              ? Math.min(Math.max(meta.retryAfterMs, 5_000), 55_000)
+              : Math.pow(2, attempt - 1) * 1000;
+          // maxDuration (120s) içinde kal
+          delay = Math.min(delay, 60_000);
           console.log(`[Gemini API] Attempt ${attempt} failed, retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
-        
-        // Retry yapılamazsa veya son deneme ise hata fırlat
+
         throw apiError;
       }
     }
@@ -1497,26 +1539,45 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
 
     } catch (apiError: any) {
       console.error("Gemini API Error:", apiError);
+      const meta = getGeminiErrorMeta(apiError);
+      if (meta.is429) {
+        const errTr =
+          meta.isDailyFreeTierQuota
+            ? "Gemini ücretsiz planda bu model için günlük istek limiti doldu. Google AI Studio’da faturalandırmayı açın veya yarın tekrar deneyin."
+            : "Çok fazla istek gönderildi. Bir süre sonra tekrar deneyin.";
+        const errEn =
+          meta.isDailyFreeTierQuota
+            ? "Daily Gemini free-tier request limit reached for this model. Enable billing in Google AI Studio or try again tomorrow."
+            : "Too many requests. Please try again in a moment.";
+        return NextResponse.json(
+          {
+            error: language === "en" ? errEn : errTr,
+            code: "GEMINI_RATE_LIMIT",
+            retryAfterSeconds: meta.retryAfterMs
+              ? Math.ceil(meta.retryAfterMs / 1000)
+              : undefined,
+          },
+          { status: 429 }
+        );
+      }
+
       let errorMessage = "Gemini API hatası";
-      
-      // Hata mesajını kontrol et
+
       if (apiError.message) {
         if (apiError.message.includes("API key") || apiError.message.includes("401") || apiError.message.includes("403")) {
           errorMessage = "Gemini API key geçersiz veya yetkisiz. Lütfen GEMINI_API_KEY'i kontrol edin.";
-        } else if (apiError.message.includes("429") || apiError.message.includes("rate limit")) {
-          errorMessage = "API rate limit aşıldı. Lütfen birkaç dakika bekleyin.";
         } else if (apiError.message.includes("500") || apiError.message.includes("503")) {
           errorMessage = "Gemini servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.";
         } else {
           errorMessage = `Gemini API hatası: ${apiError.message}`;
         }
       }
-      
+
       return NextResponse.json(
-        { 
-          error: errorMessage, 
+        {
+          error: errorMessage,
           details: apiError.message,
-        }, 
+        },
         { status: 500 }
       );
     }
@@ -1525,6 +1586,32 @@ KONULARIN: FRC takımları, robotlar, yarışmalar, programlama, mekanik, strate
     console.error("Route Error:", error);
     const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     const msg = error?.message || String(error);
+    const meta = getGeminiErrorMeta(error);
+
+    if (meta.is429) {
+      const errTr =
+        meta.isDailyFreeTierQuota
+          ? "Gemini ücretsiz planda bu model için günlük istek limiti doldu. Google AI Studio’da faturalandırmayı açın veya yarın tekrar deneyin."
+          : "Çok fazla istek gönderildi. Bir süre sonra tekrar deneyin.";
+      const errEn =
+        meta.isDailyFreeTierQuota
+          ? "Daily Gemini free-tier request limit reached for this model. Enable billing in Google AI Studio or try again tomorrow."
+          : "Too many requests. Please try again in a moment.";
+      return NextResponse.json(
+        {
+          error: language === "en" ? errEn : errTr,
+          code: "GEMINI_RATE_LIMIT",
+          retryAfterSeconds: meta.retryAfterMs
+            ? Math.ceil(meta.retryAfterMs / 1000)
+            : undefined,
+          details: msg.length < 500 ? msg : undefined,
+          timestamp: new Date().toISOString(),
+          model,
+        },
+        { status: 429 }
+      );
+    }
+
     return NextResponse.json(
       {
         error:
